@@ -1,10 +1,10 @@
 package org.hyperledger.identus.mercury
 
-import io.circe.syntax.*
 import org.hyperledger.identus.mercury.protocol.invitation.*
 import org.hyperledger.identus.mercury.protocol.invitation.v2.*
 import org.hyperledger.identus.mercury.protocol.invitation.v2.Invitation.Body
 import zio.*
+import zio.json.EncoderOps
 
 object InvitationPrograms {
 
@@ -27,8 +27,8 @@ object InvitationPrograms {
         Body(Some("request-mediate"), Some("RequestMediate"), Seq("didcomm/v2", "didcomm/aip2;env=rfc587"))
       )
       _ <- ZIO.log(s"createInvitationV2 from '${merdiator.id}'")
-      result = invitation.asJson.deepDropNullValues
-    } yield (java.util.Base64.getUrlEncoder.encodeToString(result.noSpaces.getBytes))
+      result = invitation.toJson
+    } yield (java.util.Base64.getUrlEncoder.encodeToString(result.toJson.getBytes))
 
   }
 

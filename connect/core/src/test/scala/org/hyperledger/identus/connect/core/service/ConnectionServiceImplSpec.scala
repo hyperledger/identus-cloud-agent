@@ -1,6 +1,5 @@
 package org.hyperledger.identus.connect.core.service
 
-import io.circe.syntax.*
 import org.hyperledger.identus.connect.core.model.error.ConnectionServiceError
 import org.hyperledger.identus.connect.core.model.error.ConnectionServiceError.InvalidStateForOperation
 import org.hyperledger.identus.connect.core.model.ConnectionRecord.*
@@ -11,6 +10,7 @@ import org.hyperledger.identus.shared.messaging
 import org.hyperledger.identus.shared.messaging.WalletIdAndRecordId
 import org.hyperledger.identus.shared.models.{WalletAccessContext, WalletId}
 import zio.*
+import zio.json.{DecoderOps, EncoderOps}
 import zio.test.*
 import zio.test.Assertion.*
 
@@ -291,7 +291,7 @@ object ConnectionServiceImplSpec extends ZIOSpecDefault {
             )
             maybeAcceptedRequestConnectionRecord <- inviterSvc.acceptConnectionRequest(inviterRecord.id)
             connectionResponseMessage <- ZIO.fromEither(
-              maybeAcceptedRequestConnectionRecord.connectionResponse.get.makeMessage.asJson.as[Message]
+              maybeAcceptedRequestConnectionRecord.connectionResponse.get.makeMessage.toJson.fromJson[Message]
             )
             _ <- inviterSvc.markConnectionResponseSent(inviterRecord.id)
             maybeReceivedResponseConnectionRecord <- inviteeSvc.receiveConnectionResponse(

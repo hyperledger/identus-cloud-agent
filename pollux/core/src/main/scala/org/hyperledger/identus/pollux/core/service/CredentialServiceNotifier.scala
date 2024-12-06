@@ -1,6 +1,5 @@
 package org.hyperledger.identus.pollux.core.service
 
-import io.circe.Json
 import org.hyperledger.identus.castor.core.model.did.{CanonicalPrismDID, PrismDID, VerificationRelationship}
 import org.hyperledger.identus.event.notification.*
 import org.hyperledger.identus.mercury.model.DidId
@@ -13,6 +12,7 @@ import org.hyperledger.identus.pollux.core.repository.CredentialRepository
 import org.hyperledger.identus.pollux.vc.jwt.Issuer
 import org.hyperledger.identus.shared.models.*
 import zio.{Duration, UIO, URIO, URLayer, ZIO, ZLayer}
+import zio.json.ast.Json
 
 import java.util.UUID
 
@@ -63,7 +63,7 @@ class CredentialServiceNotifier(
       kidIssuer: Option[KeyId],
       thid: DidCommID,
       credentialSchemaRef: Option[CredentialSchemaRef],
-      claims: io.circe.Json,
+      claims: Json,
       validityPeriod: Option[Double] = None,
       automaticIssuance: Option[Boolean],
       issuingDID: CanonicalPrismDID,

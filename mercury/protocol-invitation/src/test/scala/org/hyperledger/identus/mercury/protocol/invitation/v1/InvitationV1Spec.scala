@@ -1,11 +1,10 @@
 package org.hyperledger.identus.mercury.protocol.invitation.v1
 
-import io.circe.parser.*
-import io.circe.syntax.*
-import io.circe.Json
 import munit.*
 import org.hyperledger.identus.mercury.model.AttachmentDescriptor
 import org.hyperledger.identus.mercury.protocol.invitation.*
+import zio.json.{DecoderOps, EncoderOps}
+import zio.json.ast.Json
 
 class InvitationV1Spec extends ZSuite {
 
@@ -13,7 +12,7 @@ class InvitationV1Spec extends ZSuite {
     val payload = "attachmentData"
     val payloadBase64 = java.util.Base64.getUrlEncoder.encodeToString(payload.getBytes)
 
-    val expectedJson = parse(s"""{
+    val expectedJson = s"""{
                                 |  "@id": "f3375429-b116-4224-b55f-563d7ef461f1",
                                 |  "@type": "https://didcomm.org/out-of-band/2.0/invitation",
                                 |  "label": "Faber College",
@@ -34,7 +33,7 @@ class InvitationV1Spec extends ZSuite {
                                 |    }
                                 |  ],
                                 |  "services": ["did:sov:LjgpST2rjsoxYegQDRm7EL"]
-                                |}""".stripMargin).getOrElse(Json.Null)
+                                |}""".stripMargin.fromJson[Json]
 
     val did = Did("did:sov:LjgpST2rjsoxYegQDRm7EL")
     val accepts = Seq("didcomm/aip2;env=rfc587", "didcomm/aip2;env=rfc19")
@@ -53,9 +52,7 @@ class InvitationV1Spec extends ZSuite {
       `requests~attach` = Seq(attachmentDescriptor),
       services = Seq(did)
     )
-    val result = invitation.asJson.deepDropNullValues
-
-    println(result)
+    val result = invitation.toJsonAST
     assertEquals(result, expectedJson)
   }
 }

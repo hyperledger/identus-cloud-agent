@@ -1,17 +1,13 @@
 package org.hyperledger.identus.pollux.core.service
 
-import io.circe.syntax.*
-import io.circe.Json
 import org.bouncycastle.jce.provider.BouncyCastleProvider
 import org.hyperledger.identus.agent.walletapi.service.MockManagedDIDService
 import org.hyperledger.identus.castor.core.model.did.*
-import org.hyperledger.identus.castor.core.model.did.VerificationRelationship.AssertionMethod
 import org.hyperledger.identus.castor.core.service.MockDIDService
 import org.hyperledger.identus.mercury.model.{Base64 as MyBase64, *}
 import org.hyperledger.identus.mercury.protocol.issuecredential.*
 import org.hyperledger.identus.pollux.anoncreds.AnoncredCredential
 import org.hyperledger.identus.pollux.core.model.*
-import org.hyperledger.identus.pollux.core.model.error.CredentialServiceError
 import org.hyperledger.identus.pollux.core.model.error.CredentialServiceError.*
 import org.hyperledger.identus.pollux.core.model.primitives.UriString
 import org.hyperledger.identus.pollux.core.model.primitives.UriString.toUriString
@@ -19,10 +15,11 @@ import org.hyperledger.identus.pollux.core.model.schema.{CredentialDefinition, C
 import org.hyperledger.identus.pollux.core.model.schema.CredentialSchemaRefType
 import org.hyperledger.identus.pollux.core.model.IssueCredentialRecord.{ProtocolState, Role}
 import org.hyperledger.identus.pollux.core.service.uriResolvers.ResourceUrlResolver
-import org.hyperledger.identus.pollux.core.service.CredentialServiceImplSpec.test
-import org.hyperledger.identus.pollux.vc.jwt.{CredentialIssuer, JWT, JwtCredential, JwtCredentialPayload}
+import org.hyperledger.identus.pollux.vc.jwt.{CredentialIssuer, JWT, JwtCredential}
 import org.hyperledger.identus.shared.models.{KeyId, UnmanagedFailureException, WalletAccessContext, WalletId}
 import zio.*
+import zio.json.{DecoderOps, EncoderOps}
+import zio.json.ast.Json
 import zio.mock.MockSpecDefault
 import zio.test.*
 import zio.test.Assertion.*
@@ -112,10 +109,11 @@ object CredentialServiceImplSpec extends MockSpecDefault with CredentialServiceS
                 Attribute(
                   "address",
                   Base64.getUrlEncoder.encodeToString(
-                    io.circe.parser
-                      .parse("""{"street": "Street Name", "number": "12"}""")
+                    """{"street": "Street Name", "number": "12"}"""
+                      .fromJson[Json]
+                      .toOption
                       .getOrElse(Json.Null)
-                      .noSpaces
+                      .toJson
                       .getBytes(StandardCharsets.UTF_8)
                   ),
                   Some("application/json")
@@ -137,8 +135,7 @@ object CredentialServiceImplSpec extends MockSpecDefault with CredentialServiceS
             svc <- ZIO.service[CredentialService]
             pairwiseIssuerDid = DidId("did:peer:INVITER")
             pairwiseHolderDid = Some(DidId("did:peer:HOLDER"))
-            claims = io.circe.parser
-              .parse("""
+            claims = """
                 |{
                 |   "credentialSubject": {
                 |     "emailAddress": "alice@wonderland.com",
@@ -149,8 +146,7 @@ object CredentialServiceImplSpec extends MockSpecDefault with CredentialServiceS
                 |     "drivingClass": 5
                 |   }
                 |}
-                |""".stripMargin)
-              .getOrElse(Json.Null)
+                |""".stripMargin.fromJson[Json].toOption.getOrElse(Json.Null)
             thid = DidCommID(UUID.randomUUID().toString())
             record <- svc.createJWTIssueCredentialRecord(
               thid = thid,
@@ -204,18 +200,14 @@ object CredentialServiceImplSpec extends MockSpecDefault with CredentialServiceS
             svc <- ZIO.service[CredentialService]
             pairwiseIssuerDid = DidId("did:peer:INVITER")
             pairwiseHolderDid = Some(DidId("did:peer:HOLDER"))
-            claims = io.circe.parser
-              .parse(
-                """
+            claims = """
                 |{
                 |   "emailAddress": "alice@wonderland.com",
                 |   "givenName": "Alice",
                 |   "familyName": "Wonderland"
                 |}
-                |""".stripMargin
-              )
-              .getOrElse(Json.Null)
-            thid = DidCommID(UUID.randomUUID().toString())
+                |""".stripMargin.fromJson[Json].toOption.getOrElse(Json.Null)
+            thid = DidCommID(UUID.randomUUID().toString)
             record <- svc
               .createJWTIssueCredentialRecord(
                 thid = thid,
@@ -519,7 +511,7 @@ object CredentialServiceImplSpec extends MockSpecDefault with CredentialServiceS
           issuerRecordId = offerCreatedRecord.id
           // Issuer sends offer
           _ <- issuerSvc.markOfferSent(issuerRecordId)
-          msg <- ZIO.fromEither(offerCreatedRecord.offerCredentialData.get.makeMessage.asJson.as[Message])
+          msg <- ZIO.fromEither(offerCreatedRecord.offerCredentialData.get.makeMessage.toJson.fromJson[Message])
           // Holder receives offer
           offerCredential <- ZIO.fromEither(OfferCredential.readFromMessage(msg))
           offerReceivedRecord <- holderSvc.receiveCredentialOffer(offerCredential)
@@ -531,7 +523,7 @@ object CredentialServiceImplSpec extends MockSpecDefault with CredentialServiceS
           requestGeneratedRecord <- holderSvc.generateJWTCredentialRequest(offerReceivedRecord.id)
           // Holder sends offer
           _ <- holderSvc.markRequestSent(holderRecordId)
-          msg <- ZIO.fromEither(requestGeneratedRecord.requestCredentialData.get.makeMessage.asJson.as[Message])
+          msg <- ZIO.fromEither(requestGeneratedRecord.requestCredentialData.get.makeMessage.toJson.fromJson[Message])
           // Issuer receives request
           requestCredential <- ZIO.fromEither(RequestCredential.readFromMessage(msg))
           requestReceivedRecord <- issuerSvc.receiveCredentialRequest(requestCredential)
@@ -550,7 +542,7 @@ object CredentialServiceImplSpec extends MockSpecDefault with CredentialServiceS
           }
           // Issuer sends credential
           _ <- issuerSvc.markCredentialSent(issuerRecordId)
-          msg <- ZIO.fromEither(credentialGenerateRecord.issueCredentialData.get.makeMessage.asJson.as[Message])
+          msg <- ZIO.fromEither(credentialGenerateRecord.issueCredentialData.get.makeMessage.toJson.fromJson[Message])
           // Holder receives credential
           issueCredential <- ZIO.fromEither(IssueCredential.readFromMessage(msg))
           _ <- holderSvc.receiveCredentialIssue(issueCredential)
@@ -574,7 +566,7 @@ object CredentialServiceImplSpec extends MockSpecDefault with CredentialServiceS
           issuerRecordId = offerCreatedRecord.id
           // Issuer sends offer
           _ <- issuerSvc.markOfferSent(issuerRecordId)
-          msg <- ZIO.fromEither(offerCreatedRecord.offerCredentialData.get.makeMessage.asJson.as[Message])
+          msg <- ZIO.fromEither(offerCreatedRecord.offerCredentialData.get.makeMessage.toJson.fromJson[Message])
           // Holder receives offer
           offerCredential <- ZIO.fromEither(OfferCredential.readFromMessage(msg))
           offerReceivedRecord <- holderSvc.receiveCredentialOffer(offerCredential)
@@ -586,7 +578,7 @@ object CredentialServiceImplSpec extends MockSpecDefault with CredentialServiceS
           requestGeneratedRecord <- holderSvc.generateJWTCredentialRequest(offerReceivedRecord.id)
           // Holder sends offer
           _ <- holderSvc.markRequestSent(holderRecordId)
-          msg <- ZIO.fromEither(requestGeneratedRecord.requestCredentialData.get.makeMessage.asJson.as[Message])
+          msg <- ZIO.fromEither(requestGeneratedRecord.requestCredentialData.get.makeMessage.toJson.fromJson[Message])
           // Issuer receives request
           requestCredential <- ZIO.fromEither(RequestCredential.readFromMessage(msg))
           requestReceivedRecord <- issuerSvc.receiveCredentialRequest(requestCredential)
@@ -605,7 +597,7 @@ object CredentialServiceImplSpec extends MockSpecDefault with CredentialServiceS
           }
           // Issuer sends credential
           _ <- issuerSvc.markCredentialSent(issuerRecordId)
-          msg <- ZIO.fromEither(credentialGenerateRecord.issueCredentialData.get.makeMessage.asJson.as[Message])
+          msg <- ZIO.fromEither(credentialGenerateRecord.issueCredentialData.get.makeMessage.toJson.fromJson[Message])
           // Holder receives credential
           issueCredential <- ZIO.fromEither(IssueCredential.readFromMessage(msg))
           _ <- holderSvc.receiveCredentialIssue(issueCredential)
@@ -654,7 +646,7 @@ object CredentialServiceImplSpec extends MockSpecDefault with CredentialServiceS
           issuerRecordId = offerCreatedRecord.id
           // Issuer sends offer
           _ <- issuerSvc.markOfferSent(issuerRecordId)
-          msg <- ZIO.fromEither(offerCreatedRecord.offerCredentialData.get.makeMessage.asJson.as[Message])
+          msg <- ZIO.fromEither(offerCreatedRecord.offerCredentialData.get.makeMessage.toJson.fromJson[Message])
           // Holder receives offer
           holderCredDefResolverLayer = ZLayer.succeed(
             Map(s"http://test.com/cred-defs/${credDef.guid.toString}" -> credDef.definition.toString)
@@ -675,7 +667,7 @@ object CredentialServiceImplSpec extends MockSpecDefault with CredentialServiceS
           requestGeneratedRecord <- holderSvc.generateAnonCredsCredentialRequest(offerReceivedRecord.id)
           // Holder sends offer
           _ <- holderSvc.markRequestSent(holderRecordId)
-          msg <- ZIO.fromEither(requestGeneratedRecord.requestCredentialData.get.makeMessage.asJson.as[Message])
+          msg <- ZIO.fromEither(requestGeneratedRecord.requestCredentialData.get.makeMessage.toJson.fromJson[Message])
           // Issuer receives request
           requestCredential <- ZIO.fromEither(RequestCredential.readFromMessage(msg))
           _ <- issuerSvc.receiveCredentialRequest(requestCredential)
@@ -685,7 +677,7 @@ object CredentialServiceImplSpec extends MockSpecDefault with CredentialServiceS
           credentialGenerateRecord <- issuerSvc.generateAnonCredsCredential(issuerRecordId)
           // Issuer sends credential
           _ <- issuerSvc.markCredentialSent(issuerRecordId)
-          msg <- ZIO.fromEither(credentialGenerateRecord.issueCredentialData.get.makeMessage.asJson.as[Message])
+          msg <- ZIO.fromEither(credentialGenerateRecord.issueCredentialData.get.makeMessage.toJson.fromJson[Message])
           // Holder receives credential\
           issueCredential <- ZIO.fromEither(IssueCredential.readFromMessage(msg))
           record <- holderSvc.receiveCredentialIssue(issueCredential)

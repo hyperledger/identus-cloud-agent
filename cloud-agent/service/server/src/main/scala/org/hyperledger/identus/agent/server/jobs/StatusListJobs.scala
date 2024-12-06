@@ -10,11 +10,14 @@ import org.hyperledger.identus.pollux.core.model.{CredInStatusList, CredentialSt
 import org.hyperledger.identus.pollux.core.service.{CredentialService, CredentialStatusListService}
 import org.hyperledger.identus.pollux.vc.jwt.revocation.{BitString, VCStatusList2021, VCStatusList2021Error}
 import org.hyperledger.identus.resolvers.DIDResolver
+import org.hyperledger.identus.shared.json.JsonInterop
 import org.hyperledger.identus.shared.messaging
 import org.hyperledger.identus.shared.messaging.{Message, Producer, WalletIdAndRecordId}
 import org.hyperledger.identus.shared.models.{WalletAccessContext, WalletId}
 import org.hyperledger.identus.shared.utils.DurationOps.toMetricsSeconds
 import zio.*
+import zio.json.ast.Json
+import zio.json.DecoderOps
 import zio.metrics.Metric
 
 import java.util.UUID
@@ -72,12 +75,10 @@ object StatusListJobs extends BackgroundJobsHelper {
       vcStatusListCredString = statusListWithCreds.statusListCredential
       walletAccessContext = WalletAccessContext(statusListWithCreds.walletId)
       effect = for {
-        vcStatusListCredJson <- ZIO
-          .fromEither(io.circe.parser.parse(vcStatusListCredString))
-          .mapError(_.underlying)
+        vcStatusListCredJson <- ZIO.fromEither(vcStatusListCredString.fromJson[Json])
         issuer <- createJwtVcIssuer(statusListWithCreds.issuer, VerificationRelationship.AssertionMethod, None)
         vcStatusListCred <- VCStatusList2021
-          .decodeFromJson(vcStatusListCredJson, issuer)
+          .decodeFromJson(JsonInterop.toCirceJsonAst(vcStatusListCredJson), issuer)
           .mapError(x => new Throwable(x.msg))
         bitString <- vcStatusListCred.getBitString.mapError(x => new Throwable(x.msg))
         _ <- ZIO.collectAll(

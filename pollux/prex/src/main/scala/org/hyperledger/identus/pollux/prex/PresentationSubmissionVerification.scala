@@ -1,22 +1,10 @@
 package org.hyperledger.identus.pollux.prex
 
-import io.circe.*
-import io.circe.syntax.*
-import org.hyperledger.identus.pollux.prex.PresentationSubmissionError.{
-  ClaimDecodeFailure,
-  ClaimFormatVerificationFailure,
-  ClaimNotSatisfyInputConstraint,
-  InvalidDataTypeForClaimFormat,
-  InvalidJsonPath,
-  InvalidNestedPathDescriptorId,
-  InvalidSubmissionId,
-  JsonPathNotFound,
-  SubmissionNotSatisfyInputDescriptors
-}
+import org.hyperledger.identus.pollux.prex.PresentationSubmissionError.*
 import org.hyperledger.identus.pollux.vc.jwt.{JWT, JwtCredential, JwtPresentation, JwtPresentationPayload}
 import org.hyperledger.identus.pollux.vc.jwt.CredentialPayload.Implicits.*
 import org.hyperledger.identus.pollux.vc.jwt.PresentationPayload.Implicits.*
-import org.hyperledger.identus.shared.json.{JsonInterop, JsonPath, JsonPathError, JsonSchemaValidatorImpl}
+import org.hyperledger.identus.shared.json.{JsonInterop, JsonPathError, JsonSchemaValidatorImpl}
 import org.hyperledger.identus.shared.models.{Failure, StatusCode}
 import zio.*
 import zio.json.ast.Json as ZioJson
@@ -206,7 +194,7 @@ object PresentationSubmissionVerification {
         .mapError(e => ClaimDecodeFailure(format, path, e))
       _ <- formatVerification(jwt)
         .mapError(errors => ClaimFormatVerificationFailure(format, path, errors.mkString))
-    } yield JsonInterop.toZioJsonAst(payload.asJson)
+    } yield JsonInterop.toZioJsonAst(io.circe.syntax.EncoderOps(payload).asJson)
   }
 
   private def verifyJwtVp(
@@ -224,6 +212,6 @@ object PresentationSubmissionVerification {
         .mapError(e => ClaimDecodeFailure(format, path, e.getMessage()))
       _ <- formatVerification(jwt)
         .mapError(errors => ClaimFormatVerificationFailure(format, path, errors.mkString))
-    } yield JsonInterop.toZioJsonAst(payload.asJson)
+    } yield JsonInterop.toZioJsonAst(io.circe.syntax.EncoderOps(payload).asJson)
   }
 }

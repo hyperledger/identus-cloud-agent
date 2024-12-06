@@ -1,9 +1,7 @@
 package org.hyperledger.identus.mercury.protocol.trustping
 
-import io.circe.*
-import io.circe.generic.semiauto.{deriveDecoder, deriveEncoder}
-import io.circe.syntax.*
 import org.hyperledger.identus.mercury.model.{DidId, Message, PIURI}
+import zio.json.{DeriveJsonDecoder, DeriveJsonEncoder, EncoderOps, JsonDecoder, JsonEncoder}
 
 /** https://identity.foundation/didcomm-messaging/spec/#trust-ping-protocol-20 */
 final case class TrustPing(
@@ -20,7 +18,7 @@ final case class TrustPing(
     `type` = this.`type`,
     from = Some(this.from),
     to = Seq(this.to),
-    body = this.body.asJson.asObject.get,
+    body = this.body.toJsonAST.toOption.flatMap(_.asObject).get,
   )
 
   def makeReply = TrustPingResponse(
@@ -36,11 +34,11 @@ object TrustPing {
       response_requested: Option[Boolean] = Some(true),
   )
   object Body {
-    given Encoder[Body] = deriveEncoder[Body]
-    given Decoder[Body] = deriveDecoder[Body]
+    given JsonEncoder[Body] = DeriveJsonEncoder.gen
+    given JsonDecoder[Body] = DeriveJsonDecoder.gen
   }
-  given Encoder[TrustPing] = deriveEncoder[TrustPing]
-  given Decoder[TrustPing] = deriveDecoder[TrustPing]
+  given JsonEncoder[TrustPing] = DeriveJsonEncoder.gen
+  given JsonDecoder[TrustPing] = DeriveJsonDecoder.gen
 
   /** Parse a generecy DIDComm Message into a TrustPing */
   def fromMessage(message: Message): Either[String, TrustPing] =
@@ -48,10 +46,10 @@ object TrustPing {
       piuri <-
         if (message.`type` == TrustPing.`type`) Right(message.`type`)
         else Left(s"Message MUST be of the type '${TrustPing.`type`}' instead of '${message.`type`}'")
-      body <- message.body.asJson
+      body <- message.body
         .as[TrustPing.Body]
         .left
-        .map(ex => "Fail to parse the body of the TrustPing because: " + ex.message)
+        .map(err => "Fail to parse the body of the TrustPing because: " + err)
       ret <- message.to match
         case Seq(onlyOneRecipient) =>
           message.from match

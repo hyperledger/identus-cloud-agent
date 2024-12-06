@@ -1,7 +1,6 @@
 package org.hyperledger.identus.mercury.protocol.issuecredential
 
-import io.circe.{Decoder, Encoder}
-import io.circe.generic.semiauto.*
+import zio.json.{DeriveJsonDecoder, DeriveJsonEncoder, JsonDecoder, JsonEncoder}
 
 /** @see
   *   https://github.com/decentralized-identity/waci-didcomm/blob/main/issue_credential/README.md#preview-credential
@@ -43,15 +42,15 @@ object CredentialPreview {
       body = CredentialPreviewBody(attributes)
     )
 
-  given Encoder[CredentialPreview] = deriveEncoder[CredentialPreview]
-  given Decoder[CredentialPreview] = deriveDecoder[CredentialPreview]
+  given JsonEncoder[CredentialPreview] = DeriveJsonEncoder.gen
+  given JsonDecoder[CredentialPreview] = DeriveJsonDecoder.gen
 }
 
 case class CredentialPreviewBody(attributes: Seq[Attribute])
 
 object CredentialPreviewBody {
-  given Encoder[CredentialPreviewBody] = deriveEncoder[CredentialPreviewBody]
-  given Decoder[CredentialPreviewBody] = deriveDecoder[CredentialPreviewBody]
+  given JsonEncoder[CredentialPreviewBody] = DeriveJsonEncoder.gen
+  given JsonDecoder[CredentialPreviewBody] = DeriveJsonDecoder.gen
 }
 
 /** @param name
@@ -72,6 +71,6 @@ final case class Attribute(
     media_type: Option[String] = None,
 )
 object Attribute {
-  given Encoder[Attribute] = deriveEncoder[Attribute]
-  given Decoder[Attribute] = deriveDecoder[Attribute]
+  given JsonEncoder[Attribute] = DeriveJsonEncoder.gen
+  given JsonDecoder[Attribute] = DeriveJsonDecoder.gen
 }

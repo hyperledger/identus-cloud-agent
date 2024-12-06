@@ -1,9 +1,7 @@
 package org.hyperledger.identus.mercury.protocol.issuecredential
 
-import io.circe.*
-import io.circe.generic.semiauto.*
-import io.circe.syntax.*
 import org.hyperledger.identus.mercury.model.{AttachmentDescriptor, DidId, Message, PIURI}
+import zio.json.{DeriveJsonDecoder, DeriveJsonEncoder, EncoderOps, JsonDecoder, JsonEncoder}
 
 /** ALL parameterS are DIDCOMMV2 format and naming conventions and follows the protocol
   * @see
@@ -32,7 +30,7 @@ final case class IssueCredential(
     from = Some(this.from),
     to = Seq(this.to),
     thid = this.thid,
-    body = this.body.asJson.asObject.get,
+    body = this.body.toJsonAST.toOption.flatMap(_.asObject).get,
     attachments = Some(this.attachments),
   )
 }
@@ -40,8 +38,8 @@ final case class IssueCredential(
 object IssueCredential {
 
   import AttachmentDescriptor.attachmentDescriptorEncoderV2
-  given Encoder[IssueCredential] = deriveEncoder[IssueCredential]
-  given Decoder[IssueCredential] = deriveDecoder[IssueCredential]
+  given JsonEncoder[IssueCredential] = DeriveJsonEncoder.gen
+  given JsonDecoder[IssueCredential] = DeriveJsonDecoder.gen
 
   def `type`: PIURI = "https://didcomm.org/issue-credential/3.0/issue-credential"
 
@@ -69,8 +67,8 @@ object IssueCredential {
       more_available: Option[String] = None,
   )
   object Body {
-    given Encoder[Body] = deriveEncoder[Body]
-    given Decoder[Body] = deriveDecoder[Body]
+    given JsonEncoder[Body] = DeriveJsonEncoder.gen
+    given JsonDecoder[Body] = DeriveJsonDecoder.gen
   }
 
   def makeIssueCredentialFromRequestCredential(msg: Message): Either[String, IssueCredential] =
@@ -90,8 +88,8 @@ object IssueCredential {
     }
 
   def readFromMessage(message: Message): Either[String, IssueCredential] = {
-    message.body.asJson.as[IssueCredential.Body] match
-      case Left(fail) => Left("Fail to parse IssueCredential's body: " + fail.getMessage)
+    message.body.as[IssueCredential.Body] match
+      case Left(err) => Left("Fail to parse IssueCredential's body: " + err)
       case Right(body) =>
         message.from match
           case None => Left("IssueCredential MUST have the sender explicit")

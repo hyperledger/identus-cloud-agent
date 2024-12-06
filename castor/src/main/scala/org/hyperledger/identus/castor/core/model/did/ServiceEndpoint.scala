@@ -1,7 +1,7 @@
 package org.hyperledger.identus.castor.core.model.did
 
-import io.circe.JsonObject
 import org.hyperledger.identus.castor.core.util.UriUtils
+import zio.json.ast.Json as ZioJson
 
 sealed trait ServiceEndpoint {
   def normalize(): ServiceEndpoint
@@ -35,12 +35,12 @@ object ServiceEndpoint {
       override def normalize(): UriOrJsonEndpoint = copy(uri = uri.normalize())
     }
 
-    final case class Json(json: JsonObject) extends UriOrJsonEndpoint {
+    final case class Json(json: ZioJson.Obj) extends UriOrJsonEndpoint {
       override def normalize(): UriOrJsonEndpoint = this
     }
 
     given Conversion[UriValue, UriOrJsonEndpoint] = Uri(_)
-    given Conversion[JsonObject, UriOrJsonEndpoint] = Json(_)
+    given Conversion[ZioJson.Obj, UriOrJsonEndpoint] = Json(_)
   }
 
   final case class Single(value: UriOrJsonEndpoint) extends ServiceEndpoint {

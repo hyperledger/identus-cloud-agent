@@ -1,10 +1,8 @@
 package org.hyperledger.identus.mercury.model
 
-import io.circe.*
 import org.didcommx.didcomm.message.{Attachment as XAttachment, MessageBuilder}
-import org.didcommx.didcomm.message.Attachment.Data
 import org.didcommx.didcomm.model.*
-import org.hyperledger.identus.mercury.model.*
+import zio.json.ast.Json
 
 import scala.jdk.CollectionConverters.*
 import scala.language.implicitConversions
@@ -48,39 +46,35 @@ given Conversion[Message, org.didcommx.didcomm.message.Message] with {
 }
 
 def json2Map(json: Json): Any = json match {
-  case e if e.isArray   => e.asArray.get.toList.map(j => json2Map(j)).asJava
-  case e if e.isBoolean => e.asBoolean.get
-  case e if e.isNumber  => e.asNumber.flatMap(_.toBigDecimal).get
-  case e if e.isObject  => e.asObject.get.toMap.view.mapValues(json2Map).toMap.asJava
-  case e if e.isString  => e.asString.get
-  case e if e.isNull    => null
-  case _                => null // Impossible case but Json cases are private in circe ...
+  case e @ Json.Arr(_)  => e.asArray.get.toList.map(j => json2Map(j)).asJava
+  case e @ Json.Bool(_) => e.asBoolean.get
+  case e @ Json.Num(_)  => e.asNumber.map(_.value).get
+  case e @ Json.Obj(_)  => e.asObject.get.toMap.view.mapValues(json2Map).toMap.asJava
+  case e @ Json.Str(_)  => e.asString.get
+  case e @ Json.Null    => null
 }
 
 def mapValueToJson(obj: java.lang.Object): Json = {
   obj match {
     case null                 => Json.Null
-    case b: java.lang.Boolean => Json.fromBoolean(b)
-    case i: java.lang.Integer => Json.fromInt(i)
-    case d: java.lang.Double =>
-      Json.fromDouble(d).getOrElse(Json.fromDouble(0d).get)
-    case l: java.lang.Long   => Json.fromLong(l)
-    case s: java.lang.String => Json.fromString(String.valueOf(s))
+    case b: java.lang.Boolean => Json.Bool(b)
+    case i: java.lang.Integer => Json.Num(i)
+    case d: java.lang.Double  => Json.Num(d)
+    case l: java.lang.Long    => Json.Num(l)
+    case s: java.lang.String  => Json.Str(String.valueOf(s))
     case array: com.nimbusds.jose.shaded.json.JSONArray => {
-      Json.fromValues(array.iterator().asScala.map(mapValueToJson).toList)
+      Json.Arr(array.iterator().asScala.map(mapValueToJson).toList: _*)
     }
     case joseObject: com.nimbusds.jose.shaded.json.JSONObject =>
-      Json.fromJsonObject {
-        JsonObject.fromMap(
-          joseObject
-            .asInstanceOf[java.util.Map[String, Object]]
-            .asScala
-            .toMap
-            .view
-            .mapValues(mapValueToJson)
-            .toMap
-        )
-      }
+      Json.Obj(
+        joseObject
+          .asInstanceOf[java.util.Map[String, Object]]
+          .asScala
+          .toMap
+          .view
+          .mapValues(mapValueToJson)
+          .toArray: _*
+      )
   }
 }
 
@@ -115,7 +109,7 @@ given Conversion[XAttachment, AttachmentDescriptor] with {
       case e if e contains ("json") =>
         val aux = e("json")
         val x = aux.asInstanceOf[java.util.Map[String, Object]].asScala.toMap.view.mapValues(mapValueToJson)
-        JsonData(JsonObject.fromMap(x.toMap))
+        JsonData(Json.Obj(x.toArray: _*))
       case e if e contains ("base64") =>
         val tmp = e("base64").asInstanceOf[String] // ...
         Base64(tmp)

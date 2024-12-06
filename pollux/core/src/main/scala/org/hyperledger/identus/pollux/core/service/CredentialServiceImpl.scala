@@ -1,9 +1,6 @@
 package org.hyperledger.identus.pollux.core.service
 
 import cats.implicits.*
-import io.circe.*
-import io.circe.parser.*
-import io.circe.syntax.*
 import org.hyperledger.identus.agent.walletapi.model.{ManagedDIDState, PublicationState}
 import org.hyperledger.identus.agent.walletapi.service.ManagedDIDService
 import org.hyperledger.identus.agent.walletapi.storage.GenericSecretStorage
@@ -21,8 +18,6 @@ import org.hyperledger.identus.pollux.core.model.presentation.*
 import org.hyperledger.identus.pollux.core.model.primitives.UriString
 import org.hyperledger.identus.pollux.core.model.schema.{CredentialDefinition, CredentialSchema, CredentialSchemaRef}
 import org.hyperledger.identus.pollux.core.model.secret.CredentialDefinitionSecret
-import org.hyperledger.identus.pollux.core.model.CredentialFormat.AnonCreds
-import org.hyperledger.identus.pollux.core.model.IssueCredentialRecord.ProtocolState.OfferReceived
 import org.hyperledger.identus.pollux.core.repository.{CredentialRepository, CredentialStatusListRepository}
 import org.hyperledger.identus.pollux.prex.{ClaimFormat, Jwt, PresentationDefinition}
 import org.hyperledger.identus.pollux.sdjwt.*
@@ -30,6 +25,7 @@ import org.hyperledger.identus.pollux.vc.jwt.{Issuer as JwtIssuer, *}
 import org.hyperledger.identus.pollux.vc.jwt.PresentationPayload.Implicits.*
 import org.hyperledger.identus.shared.crypto.{Ed25519KeyPair, Secp256k1KeyPair}
 import org.hyperledger.identus.shared.http.UriResolver
+import org.hyperledger.identus.shared.json.JsonInterop
 import org.hyperledger.identus.shared.messaging.{Producer, WalletIdAndRecordId}
 import org.hyperledger.identus.shared.models.*
 import org.hyperledger.identus.shared.models.Failure.orDieAsUnmanagedFailure
@@ -37,6 +33,7 @@ import org.hyperledger.identus.shared.utils.aspects.CustomMetricsAspect
 import org.hyperledger.identus.shared.utils.Base64Utils
 import zio.*
 import zio.json.*
+import zio.json.ast.Json
 import zio.prelude.ZValidation
 
 import java.time.{Instant, ZoneId}
@@ -255,7 +252,7 @@ class CredentialServiceImpl(
       kidIssuer: Option[KeyId],
       thid: DidCommID,
       credentialSchemaRef: Option[CredentialSchemaRef],
-      claims: io.circe.Json,
+      claims: Json,
       validityPeriod: Option[Double] = None,
       automaticIssuance: Option[Boolean],
       issuingDID: CanonicalPrismDID,
@@ -317,7 +314,7 @@ class CredentialServiceImpl(
       _ <- CredentialSchema
         .validateAnonCredsClaims(
           credentialDefinition.schemaId,
-          claims.noSpaces,
+          claims.toJson,
           uriResolver,
         )
         .orDieAsUnmanagedFailure
@@ -430,10 +427,8 @@ class CredentialServiceImpl(
         attachment.data match
           case JsonData(json) =>
             ZIO
-              .attempt(json.asJson.hcursor.downField("json").as[CredentialOfferAttachment])
-              .mapError(e =>
-                InvalidCredentialOffer(s"An error occurred when parsing the offer attachment: ${e.toString}")
-              )
+              .fromEither(json.as[CredentialOfferAttachment])
+              .mapError(err => InvalidCredentialOffer(s"An error occurred when parsing the offer attachment: $err"))
           case _ =>
             ZIO.fail(InvalidCredentialOffer(s"Only JSON attachments are supported in JWT offers"))
       case CredentialFormat.AnonCreds =>
@@ -469,7 +464,7 @@ class CredentialServiceImpl(
               .map(_.id)
               .map(schemaId =>
                 CredentialSchema
-                  .validateJWTCredentialSubject(schemaId, claims.noSpaces, uriResolver)
+                  .validateJWTCredentialSubject(schemaId, claims.toJson, uriResolver)
               )
           )
           .orDieAsUnmanagedFailure
@@ -901,7 +896,7 @@ class CredentialServiceImpl(
       .updateWithIssuedRawCredential(
         record.id,
         issueCredential,
-        attachment.data.asJson.noSpaces,
+        attachment.data.toJson,
         schemaId,
         credDefId,
         ProtocolState.CredentialReceived
@@ -1224,7 +1219,7 @@ class CredentialServiceImpl(
           ids.map(id => org.hyperledger.identus.pollux.vc.jwt.CredentialSchema(id, VC_JSON_SCHEMA_TYPE))
         ),
         maybeCredentialStatus = Some(credentialStatus),
-        credentialSubject = claims.add("id", jwtPresentation.iss.asJson).asJson,
+        credentialSubject = JsonInterop.toCirceJsonAst(claims.add("id", Json.Str(jwtPresentation.iss))),
         maybeRefreshService = None,
         maybeEvidence = None,
         maybeTermsOfUse = None,
@@ -1305,29 +1300,29 @@ class CredentialServiceImpl(
       }
 
       now = Instant.now.getEpochSecond
-      exp = claims("exp").flatMap(_.asNumber).flatMap(_.toLong)
+      exp = claims.get("exp").flatMap(_.asNumber).map(_.value.longValue())
       expInSeconds <- ZIO.fromEither(exp match {
         case Some(e) if e > now => Right(e)
         case Some(e)            => Left(ExpirationDateHasPassed(e))
         case _                  => Right(Instant.now.plus(expirationTime).getEpochSecond)
       })
       claimsUpdated = claims
-        .add("iss", issuingDID.did.toString.asJson) // This is issuer did
-        .add("sub", jwtPresentation.iss.asJson) // This is subject did
-        .add("iat", now.asJson)
-        .add("exp", expInSeconds.asJson)
+        .add("iss", Json.Str(issuingDID.did.toString)) // This is issuer did
+        .add("sub", Json.Str(jwtPresentation.iss)) // This is subject did
+        .add("iat", Json.Num(now))
+        .add("exp", Json.Num(expInSeconds))
       credential = {
         jsonWebKey match {
           case Some(jwk) =>
             SDJWT.issueCredential(
               sdJwtPrivateKey,
-              claimsUpdated.asJson.noSpaces,
+              claimsUpdated.toJson,
               sdjwt.HolderPublicKey.fromJWT(jwk.toJson)
             )
           case None =>
             SDJWT.issueCredential(
               sdJwtPrivateKey,
-              claimsUpdated.asJson.noSpaces,
+              claimsUpdated.toJson,
             )
         }
       }
@@ -1460,11 +1455,11 @@ class CredentialServiceImpl(
         .fromOption(offer.attachments.headOption)
         .orElse(ZIO.dieMessage(s"Attachments not found in record: ${record.id}"))
       json <- attachmentDescriptor.data match
-        case JsonData(json) => ZIO.succeed(json.asJson)
+        case JsonData(json) => ZIO.succeed(json.toJsonAST.toOption.get)
         case _              => ZIO.dieMessage(s"Attachment doesn't contain JsonData: ${record.id}")
       maybeOptions <- ZIO
         .fromEither(json.as[PresentationAttachment].map(_.options))
-        .flatMapError(df => ZIO.dieMessage(df.getMessage))
+        .flatMapError(err => ZIO.dieMessage(err))
     } yield maybeOptions
   }
 
@@ -1529,8 +1524,8 @@ class CredentialServiceImpl(
   ): ZIO[WalletAccessContext, CredentialServiceError, OfferCredential] = {
     for {
       invitation <- ZIO
-        .fromEither(io.circe.parser.decode[Invitation](Base64Utils.decodeUrlToString(invitation)))
-        .mapError(err => InvitationParsingError(err.getMessage))
+        .fromEither(Base64Utils.decodeUrlToString(invitation).fromJson[Invitation])
+        .mapError(err => InvitationParsingError(err))
       _ <- invitation.expires_time match {
         case Some(expiryTime) =>
           ZIO
@@ -1547,16 +1542,15 @@ class CredentialServiceImpl(
         invitation.attachments
           .flatMap(
             _.headOption.map(attachment =>
-              decode[org.hyperledger.identus.mercury.model.JsonData](
-                attachment.data.asJson.noSpaces
-              ) // TODO Move mercury to use ZIO JSON
+              attachment.data.toJson
+                .fromJson[org.hyperledger.identus.mercury.model.JsonData]
                 .flatMap { data =>
-                  OfferCredential.given_Decoder_OfferCredential
-                    .decodeJson(data.json.asJson)
+                  OfferCredential.given_JsonDecoder_OfferCredential
+                    .decodeJson(data.json.toJson)
                     .map(r => r.copy(to = Some(pairwiseHolderDID)))
                     .leftMap(err =>
                       CredentialOfferDecodingError(
-                        s"Credential Offer As Attachment decoding error: ${err.getMessage}"
+                        s"Credential Offer As Attachment decoding error: $err"
                       )
                     )
                 }
