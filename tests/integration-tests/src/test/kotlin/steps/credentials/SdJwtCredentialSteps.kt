@@ -2,6 +2,7 @@ package steps.credentials
 
 import com.google.gson.Gson
 import com.nimbusds.jose.util.Base64URL
+import common.CredentialSchema
 import interactions.Post
 import interactions.body
 import io.cucumber.java.en.Then
@@ -17,18 +18,22 @@ import org.hyperledger.identus.client.models.*
 
 class SdJwtCredentialSteps {
 
-    private val claims = linkedMapOf(
-        "firstName" to "Automation",
-        "lastName" to "Execution",
-    )
-
     @When("{actor} offers a sd-jwt credential to {actor}")
     fun issuerOffersSdJwtCredentialToHolder(issuer: Actor, holder: Actor) {
         val connectionId = issuer.recall<Connection>("connection-with-${holder.name}").connectionId
         val did = issuer.recall<String>("shortFormDid")
+        val schemaGuid = issuer.recall<String>(CredentialSchema.ID_SCHEMA.name)
+
+        val schemaId: String? = if (schemaGuid != null) {
+            val baseUrl = issuer.recall<String>("baseUrl")
+            "$baseUrl/schema-registry/schemas/$schemaGuid"
+        } else {
+            null
+        }
 
         val credentialOfferRequest = CreateIssueCredentialRecordRequest(
-            claims = claims,
+            schemaId = schemaId?.let { listOf(it) },
+            claims = CredentialSchema.ID_SCHEMA.claims,
             issuingDID = did,
             connectionId = connectionId,
             validityPeriod = 3600.0,
@@ -62,24 +67,24 @@ class SdJwtCredentialSteps {
         )
     }
 
-    @When("{actor} tries to offer a sd-jwt credential to {actor}")
-    fun issuerTriesToOfferSdJwtCredentialToHolder(issuer: Actor, holder: Actor) {
-        val connectionId = issuer.recall<Connection>("connection-with-${holder.name}").connectionId
-        val did = issuer.recall<String>("shortFormDid")
-
-        val credentialOfferRequest = CreateIssueCredentialRecordRequest(
-            claims = claims,
-            issuingDID = did,
-            connectionId = connectionId,
-            validityPeriod = 3600.0,
-            credentialFormat = "SDJWT",
-            automaticIssuance = false,
-        )
-
-        issuer.attemptsTo(
-            Post.to("/issue-credentials/credential-offers").body(credentialOfferRequest),
-        )
-    }
+//    @When("{actor} tries to offer a sd-jwt credential to {actor}")
+//    fun issuerTriesToOfferSdJwtCredentialToHolder(issuer: Actor, holder: Actor) {
+//        val connectionId = issuer.recall<Connection>("connection-with-${holder.name}").connectionId
+//        val did = issuer.recall<String>("shortFormDid")
+//
+//        val credentialOfferRequest = CreateIssueCredentialRecordRequest(
+//            claims = claims,
+//            issuingDID = did,
+//            connectionId = connectionId,
+//            validityPeriod = 3600.0,
+//            credentialFormat = "SDJWT",
+//            automaticIssuance = false,
+//        )
+//
+//        issuer.attemptsTo(
+//            Post.to("/issue-credentials/credential-offers").body(credentialOfferRequest),
+//        )
+//    }
 
     @Then("{actor} checks the sd-jwt credential contents")
     fun holderChecksTheSdJwtCredentialContents(holder: Actor) {
@@ -112,6 +117,7 @@ class SdJwtCredentialSteps {
     ) {
         val issuedCredential = holder.recall<IssueCredentialRecord>("issuedCredential")
         val jwtCredential = JwtCredential.parseBase64(issuedCredential.credential!!)
+        val actualClaims = CredentialSchema.ID_SCHEMA.claims.mapValues { it.value.toString() }
 
         val payload = jwtCredential.payload!!.toJSONObject()
 
@@ -128,8 +134,8 @@ class SdJwtCredentialSteps {
             Ensure.that(payload.containsKey("iss")).isTrue(),
             Ensure.that(payload.containsKey("iat")).isTrue(),
             Ensure.that(payload.containsKey("exp")).isTrue(),
-            Ensure.that(disclosedClaims["firstName"]!!.value).isEqualTo(claims["firstName"]!!),
-            Ensure.that(disclosedClaims["lastName"]!!.value).isEqualTo(claims["lastName"]!!),
+            Ensure.that(disclosedClaims["firstName"]!!.value).isEqualTo(actualClaims["firstName"]!!),
+            Ensure.that(disclosedClaims["lastName"]!!.value).isEqualTo(actualClaims["lastName"]!!),
         )
 
         additionalChecks(payload, disclosedClaims)

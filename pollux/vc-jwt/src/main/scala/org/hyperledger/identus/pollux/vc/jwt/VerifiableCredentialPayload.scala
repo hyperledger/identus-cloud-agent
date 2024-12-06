@@ -48,6 +48,7 @@ case class RefreshService(
     `type`: String
 )
 
+//TODO: refactor to use the new CredentialSchemaRef
 case class CredentialSchema(
     id: String,
     `type`: String

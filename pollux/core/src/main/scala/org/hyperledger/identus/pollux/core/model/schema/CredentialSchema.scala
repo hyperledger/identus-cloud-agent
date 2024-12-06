@@ -2,6 +2,7 @@ package org.hyperledger.identus.pollux.core.model.schema
 
 import org.hyperledger.identus.pollux.core.model.error.CredentialSchemaError
 import org.hyperledger.identus.pollux.core.model.error.CredentialSchemaError.*
+import org.hyperledger.identus.pollux.core.model.primitives.UriString
 import org.hyperledger.identus.pollux.core.model.schema.`type`.{
   AnoncredSchemaType,
   CredentialJsonSchemaType,
@@ -43,6 +44,7 @@ type Schema = zio.json.ast.Json
   *   Internal schema object that depends on concrete implementation For W3C JsonSchema it is a JsonSchema object For
   *   AnonCreds schema is a AnonCreds schema
   */
+//TODO: refactor `id` to use UriString
 case class CredentialSchema(
     guid: UUID,
     id: UUID,
@@ -135,11 +137,11 @@ object CredentialSchema {
   }
 
   def validSchemaValidator(
-      schemaId: String,
+      schemaId: UriString,
       uriResolver: UriResolver
-  ): IO[InvalidURI | CredentialSchemaParsingError | SchemaDereferencingError, JsonSchemaValidator] = {
+  ): IO[CredentialSchemaParsingError | SchemaDereferencingError, JsonSchemaValidator] = {
     for {
-      uri <- ZIO.attempt(new URI(schemaId)).mapError(_ => InvalidURI(schemaId))
+      uri <- ZIO.succeed(schemaId.toUri)
       json <- resolveJWTSchema(uri, uriResolver)
       schemaValidator <- JsonSchemaValidatorImpl
         .from(json)
@@ -155,7 +157,7 @@ object CredentialSchema {
   }
 
   def validateJWTCredentialSubject(
-      schemaId: String,
+      schemaId: UriString,
       credentialSubject: String,
       uriResolver: UriResolver
   ): IO[

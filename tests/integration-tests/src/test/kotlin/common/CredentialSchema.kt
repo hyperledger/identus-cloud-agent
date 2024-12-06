@@ -35,6 +35,37 @@ enum class CredentialSchema {
             "age" to 18,
         )
     },
+
+    ID_SCHEMA {
+        override val credentialSchemaType: String =
+            "https://w3c-ccg.github.io/vc-json-schemas/schema/2.0/schema.json"
+        override val schemaType: String = "https://json-schema.org/draft/2020-12/schema"
+        override val schema: JsonSchema = JsonSchema(
+            id = "https://example.com/student-schema-1.0",
+            schema = schemaType,
+            description = "ID schema",
+            type = "object",
+            properties = mutableMapOf(
+                "firstName" to JsonSchemaProperty(type = "string"),
+                "lastName" to JsonSchemaProperty(type = "string"),
+            ),
+            required = listOf("firstName", "lastName"),
+        )
+        override val credentialSchema: CredentialSchemaInput = CredentialSchemaInput(
+            author = "did:prism:agent",
+            name = UUID.randomUUID().toString(),
+            description = "ID credentials schema",
+            type = credentialSchemaType,
+            schema = schema,
+            tags = listOf("id", "personal"),
+            version = "1.0.0",
+        )
+        override val claims: Map<String, Any> = linkedMapOf(
+            "firstName" to "John",
+            "lastName" to "Doe",
+        )
+    },
+
     EMPLOYEE_SCHEMA {
         override val credentialSchemaType: String =
             "https://w3c-ccg.github.io/vc-json-schemas/schema/2.0/schema.json"

@@ -9,6 +9,7 @@ import org.hyperledger.identus.mercury.model.{AttachmentDescriptor, DidId}
 import org.hyperledger.identus.mercury.protocol.issuecredential.*
 import org.hyperledger.identus.pollux.core.model.*
 import org.hyperledger.identus.pollux.core.model.presentation.Options
+import org.hyperledger.identus.pollux.core.model.schema.CredentialSchemaRef
 import org.hyperledger.identus.pollux.core.repository.{
   CredentialDefinitionRepositoryInMemory,
   CredentialRepositoryInMemory,
@@ -110,7 +111,7 @@ trait CredentialServiceSpecHelper {
         pairwiseIssuerDID: DidId = DidId("did:prism:issuer"),
         pairwiseHolderDID: Option[DidId] = Some(DidId("did:prism:holder-pairwise")),
         thid: DidCommID = DidCommID(),
-        maybeSchemaIds: Option[List[String]] = None,
+        credentialSchemaRef: Option[CredentialSchemaRef] = None,
         claims: Json = io.circe.parser
           .parse("""
               |{
@@ -134,7 +135,7 @@ trait CredentialServiceSpecHelper {
         pairwiseHolderDID = pairwiseHolderDID,
         kidIssuer = kidIssuer,
         thid = thid,
-        maybeSchemaIds = maybeSchemaIds,
+        credentialSchemaRef = credentialSchemaRef,
         claims = claims,
         validityPeriod = validityPeriod,
         automaticIssuance = automaticIssuance,
