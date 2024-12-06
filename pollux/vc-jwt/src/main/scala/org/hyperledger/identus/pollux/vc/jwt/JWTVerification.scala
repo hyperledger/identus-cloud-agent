@@ -6,12 +6,12 @@ import com.nimbusds.jose.jwk.*
 import com.nimbusds.jose.util.Base64URL
 import com.nimbusds.jose.JWSVerifier
 import com.nimbusds.jwt.SignedJWT
-import io.circe
-import io.circe.generic.auto.*
 import org.hyperledger.identus.castor.core.model.did.VerificationRelationship
 import org.hyperledger.identus.shared.crypto.Ed25519PublicKey
 import pdi.jwt.*
 import zio.*
+import zio.json.{DecoderOps, EncoderOps}
+import zio.json.ast.Json
 import zio.prelude.*
 
 import java.security.interfaces.{ECPublicKey, EdECPublicKey}
@@ -242,15 +242,12 @@ object JWTVerification {
   }
 
   def extractJwtHeader(jwt: JWT): Validation[String, JwtHeader] = {
-    import io.circe.parser._
-    import io.circe.Json
-
     def parseHeaderUnsafe(json: Json): Either[String, JwtHeader] =
-      Try(JwtCirce.parseHeader(json.noSpaces)).toEither.left.map(_.getMessage)
+      Try(JwtCirce.parseHeader(json.toJson)).toEither.left.map(_.getMessage)
 
     def decodeJwtHeader(header: String): Validation[String, JwtHeader] = {
       val eitherResult = for {
-        json <- parse(header).left.map(_.getMessage)
+        json <- header.fromJson[Json]
         jwtHeader <- parseHeaderUnsafe(json)
       } yield jwtHeader
       Validation.fromEither(eitherResult)

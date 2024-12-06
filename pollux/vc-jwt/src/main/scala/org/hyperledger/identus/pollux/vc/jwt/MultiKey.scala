@@ -1,7 +1,7 @@
 package org.hyperledger.identus.pollux.vc.jwt
 
-import io.circe.*
-import io.circe.syntax.*
+import zio.json.{EncoderOps, JsonDecoder, JsonEncoder}
+import zio.json.ast.{Json as ZioJson, JsonCursor}
 
 case class MultiKey(
     publicKeyMultibase: Option[MultiBaseString] = None,
@@ -11,26 +11,29 @@ case class MultiKey(
   val `@context`: Set[String] = Set("https://w3id.org/security/multikey/v1")
 }
 object MultiKey {
-  given multiKeyEncoder: Encoder[MultiKey] =
-    (multiKey: MultiKey) =>
-      Json
-        .obj(
-          ("@context", multiKey.`@context`.asJson),
-          ("type", multiKey.`type`.asJson),
-          ("publicKeyMultibase", multiKey.publicKeyMultibase.asJson),
-          ("secretKeyMultibase", multiKey.secretKeyMultibase.asJson),
-        )
 
-  given multiKeyDecoder: Decoder[MultiKey] =
-    (c: HCursor) =>
-      for {
-        publicKeyMultibase <- c.downField("publicKeyMultibase").as[Option[MultiBaseString]]
-        secretKeyMultibase <- c.downField("secretKeyMultibase").as[Option[MultiBaseString]]
-      } yield {
-        MultiKey(
-          publicKeyMultibase = publicKeyMultibase,
-          secretKeyMultibase = secretKeyMultibase,
-        )
-      }
+  given JsonEncoder[MultiKey] = JsonEncoder[ZioJson].contramap { multiKey =>
+    (for {
+      context <- multiKey.`@context`.toJsonAST
+      typ <- multiKey.`type`.toJsonAST
+      publicKeyMultibase <- multiKey.publicKeyMultibase.toJsonAST
+      secretKeyMultibase <- multiKey.secretKeyMultibase.toJsonAST
+    } yield ZioJson.Obj(
+      "@context" -> context,
+      "type" -> typ,
+      "publicKeyMultibase" -> publicKeyMultibase,
+      "secretKeyMultibase" -> secretKeyMultibase,
+    )).getOrElse(UnexpectedCodeExecutionPath)
+  }
+
+  given JsonDecoder[MultiKey] = JsonDecoder[ZioJson].mapOrFail { json =>
+    for {
+      publicKeyMultibase <- json.get(JsonCursor.field("publicKeyMultibase")).flatMap(_.as[Option[MultiBaseString]])
+      secretKeyMultibase <- json.get(JsonCursor.field("secretKeyMultibase")).flatMap(_.as[Option[MultiBaseString]])
+    } yield MultiKey(
+      publicKeyMultibase = publicKeyMultibase,
+      secretKeyMultibase = secretKeyMultibase,
+    )
+  }
 
 }

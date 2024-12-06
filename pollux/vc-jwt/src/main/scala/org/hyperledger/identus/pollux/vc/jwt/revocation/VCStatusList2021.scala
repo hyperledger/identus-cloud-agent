@@ -1,10 +1,11 @@
 package org.hyperledger.identus.pollux.vc.jwt.revocation
 
-import io.circe.{Json, JsonObject}
-import io.circe.syntax.*
 import org.hyperledger.identus.pollux.vc.jwt.*
 import org.hyperledger.identus.pollux.vc.jwt.revocation.VCStatusList2021Error.{DecodingError, EncodingError}
+import org.hyperledger.identus.shared.json.JsonInterop
 import zio.*
+import zio.json.ast.Json
+import zio.json.EncoderOps
 
 import java.time.Instant
 
@@ -12,7 +13,8 @@ class VCStatusList2021 private (val vcPayload: W3cCredentialPayload, jwtIssuer: 
 
   def encoded: UIO[JWT] = ZIO.succeed(W3CCredential.toEncodedJwt(vcPayload, jwtIssuer))
 
-  def toJsonWithEmbeddedProof: Task[Json] = W3CCredential.toJsonWithEmbeddedProof(vcPayload, jwtIssuer)
+  def toJsonWithEmbeddedProof: Task[Json] =
+    W3CCredential.toJsonWithEmbeddedProof(vcPayload, jwtIssuer).map(JsonInterop.toZioJsonAst)
 
   def updateBitString(bitString: BitString): IO[VCStatusList2021Error, VCStatusList2021] = {
     import CredentialPayload.Implicits.*
@@ -50,10 +52,11 @@ object VCStatusList2021 {
     for {
       encodedBitString <- revocationData.encoded.mapError(e => EncodingError(e.message))
     } yield {
-      val claims = JsonObject()
-        .add("type", "StatusList2021".asJson)
-        .add("statusPurpose", purpose.toString.asJson)
-        .add("encodedList", encodedBitString.asJson)
+      val claims = Json
+        .Obj()
+        .add("type", Json.Str("StatusList2021"))
+        .add("statusPurpose", Json.Str(purpose.toString))
+        .add("encodedList", Json.Str(encodedBitString))
       val w3Credential = W3cCredentialPayload(
         `@context` = Set(
           "https://www.w3.org/2018/credentials/v1",
@@ -65,7 +68,7 @@ object VCStatusList2021 {
         issuanceDate = Instant.now,
         maybeExpirationDate = None,
         maybeCredentialSchema = None,
-        credentialSubject = claims.asJson,
+        credentialSubject = JsonInterop.toCirceJsonAst(claims),
         maybeCredentialStatus = None,
         maybeRefreshService = None,
         maybeEvidence = None,
@@ -81,7 +84,7 @@ object VCStatusList2021 {
     import CredentialPayload.Implicits.*
     for {
       w3cCredentialPayload <- ZIO
-        .fromEither(io.circe.parser.decode[W3cCredentialPayload](json.noSpaces))
+        .fromEither(io.circe.parser.decode[W3cCredentialPayload](json.toJson))
         .mapError(t => DecodingError(t.getMessage))
     } yield VCStatusList2021(w3cCredentialPayload, issuer)
   }

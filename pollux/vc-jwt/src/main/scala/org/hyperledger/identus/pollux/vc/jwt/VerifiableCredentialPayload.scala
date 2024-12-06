@@ -1,7 +1,6 @@
 package org.hyperledger.identus.pollux.vc.jwt
 
 import com.nimbusds.jwt.SignedJWT
-import io.circe
 import io.circe.*
 import io.circe.generic.auto.*
 import io.circe.parser.decode
@@ -10,14 +9,18 @@ import org.hyperledger.identus.castor.core.model.did.{DID, VerificationRelations
 import org.hyperledger.identus.pollux.vc.jwt.revocation.BitString
 import org.hyperledger.identus.shared.crypto.KmpSecp256k1KeyOps
 import org.hyperledger.identus.shared.http.UriResolver
+import org.hyperledger.identus.shared.json.JsonInterop
+import org.hyperledger.identus.shared.json.JsonOps.*
 import org.hyperledger.identus.shared.utils.Base64Utils
 import pdi.jwt.*
 import zio.*
+import zio.json.DecoderOps
+import zio.json.ast.{JsonCursor, Json as ZioJson}
 import zio.prelude.*
 
 import java.security.PublicKey
-import java.time.{Clock, Instant, OffsetDateTime, ZoneId}
 import java.time.temporal.TemporalAmount
+import java.time.{Clock, Instant, OffsetDateTime, ZoneId}
 import scala.util.{Failure, Try}
 
 case class Issuer(did: DID, signer: Signer, publicKey: PublicKey)
@@ -534,8 +537,6 @@ object CredentialPayload {
 
 object CredentialVerification {
 
-  import CredentialPayload.Implicits.*
-
   def validateValidFromNotAfterValidUntil(
       maybeValidFrom: Option[Instant],
       maybeValidUntil: Option[Instant],
@@ -647,18 +648,17 @@ object CredentialVerification {
   def verifyCredentialStatus(
       credentialStatus: CredentialStatus
   )(uriResolver: UriResolver): IO[String, Validation[String, Unit]] = {
-
     val res = for {
       statusListString <- uriResolver
         .resolve(credentialStatus.statusListCredential)
         .mapError(err => s"Could not resolve status list credential: $err")
       _ <- ZIO.logInfo("Credential status: " + credentialStatus)
       vcStatusListCredJson <- ZIO
-        .fromEither(io.circe.parser.parse(statusListString))
+        .fromEither(statusListString.fromJson[ZioJson])
         .mapError(err => s"Could not parse status list credential as Json string: $err")
-      statusListCredJsonWithoutProof = vcStatusListCredJson.hcursor.downField("proof").delete.top.get
+      statusListCredJsonWithoutProof = vcStatusListCredJson.removeField("proof")
       proof <- ZIO
-        .fromEither(vcStatusListCredJson.hcursor.downField("proof").as[Proof])
+        .fromEither(vcStatusListCredJson.get(JsonCursor.field("proof")).flatMap(_.as[Proof]))
         .mapError(err => s"Could not extract proof from status list credential: $err")
 
       // Verify proof
@@ -709,15 +709,13 @@ object CredentialVerification {
               .verifyProof(statusListCredJsonWithoutProof, jws, ecPublicKey)
               .mapError(_.getMessage)
           } yield verified
-        // Note: add other proof types here when available
-
-        case _ => ZIO.fail(s"Unsupported proof type - ${proof.`type`}")
-
       proofVerificationValidation =
         if (verified) Validation.unit else Validation.fail("Could not verify status list credential proof")
 
       // Check revocation status in the list by index
-      encodedBitStringEither = vcStatusListCredJson.hcursor
+      encodedBitStringEither = JsonInterop
+        .toCirceJsonAst(vcStatusListCredJson)
+        .hcursor
         .downField("credentialSubject")
         .as[Json]
         .flatMap(_.hcursor.downField("encodedList").as[String])
@@ -736,7 +734,8 @@ object JwtCredential {
 
   import CredentialPayload.Implicits.*
 
-  def encodeJwt(payload: JwtCredentialPayload, issuer: Issuer): JWT = issuer.signer.encode(payload.asJson)
+  def encodeJwt(payload: JwtCredentialPayload, issuer: Issuer): JWT =
+    issuer.signer.encode(JsonInterop.toZioJsonAst(payload.asJson))
 
   def decodeJwt(jwt: JWT, publicKey: PublicKey): Try[JwtCredentialPayload] = {
     val signedJWT = SignedJWT.parse(jwt.value)
@@ -883,7 +882,7 @@ object W3CCredential {
       payload = payload,
       proof = JwtProof(
         `type` = "JwtProof2020",
-        jwt = issuer.signer.encode(payload.asJson)
+        jwt = issuer.signer.encode(JsonInterop.toZioJsonAst(payload.asJson))
       )
     )
   }
@@ -895,11 +894,10 @@ object W3CCredential {
     val jsonCred = payload.asJson
 
     for {
-      proof <- issuer.signer.generateProofForJson(jsonCred, issuer.publicKey)
+      proof <- issuer.signer.generateProofForJson(JsonInterop.toZioJsonAst(jsonCred), issuer.publicKey)
       jsonProof <- proof match
         case b: EcdsaSecp256k1Signature2019Proof => ZIO.succeed(b.asJson.dropNullValues)
         case c: EddsaJcs2022Proof                => ZIO.succeed(c.asJson.dropNullValues)
-        case _: DataIntegrityProof               => UnexpectedCodeExecutionPath
       verifiableCredentialWithProof = jsonCred.deepMerge(Map("proof" -> jsonProof).asJson)
     } yield verifiableCredentialWithProof
 

@@ -73,7 +73,7 @@ object VcVerificationControllerImplSpec extends ZIOSpecDefault with VcVerificati
           maybeTermsOfUse = Option.empty,
           aud = Set(verifier)
         ).toJwtCredentialPayload
-        signedJwtCredential = issuer.signer.encode(io.circe.syntax.EncoderOps(jwtCredentialPayload).asJson)
+        signedJwtCredential = issuer.signer.encode(JsonInterop.toZioJsonAst(io.circe.syntax.EncoderOps(jwtCredentialPayload).asJson))
         authenticator <- ZIO.service[AuthenticatorWithAuthZ[BaseEntity]]
         backend = httpBackend(vcVerificationController, authenticator)
         request = List(

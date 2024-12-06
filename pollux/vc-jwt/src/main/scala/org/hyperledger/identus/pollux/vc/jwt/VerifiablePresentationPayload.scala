@@ -7,6 +7,7 @@ import io.circe.parser.decode
 import io.circe.syntax.*
 import org.hyperledger.identus.castor.core.model.did.VerificationRelationship
 import org.hyperledger.identus.shared.http.UriResolver
+import org.hyperledger.identus.shared.json.JsonInterop
 import pdi.jwt.{JwtCirce, JwtOptions}
 import zio.*
 import zio.prelude.*
@@ -316,14 +317,15 @@ object JwtPresentation {
 
   import PresentationPayload.Implicits.*
 
-  def encodeJwt(payload: JwtPresentationPayload, issuer: Issuer): JWT = issuer.signer.encode(payload.asJson)
+  def encodeJwt(payload: JwtPresentationPayload, issuer: Issuer): JWT =
+    issuer.signer.encode(JsonInterop.toZioJsonAst(payload.asJson))
 
   def toEncodeW3C(payload: W3cPresentationPayload, issuer: Issuer): W3cVerifiablePresentationPayload = {
     W3cVerifiablePresentationPayload(
       payload = payload,
       proof = JwtProof(
         `type` = "JwtProof2020",
-        jwt = issuer.signer.encode(payload.asJson)
+        jwt = issuer.signer.encode(JsonInterop.toZioJsonAst(payload.asJson))
       )
     )
   }

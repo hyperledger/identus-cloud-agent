@@ -1,9 +1,8 @@
 package org.hyperledger.identus.pollux.vc.jwt
 
-import io.circe
 import io.circe.*
-import io.circe.generic.auto.*
 import io.circe.syntax.*
+import zio.json.{DeriveJsonDecoder, DeriveJsonEncoder, JsonDecoder, JsonEncoder}
 
 import scala.annotation.unused
 
@@ -34,5 +33,9 @@ object JwtProof {
           )
         }
 
+    given JsonEncoder[JWT] = JsonEncoder.string.contramap(jwt => jwt.value)
+    given JsonDecoder[JWT] = JsonDecoder.string.map(JWT(_))
+    given JsonEncoder[JwtProof] = DeriveJsonEncoder.gen
+    given JsonDecoder[JwtProof] = DeriveJsonDecoder.gen
   }
 }

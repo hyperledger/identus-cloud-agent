@@ -5,10 +5,11 @@ import com.nimbusds.jose.crypto.{ECDSASigner, Ed25519Signer}
 import com.nimbusds.jose.crypto.bc.BouncyCastleProviderSingleton
 import com.nimbusds.jose.jwk.{Curve, ECKey}
 import com.nimbusds.jwt.{JWTClaimsSet, SignedJWT}
-import io.circe.*
 import org.hyperledger.identus.shared.crypto.{Ed25519KeyPair, Secp256k1PrivateKey}
 import org.hyperledger.identus.shared.models.KeyId
 import zio.*
+import zio.json.ast.Json as ZioJson
+import zio.json.EncoderOps
 
 import java.security.*
 import java.security.interfaces.ECPublicKey
@@ -37,9 +38,9 @@ object JwtSignerImplicits {
 }
 
 trait Signer {
-  def encode(claim: Json): JWT
+  def encode(claim: ZioJson): JWT
 
-  def generateProofForJson(payload: Json, pk: PublicKey): Task[Proof]
+  def generateProofForJson(payload: ZioJson, pk: PublicKey): Task[Proof]
 }
 
 // works with java 7, 8, 11 & bouncycastle provider
@@ -52,7 +53,7 @@ class ES256KSigner(privateKey: PrivateKey, keyId: Option[KeyId] = None) extends 
     ecdsaSigner
   }
 
-  override def generateProofForJson(payload: Json, pk: PublicKey): Task[Proof] = {
+  override def generateProofForJson(payload: ZioJson, pk: PublicKey): Task[Proof] = {
     val err = Throwable("Public key must be secp256k1 EC public key")
     pk match
       case pk: ECPublicKey =>
@@ -60,8 +61,8 @@ class ES256KSigner(privateKey: PrivateKey, keyId: Option[KeyId] = None) extends 
       case _ => ZIO.fail(err)
   }
 
-  override def encode(claim: Json): JWT = {
-    val claimSet = JWTClaimsSet.parse(claim.noSpaces)
+  override def encode(claim: ZioJson): JWT = {
+    val claimSet = JWTClaimsSet.parse(claim.toJson)
     val signedJwt = SignedJWT(
       keyId
         .map(kid => new JWSHeader.Builder(JWSAlgorithm.ES256K).`type`(JOSEObjectType.JWT).keyID(kid.value))
@@ -80,12 +81,12 @@ class EdSigner(ed25519KeyPair: Ed25519KeyPair, keyId: Option[KeyId] = None) exte
     ed25519Signer
   }
 
-  override def generateProofForJson(payload: Json, pk: PublicKey): Task[Proof] = {
+  override def generateProofForJson(payload: ZioJson, pk: PublicKey): Task[Proof] = {
     EddsaJcs2022ProofGenerator.generateProof(payload, ed25519KeyPair)
   }
 
-  override def encode(claim: Json): JWT = {
-    val claimSet = JWTClaimsSet.parse(claim.noSpaces)
+  override def encode(claim: ZioJson): JWT = {
+    val claimSet = JWTClaimsSet.parse(claim.toJson)
 
     val signedJwt = SignedJWT(
       keyId
