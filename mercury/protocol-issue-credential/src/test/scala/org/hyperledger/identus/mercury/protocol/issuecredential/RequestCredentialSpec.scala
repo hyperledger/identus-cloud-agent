@@ -1,11 +1,10 @@
 package org.hyperledger.identus.mercury.protocol.issuecredential
 
-import io.circe.parser.*
-import io.circe.syntax.*
-import io.circe.Json
 import munit.*
 import org.hyperledger.identus.mercury.model.{AttachmentDescriptor, DidId}
 import org.hyperledger.identus.mercury.model.AttachmentDescriptor.attachmentDescriptorEncoderV2
+import zio.json.{DecoderOps, EncoderOps}
+import zio.json.ast.Json
 class RequestCredentialSpec extends ZSuite {
 
   test("Holder RequestCredential") {
@@ -15,9 +14,9 @@ class RequestCredentialSpec extends ZSuite {
     val credentialPreview = CredentialPreview(attributes = Seq(attribute1, attribute2))
     val body = RequestCredential.Body(goal_code = Some("Request Credential"))
     val attachmentDescriptor = AttachmentDescriptor.buildJsonAttachment[CredentialPreview](payload = credentialPreview)
-    val attachmentDescriptorJson = attachmentDescriptor.asJson.deepDropNullValues.noSpaces
+    val attachmentDescriptorJson = attachmentDescriptor.toJson
 
-    val expectedRequestedCredentialJson = parse(s"""{
+    val expectedRequestedCredentialJson = s"""{
          |    "id": "051bf917-2cbe-460b-8d12-b1a9609505c2",
          |    "type": "https://didcomm.org/issue-credential/3.0/request-credential",
          |    "body":
@@ -30,7 +29,7 @@ class RequestCredentialSpec extends ZSuite {
          |    ],
          |    "from": "did:prism:test123",
          |    "to" : "did:prism:test123"
-         |}""".stripMargin).getOrElse(Json.Null)
+         |}""".stripMargin.fromJson[Json]
 
     val requestCredential = RequestCredential(
       id = "051bf917-2cbe-460b-8d12-b1a9609505c2",
@@ -40,7 +39,7 @@ class RequestCredentialSpec extends ZSuite {
       from = DidId("did:prism:test123")
     )
 
-    val result = requestCredential.asJson.deepDropNullValues
+    val result = requestCredential.toJsonAST
 
     assertEquals(result, expectedRequestedCredentialJson)
   }

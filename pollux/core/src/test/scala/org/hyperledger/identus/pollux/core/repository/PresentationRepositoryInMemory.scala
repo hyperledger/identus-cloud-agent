@@ -7,7 +7,6 @@ import org.hyperledger.identus.shared.db.Implicits.*
 import org.hyperledger.identus.shared.models.*
 import zio.*
 import zio.json.*
-import zio.json.ast.Json
 
 import java.time.Instant
 

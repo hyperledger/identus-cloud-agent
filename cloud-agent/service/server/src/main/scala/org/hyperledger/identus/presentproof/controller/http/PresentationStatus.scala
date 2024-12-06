@@ -9,6 +9,7 @@ import org.hyperledger.identus.shared.models.{FailureInfo, StatusCode}
 import sttp.tapir.{Schema, Validator}
 import sttp.tapir.Schema.annotations.{description, encodedExample, validate}
 import zio.json.{DeriveJsonDecoder, DeriveJsonEncoder, JsonDecoder, JsonEncoder}
+import zio.json.EncoderOps
 
 final case class PresentationStatus(
     @description(annotations.presentationId.description)
@@ -89,7 +90,7 @@ object PresentationStatus {
             val base64Decoded = new String(java.util.Base64.getUrlDecoder.decode(data))
             Seq(base64Decoded)
           case JsonData(jsonData) =>
-            Seq(jsonData.toJson.toString)
+            Seq(jsonData.toJson)
           case any => FeatureNotImplemented
         }
       case None => Seq.empty

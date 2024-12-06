@@ -1,7 +1,5 @@
 package org.hyperledger.identus.oid4vci.service
 
-import io.circe.parser.parse
-import io.circe.Json
 import org.hyperledger.identus.agent.walletapi.storage.DIDNonSecretStorage
 import org.hyperledger.identus.castor.core.model.did.{DID, DIDUrl, PrismDID, VerificationRelationship}
 import org.hyperledger.identus.oid4vci.domain.{IssuanceSession, Openid4VCIProofJwtOps}
@@ -25,8 +23,11 @@ import org.hyperledger.identus.pollux.vc.jwt.{
   *
 }
 import org.hyperledger.identus.shared.http.UriResolver
+import org.hyperledger.identus.shared.json.JsonInterop
 import org.hyperledger.identus.shared.models.*
 import zio.*
+import zio.json.ast.Json
+import zio.json.EncoderOps
 
 import java.net.{URI, URL}
 import java.time.Instant
@@ -50,7 +51,7 @@ trait OIDCCredentialIssuerService {
   def issueJwtCredential(
       issuingDID: PrismDID,
       subjectDID: Option[DID],
-      claims: zio.json.ast.Json,
+      claims: Json,
       credentialIdentifier: Option[String],
       credentialDefinition: CredentialDefinition,
   ): IO[Error, JWT]
@@ -60,7 +61,7 @@ trait OIDCCredentialIssuerService {
       issuerId: UUID,
       credentialConfigurationId: String,
       issuingDID: PrismDID,
-      claims: zio.json.ast.Json,
+      claims: Json,
   ): ZIO[WalletAccessContext, Error, CredentialOffer]
 
   def getIssuanceSessionByIssuerState(issuerState: String): IO[Error, IssuanceSession]
@@ -159,7 +160,7 @@ case class OIDCCredentialIssuerServiceImpl(
   override def issueJwtCredential(
       issuingDID: PrismDID,
       subjectDID: Option[DID],
-      claims: zio.json.ast.Json,
+      claims: Json,
       credentialIdentifier: Option[String],
       credentialDefinition: CredentialDefinition
   ): IO[Error, JWT] = {
@@ -190,7 +191,7 @@ case class OIDCCredentialIssuerServiceImpl(
       subjectDid: Option[DID],
       credentialIdentifier: Option[String],
       credentialDefinition: CredentialDefinition,
-      claims: zio.json.ast.Json
+      claims: Json
   ): IO[Error, W3cCredentialPayload] = {
     val credential = W3cCredentialPayload(
       `@context` = Set(
@@ -205,7 +206,7 @@ case class OIDCCredentialIssuerServiceImpl(
       issuanceDate = Instant.now(),
       maybeExpirationDate = None, // TODO: Add expiration date
       maybeCredentialSchema = None, // TODO: Add schema from schema registry
-      credentialSubject = buildCredentialSubject(subjectDid, claims),
+      credentialSubject = JsonInterop.toCirceJsonAst(buildCredentialSubject(subjectDid, claims)),
       maybeCredentialStatus = None, // TODO: Add credential status
       maybeRefreshService = None, // TODO: Add refresh service
       maybeEvidence = None, // TODO: Add evidence
@@ -217,12 +218,8 @@ case class OIDCCredentialIssuerServiceImpl(
     ZIO.succeed(credential) // TODO: there might be other calls to fill the VC claims from the session, etc
   }
 
-  private def simpleZioToCirce(json: zio.json.ast.Json): Json =
-    parse(json.toString).toOption.get
-
-  private def buildCredentialSubject(subjectDid: Option[DID], claims: zio.json.ast.Json): Json = {
-    val subjectClaims = simpleZioToCirce(claims)
-    subjectDid.fold(subjectClaims)(did => Json.obj("id" -> Json.fromString(did.toString)) deepMerge subjectClaims)
+  private def buildCredentialSubject(subjectDid: Option[DID], claims: Json): Json = {
+    subjectDid.fold(claims)(did => claims.asObject.get.add("id", Json.Str(did.toString)))
   }
 
   def issueJwtVC(issuer: Issuer, payload: W3cCredentialPayload): IO[Error, JWT] = {
@@ -248,7 +245,7 @@ case class OIDCCredentialIssuerServiceImpl(
       issuerId: UUID,
       credentialConfigurationId: String,
       issuingDID: PrismDID,
-      claims: zio.json.ast.Json
+      claims: Json
   ): ZIO[WalletAccessContext, Error, CredentialOffer] =
     for {
       credentialSchemaUri <- issuerMetadataService
@@ -258,7 +255,7 @@ case class OIDCCredentialIssuerServiceImpl(
         }
         .map(_.schemaId)
       _ <- CredentialSchema
-        .validateJWTCredentialSubject(credentialSchemaUri.toUriString, simpleZioToCirce(claims).noSpaces, uriResolver)
+        .validateJWTCredentialSubject(credentialSchemaUri.toUriString, claims.toJson, uriResolver)
         .mapError(e => CredentialSchemaError(e))
       session <- buildNewIssuanceSession(issuerId, issuingDID, claims, credentialSchemaUri)
       _ <- issuanceSessionStorage
@@ -291,7 +288,7 @@ case class OIDCCredentialIssuerServiceImpl(
   private def buildNewIssuanceSession(
       issuerId: UUID,
       issuerDid: PrismDID,
-      claims: zio.json.ast.Json,
+      claims: Json,
       schemaId: URI
   ): UIO[IssuanceSession] = {
     for {

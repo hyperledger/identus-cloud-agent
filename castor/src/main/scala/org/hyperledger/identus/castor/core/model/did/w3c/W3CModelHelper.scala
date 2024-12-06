@@ -1,10 +1,10 @@
 package org.hyperledger.identus.castor.core.model.did.w3c
 
-import io.circe.Json
 import org.hyperledger.identus.castor.core.model.did.*
 import org.hyperledger.identus.castor.core.model.did.ServiceEndpoint.UriOrJsonEndpoint
 import org.hyperledger.identus.shared.crypto.Apollo
 import org.hyperledger.identus.shared.models.{Base64UrlString, HexString}
+import zio.json.ast.Json
 
 import java.time.{Instant, ZoneOffset}
 import java.time.format.DateTimeFormatter
@@ -95,15 +95,15 @@ private[castor] trait W3CModelHelper {
       serviceEndpoint match {
         case ServiceEndpoint.Single(uri) =>
           uri match {
-            case UriOrJsonEndpoint.Uri(uri)   => Json.fromString(uri.value)
-            case UriOrJsonEndpoint.Json(json) => Json.fromJsonObject(json)
+            case UriOrJsonEndpoint.Uri(uri)   => Json.Str(uri.value)
+            case UriOrJsonEndpoint.Json(json) => json
           }
         case ep: ServiceEndpoint.Multiple =>
           val uris = ep.values.map {
-            case UriOrJsonEndpoint.Uri(uri)   => Json.fromString(uri.value)
-            case UriOrJsonEndpoint.Json(json) => Json.fromJsonObject(json)
+            case UriOrJsonEndpoint.Uri(uri)   => Json.Str(uri.value)
+            case UriOrJsonEndpoint.Json(json) => json
           }
-          Json.arr(uris*)
+          Json.Arr(uris*)
       }
     }
   }

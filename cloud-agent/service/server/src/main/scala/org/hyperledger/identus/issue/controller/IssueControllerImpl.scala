@@ -56,11 +56,9 @@ class IssueControllerImpl(
     )
 
     for {
-      deprecatedJsonClaims <- ZIO // TODO: Get read of Circe and use zio-json all the way down
-        .fromEither(io.circe.parser.parse(request.claims.toString()))
-        .mapError(e => ErrorResponse.badRequest(detail = Some(e.getMessage)))
-      deprecatedSchemaId = request.schemaId
-      credentialFormat = request.credentialFormat.map(CredentialFormat.valueOf).getOrElse(CredentialFormat.JWT)
+      credentialFormat <- ZIO.succeed(
+        request.credentialFormat.map(CredentialFormat.valueOf).getOrElse(CredentialFormat.JWT)
+      )
       outcome <-
         credentialFormat match
           case JWT =>
@@ -68,7 +66,7 @@ class IssueControllerImpl(
               issuingDID <- getIssuingDidFromRequest(request)
               _ <- validatePrismDID(issuingDID, allowUnpublished = true, Role.Issuer)
               credentialSchemaRef <- parseCredentialSchemaRef_VCDM1_1(
-                deprecatedSchemaId,
+                request.schemaId,
                 request.jwtVcPropertiesV1.map(_.credentialSchema)
               )
               record <- credentialService
@@ -78,7 +76,7 @@ class IssueControllerImpl(
                   kidIssuer = request.issuingKid,
                   thid = DidCommID(),
                   credentialSchemaRef = Some(credentialSchemaRef),
-                  claims = deprecatedJsonClaims,
+                  claims = request.claims,
                   validityPeriod = request.validityPeriod,
                   automaticIssuance = request.automaticIssuance.orElse(Some(true)),
                   issuingDID = issuingDID.asCanonical,
@@ -93,7 +91,7 @@ class IssueControllerImpl(
               issuingDID <- getIssuingDidFromRequest(request)
               _ <- validatePrismDID(issuingDID, allowUnpublished = true, Role.Issuer)
               credentialSchemaRef <- parseCredentialSchemaRef_VCDM1_1(
-                deprecatedSchemaId,
+                request.schemaId,
                 request.sdJwtVcPropertiesV1.map(_.credentialSchema)
               )
               record <- credentialService
@@ -103,7 +101,7 @@ class IssueControllerImpl(
                   kidIssuer = request.issuingKid,
                   thid = DidCommID(),
                   credentialSchemaRef = Option(credentialSchemaRef),
-                  claims = deprecatedJsonClaims,
+                  claims = request.claims,
                   validityPeriod = request.validityPeriod,
                   automaticIssuance = request.automaticIssuance.orElse(Some(true)),
                   issuingDID = issuingDID.asCanonical,
@@ -164,7 +162,7 @@ class IssueControllerImpl(
                   thid = DidCommID(),
                   credentialDefinitionGUID = credentialDefinitionGUID,
                   credentialDefinitionId = credentialDefinitionId,
-                  claims = deprecatedJsonClaims,
+                  claims = request.claims,
                   validityPeriod = request.validityPeriod,
                   automaticIssuance = request.automaticIssuance.orElse(Some(true)),
                   goalCode = offerContext.goalCode,

@@ -9,7 +9,7 @@ import java.time.temporal.ChronoUnit
 import java.time.Instant
 
 type AnoncredCredentialProofs = zio.json.ast.Json
-type SdJwtCredentialToDisclose = zio.json.ast.Json.Obj
+type SdJwtCredentialToDisclose = zio.json.ast.Json
 
 final case class PresentationRecord(
     id: DidCommID,

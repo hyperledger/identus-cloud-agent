@@ -1,9 +1,8 @@
 package org.hyperledger.identus.mercury.protocol.connection
 
-import io.circe.*
-import io.circe.parser.*
 import munit.*
 import org.hyperledger.identus.mercury.model.{DidId, Message}
+import zio.json.DecoderOps
 
 /** protocolConnection/testOnly org.hyperledger.identus.mercury.protocol.connection.CoordinateMediationSpec */
 class CoordinateMediationSpec extends ZSuite {
@@ -19,10 +18,10 @@ class CoordinateMediationSpec extends ZSuite {
         |  "from" : "did:test:alice",
         |  "to" : ["did:test:bob"]
         |}""".stripMargin
-    val aux = parse(connectionRequest)
-      .flatMap(_.as[Message]) // Message
+    val aux = connectionRequest
+      .fromJson[Message]
       .left
-      .map(ex => fail(ex.getMessage())) // fail / get error
+      .map(err => fail(err)) // fail / get error
       .flatMap(e => ConnectionRequest.fromMessage(e))
     assertEquals(
       aux,
@@ -73,7 +72,7 @@ class CoordinateMediationSpec extends ZSuite {
       |}""".stripMargin
 
     assertEquals(
-      parse(connectionRequest).flatMap(_.as[ConnectionResponse]),
+      connectionRequest.fromJson[ConnectionResponse],
       Right(obj)
     )
   }

@@ -1,7 +1,5 @@
 package org.hyperledger.identus.pollux.core.service
 
-import io.circe.{Json, JsonObject}
-import io.circe.syntax.*
 import org.hyperledger.identus.castor.core.model.did.{CanonicalPrismDID, PrismDID, VerificationRelationship}
 import org.hyperledger.identus.mercury.model.DidId
 import org.hyperledger.identus.mercury.protocol.issuecredential.{
@@ -17,6 +15,8 @@ import org.hyperledger.identus.pollux.core.model.schema.CredentialSchemaRef
 import org.hyperledger.identus.pollux.vc.jwt.Issuer
 import org.hyperledger.identus.shared.models.*
 import zio.{Duration, IO, UIO, URIO, ZIO}
+import zio.json.{DecoderOps, EncoderOps}
+import zio.json.ast.Json
 
 import java.nio.charset.StandardCharsets
 import java.util.UUID
@@ -29,7 +29,7 @@ trait CredentialService {
       kidIssuer: Option[KeyId],
       thid: DidCommID,
       credentialSchemaRef: Option[CredentialSchemaRef],
-      claims: io.circe.Json,
+      claims: Json,
       validityPeriod: Option[Double] = None,
       automaticIssuance: Option[Boolean],
       issuingDID: CanonicalPrismDID,
@@ -45,7 +45,7 @@ trait CredentialService {
       kidIssuer: Option[KeyId],
       thid: DidCommID,
       credentialSchemaRef: Option[CredentialSchemaRef],
-      claims: io.circe.Json,
+      claims: Json,
       validityPeriod: Option[Double] = None,
       automaticIssuance: Option[Boolean],
       issuingDID: CanonicalPrismDID,
@@ -61,7 +61,7 @@ trait CredentialService {
       thid: DidCommID,
       credentialDefinitionGUID: UUID,
       credentialDefinitionId: String,
-      claims: io.circe.Json,
+      claims: Json,
       validityPeriod: Option[Double] = None,
       automaticIssuance: Option[Boolean],
       goalCode: Option[String],
@@ -185,16 +185,15 @@ trait CredentialService {
 
 object CredentialService {
   def convertJsonClaimsToAttributes(
-      claims: io.circe.Json
+      claims: Json
   ): UIO[Seq[Attribute]] = {
     for {
       fields <- ZIO.succeed(claims.asObject.map(_.toMap).getOrElse(Map.empty).toList)
       res <- ZIO.foreach(fields) {
-        case (k, v) if v.isString =>
-          ZIO.succeed(Attribute(name = k, value = v.asString.get))
+        case (k, Json.Str(v)) => ZIO.succeed(Attribute(name = k, value = v))
         case (k, v) =>
           ZIO.succeed {
-            val jsonValue = v.noSpaces
+            val jsonValue = v.toJson
             Attribute(
               name = k,
               value = java.util.Base64.getUrlEncoder.encodeToString(jsonValue.getBytes(StandardCharsets.UTF_8)),
@@ -207,18 +206,17 @@ object CredentialService {
 
   def convertAttributesToJsonClaims(
       attributes: Seq[Attribute]
-  ): IO[CredentialServiceError, JsonObject] = {
+  ): IO[CredentialServiceError, Json.Obj] = {
     for {
-      claims <- ZIO.foldLeft(attributes)(JsonObject()) { case (jsonObject, attr) =>
+      claims <- ZIO.foldLeft(attributes)(Json.Obj()) { case (jsonObject, attr) =>
         attr.media_type match
-          case None =>
-            ZIO.succeed(jsonObject.add(attr.name, attr.value.asJson))
+          case None => ZIO.succeed(jsonObject.add(attr.name, Json.Str(attr.value)))
 
           case Some("application/json") =>
             val jsonBytes = java.util.Base64.getUrlDecoder.decode(attr.value.getBytes(StandardCharsets.UTF_8))
-            io.circe.parser.parse(new String(jsonBytes, StandardCharsets.UTF_8)) match
-              case Right(value) => ZIO.succeed(jsonObject.add(attr.name, value))
-              case Left(error)  => ZIO.fail(VCClaimsValueParsingError(error.message))
+            new String(jsonBytes, StandardCharsets.UTF_8).fromJson[Json] match
+              case Right(value) => ZIO.succeed(Json.Obj().add(attr.name, value))
+              case Left(error)  => ZIO.fail(VCClaimsValueParsingError(error))
 
           case Some(media_type) =>
             ZIO.fail(UnsupportedVCClaimsMediaType(media_type))

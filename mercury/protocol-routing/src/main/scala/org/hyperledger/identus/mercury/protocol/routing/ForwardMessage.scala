@@ -1,7 +1,7 @@
 package org.hyperledger.identus.mercury.protocol.routing
 
-import io.circe.*
 import org.hyperledger.identus.mercury.model.{AttachmentDescriptor, DidId, Message, PIURI}
+import zio.json.ast.Json
 
 type ForwardAttachment = AttachmentDescriptor
 
@@ -38,7 +38,7 @@ final case class ForwardMessage(
     Message(
       from = None,
       to = Seq(to),
-      body = JsonObject(("next", Json.fromString(body.next.value))),
+      body = Json.Obj("next" -> Json.Str(body.next.value)),
       id = id,
       `type` = `type`,
       attachments = Some(attachments)

@@ -1,8 +1,7 @@
 package org.hyperledger.identus.mercury.protocol.coordinatemediation
 
-import io.circe.*
-import io.circe.parser.*
 import munit.*
+import zio.json.DecoderOps
 
 class CoordinateMediationSpec extends ZSuite {
   val mediateDenyExample = """{
@@ -22,13 +21,13 @@ class CoordinateMediationSpec extends ZSuite {
     |}""".stripMargin
 
   test("parse mediate-grant") {
-    val aux = parse(mediateGrantExample).flatMap(_.as[MediateGrant])
+    val aux = mediateGrantExample.fromJson[MediateGrant]
     println(aux)
     assert(aux.isRight)
   }
 
   test("parse mediate-deny") {
-    val aux = parse(mediateDenyExample).flatMap(_.as[MediateDeny])
+    val aux = mediateDenyExample.fromJson[MediateDeny]
     assert(aux.isRight)
   }
 

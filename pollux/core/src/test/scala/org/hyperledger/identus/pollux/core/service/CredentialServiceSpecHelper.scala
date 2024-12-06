@@ -1,6 +1,5 @@
 package org.hyperledger.identus.pollux.core.service
 
-import io.circe.Json
 import org.hyperledger.identus.agent.walletapi.memory.GenericSecretStorageInMemory
 import org.hyperledger.identus.agent.walletapi.service.ManagedDIDService
 import org.hyperledger.identus.castor.core.model.did.PrismDID
@@ -21,6 +20,8 @@ import org.hyperledger.identus.shared.http.UriResolver
 import org.hyperledger.identus.shared.messaging.{MessagingService, MessagingServiceConfig, WalletIdAndRecordId}
 import org.hyperledger.identus.shared.models.{KeyId, WalletAccessContext, WalletId}
 import zio.*
+import zio.json.ast.Json
+import zio.json.DecoderOps
 
 import java.util.UUID
 
@@ -112,8 +113,7 @@ trait CredentialServiceSpecHelper {
         pairwiseHolderDID: Option[DidId] = Some(DidId("did:prism:holder-pairwise")),
         thid: DidCommID = DidCommID(),
         credentialSchemaRef: Option[CredentialSchemaRef] = None,
-        claims: Json = io.circe.parser
-          .parse("""
+        claims: Json = """
               |{
               | "name":"Alice",
               | "address": {
@@ -121,8 +121,7 @@ trait CredentialServiceSpecHelper {
               |   "number": "12"
               | }
               |}
-              |""".stripMargin)
-          .getOrElse(Json.Null),
+              |""".stripMargin.fromJson[Json].toOption.getOrElse(Json.Null),
         validityPeriod: Option[Double] = None,
         automaticIssuance: Option[Boolean] = None,
         kidIssuer: Option[KeyId] = None
@@ -152,8 +151,7 @@ trait CredentialServiceSpecHelper {
         pairwiseIssuerDID: DidId = DidId("did:prism:issuer"),
         pairwiseHolderDID: Option[DidId] = Some(DidId("did:prism:holder-pairwise")),
         thid: DidCommID = DidCommID(),
-        claims: Json = io.circe.parser
-          .parse("""
+        claims: Json = """
                 |{
                 |  "emailAddress": "alice@wonderland.com",
                 |  "familyName": "Wonderland",
@@ -161,8 +159,7 @@ trait CredentialServiceSpecHelper {
                 |  "drivingLicenseID": "12345",
                 |  "drivingClass": "3"
                 |}
-                |""".stripMargin)
-          .getOrElse(Json.Null),
+                |""".stripMargin.fromJson[Json].toOption.getOrElse(Json.Null),
         validityPeriod: Option[Double] = None,
         automaticIssuance: Option[Boolean] = None,
         credentialDefinitionId: String = "http://test.com/cred-def/1234",

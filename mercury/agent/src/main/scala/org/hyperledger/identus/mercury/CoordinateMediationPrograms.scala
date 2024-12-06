@@ -1,12 +1,11 @@
 package org.hyperledger.identus.mercury
 
-import io.circe.*
-import io.circe.parser.*
-import org.hyperledger.identus.*
 import org.hyperledger.identus.mercury.model.*
 import org.hyperledger.identus.mercury.protocol.coordinatemediation.*
 import org.hyperledger.identus.mercury.protocol.invitation.v2.Invitation
 import zio.*
+import zio.json.{DecoderOps, EncoderOps}
+import zio.json.ast.Json
 
 object CoordinateMediationPrograms {
 
@@ -20,8 +19,8 @@ object CoordinateMediationPrograms {
     )
   }
 
-  private def toPrettyJson(parseToJson: String): Either[ParsingFailure, String] = {
-    parse(parseToJson).map(_.spaces2)
+  private def toPrettyJson(parseToJson: String): Either[String, String] = {
+    parseToJson.fromJson[Json].map(_.toJsonPretty)
   }
 
   def senderMediationRequestProgram(mediatorURL: String = "http://localhost:8000") = {
@@ -57,7 +56,7 @@ object CoordinateMediationPrograms {
       _ <- Console.printLine(tmp)
       _ <- Console.printLine("*" * 100)
       ret <- ZIO
-        .fromEither(parse(messageReceived.message.toString))
+        .fromEither(messageReceived.message.toString.fromJson[Json])
         .flatMap { json =>
           json.as[MediateGrant] match {
             case Right(mediateGrant) => ZIO.succeed(mediateGrant)
