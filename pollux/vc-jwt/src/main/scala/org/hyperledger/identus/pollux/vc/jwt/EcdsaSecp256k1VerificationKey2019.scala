@@ -1,9 +1,8 @@
 package org.hyperledger.identus.pollux.vc.jwt
 
-import zio.json.{EncoderOps, JsonDecoder, JsonEncoder}
-import zio.json.ast.{Json, JsonCursor}
+import zio.json.{DeriveJsonDecoder, DeriveJsonEncoder, JsonDecoder, JsonEncoder}
 
-import java.time.{Instant, ZoneOffset}
+import java.time.{Instant, OffsetDateTime, ZoneOffset}
 
 case class EcdsaSecp256k1VerificationKey2019(
     publicKeyJwk: JsonWebKey,
@@ -16,36 +15,26 @@ case class EcdsaSecp256k1VerificationKey2019(
 }
 
 object EcdsaSecp256k1VerificationKey2019 {
-  given JsonEncoder[EcdsaSecp256k1VerificationKey2019] = JsonEncoder[Json].contramap { key =>
-    (for {
-      context <- key.`@context`.toJsonAST
-      typ <- key.`type`.toJsonAST
-      id <- key.id.toJsonAST
-      controller <- key.controller.toJsonAST
-      publicKeyJwk <- key.publicKeyJwk.toJsonAST
-      expires <- key.expires.map(_.atOffset(ZoneOffset.UTC)).toJsonAST
-    } yield Json.Obj(
-      "@context" -> context,
-      "type" -> typ,
-      "id" -> id,
-      "controller" -> controller,
-      "publicKeyJwk" -> publicKeyJwk,
-      "expires" -> expires
-    )).getOrElse(UnexpectedCodeExecutionPath)
+  private case class Json_EcdsaSecp256k1VerificationKey2019(
+      `@context`: Set[String],
+      `type`: String,
+      id: Option[String],
+      controller: Option[String],
+      publicKeyJwk: JsonWebKey,
+      expires: Option[OffsetDateTime]
+  )
+  private given JsonEncoder[Json_EcdsaSecp256k1VerificationKey2019] = DeriveJsonEncoder.gen
+  given JsonEncoder[EcdsaSecp256k1VerificationKey2019] = JsonEncoder[Json_EcdsaSecp256k1VerificationKey2019].contramap {
+    key =>
+      Json_EcdsaSecp256k1VerificationKey2019(
+        key.`@context`,
+        key.`type`,
+        key.id,
+        key.controller,
+        key.publicKeyJwk,
+        key.expires.map(_.atOffset(ZoneOffset.UTC))
+      )
   }
-
-  given JsonDecoder[EcdsaSecp256k1VerificationKey2019] = JsonDecoder[Json].mapOrFail { json =>
-    for {
-      id <- json.get(JsonCursor.field("id")).flatMap(_.as[Option[String]])
-      controller <- json.get(JsonCursor.field("controller")).flatMap(_.as[Option[String]])
-      publicKeyJwk <- json.get(JsonCursor.field("publicKeyJwk")).flatMap(_.as[JsonWebKey])
-      expires <- json.get(JsonCursor.field("expires")).flatMap(_.as[Option[Instant]])
-    } yield EcdsaSecp256k1VerificationKey2019(
-      id = id,
-      publicKeyJwk = publicKeyJwk,
-      controller = controller,
-      expires = expires
-    )
-  }
+  given JsonDecoder[EcdsaSecp256k1VerificationKey2019] = DeriveJsonDecoder.gen
 
 }

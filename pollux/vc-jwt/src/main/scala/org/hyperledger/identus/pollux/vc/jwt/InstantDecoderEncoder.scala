@@ -1,14 +1,11 @@
 package org.hyperledger.identus.pollux.vc.jwt
 
-import io.circe.{Decoder, Encoder, HCursor}
+import io.circe.{Decoder, HCursor}
 import zio.json.{JsonDecoder, JsonEncoder}
 
 import java.time.Instant
 
 object InstantDecoderEncoder {
-  implicit val instantToEpochSecondsEncoder: Encoder[Instant] =
-    (instant: Instant) => Encoder.encodeLong(instant.getEpochSecond)
-
   given JsonEncoder[Instant] = JsonEncoder.long.contramap(_.getEpochSecond)
 
   implicit val epochSecondsToInstantDecoder: Decoder[Instant] =

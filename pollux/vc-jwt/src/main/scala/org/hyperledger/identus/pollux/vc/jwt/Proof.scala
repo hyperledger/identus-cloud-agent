@@ -9,11 +9,11 @@ import org.hyperledger.identus.shared.utils.Base64Utils
 import scodec.bits.ByteVector
 import zio.*
 import zio.json.{DecoderOps, DeriveJsonDecoder, DeriveJsonEncoder, EncoderOps, JsonDecoder, JsonEncoder}
-import zio.json.ast.{Json as ZioJson, JsonCursor}
+import zio.json.ast.{Json, JsonCursor}
 
 import java.io.IOException
 import java.security.interfaces.ECPublicKey
-import java.time.{Instant, ZoneOffset}
+import java.time.{Instant, OffsetDateTime, ZoneOffset}
 import scala.jdk.CollectionConverters.*
 
 sealed trait Proof {
@@ -33,7 +33,7 @@ sealed trait DataIntegrityProof extends Proof {
 }
 
 object Proof {
-  given JsonDecoder[Proof] = JsonDecoder[ZioJson].mapOrFail { json =>
+  given JsonDecoder[Proof] = JsonDecoder[Json].mapOrFail { json =>
     json
       .as[EddsaJcs2022Proof]
       .orElse(json.as[EcdsaSecp256k1Signature2019Proof])
@@ -44,7 +44,7 @@ object EcdsaSecp256k1Signature2019ProofGenerator {
   private def stripLeadingZero(arr: Array[Byte]): Array[Byte] = {
     if (arr.length == 33 && arr.head == 0) then arr.tail else arr
   }
-  def generateProof(payload: ZioJson, signer: ECDSASigner, pk: ECPublicKey): Task[EcdsaSecp256k1Signature2019Proof] = {
+  def generateProof(payload: Json, signer: ECDSASigner, pk: ECPublicKey): Task[EcdsaSecp256k1Signature2019Proof] = {
     for {
       dataToSign <- ZIO.fromEither(JsonUtils.canonicalizeJsonLDoRdf(payload.toJson))
       created = Instant.now()
@@ -79,7 +79,7 @@ object EcdsaSecp256k1Signature2019ProofGenerator {
     )
   }
 
-  def verifyProof(payload: ZioJson, jws: String, pk: ECPublicKey): Task[Boolean] = {
+  def verifyProof(payload: Json, jws: String, pk: ECPublicKey): Task[Boolean] = {
     for {
       dataToVerify <- ZIO.fromEither(JsonUtils.canonicalizeJsonLDoRdf(payload.toJson))
       verifier = JWTVerification.toECDSAVerifier(pk)
@@ -129,10 +129,10 @@ object EddsaJcs2022ProofGenerator {
     } yield pk
   }
 
-  def generateProof(payload: ZioJson, ed25519KeyPair: Ed25519KeyPair): Task[EddsaJcs2022Proof] = {
+  def generateProof(payload: Json, ed25519KeyPair: Ed25519KeyPair): Task[EddsaJcs2022Proof] = {
     for {
       canonicalizedJsonString <- ZIO.fromEither(JsonUtils.canonicalizeToJcs(payload.toJson))
-      canonicalizedJson <- ZIO.fromEither(canonicalizedJsonString.fromJson[ZioJson].left.map(e => IOException(e)))
+      canonicalizedJson <- ZIO.fromEither(canonicalizedJsonString.fromJson[Json].left.map(e => IOException(e)))
       dataToSign = canonicalizedJson.toJson.getBytes
       signature = ed25519KeyPair.privateKey.sign(dataToSign)
       base58BtsEncodedSignature = MultiBaseString(
@@ -152,9 +152,9 @@ object EddsaJcs2022ProofGenerator {
     )
   }
 
-  def verifyProof(payload: ZioJson, proofValue: String, pk: MultiKey): IO[IOException, Boolean] = for {
+  def verifyProof(payload: Json, proofValue: String, pk: MultiKey): IO[IOException, Boolean] = for {
     canonicalizedJsonString <- ZIO.fromEither(JsonUtils.canonicalizeToJcs(payload.toJson))
-    canonicalizedJson <- ZIO.fromEither(canonicalizedJsonString.fromJson[ZioJson].left.map(e => IOException(e)))
+    canonicalizedJson <- ZIO.fromEither(canonicalizedJsonString.fromJson[Json].left.map(e => IOException(e)))
     dataToVerify = canonicalizedJson.toJson.getBytes
     signature <- ZIO
       .fromEither(MultiBaseString.fromString(proofValue).flatMap(_.getBytes))
@@ -181,8 +181,8 @@ case class EddsaJcs2022Proof(proofValue: String, verificationMethod: String, may
 }
 
 object EddsaJcs2022Proof {
-  given JsonEncoder[EddsaJcs2022Proof] = DataIntegrityProofCodecs.zioProofEncoder("eddsa-jcs-2022")
-  given JsonDecoder[EddsaJcs2022Proof] = DataIntegrityProofCodecs.zioProofDecoder(
+  given JsonEncoder[EddsaJcs2022Proof] = DataIntegrityProofCodecs.proofEncoder("eddsa-jcs-2022")
+  given JsonDecoder[EddsaJcs2022Proof] = DataIntegrityProofCodecs.proofDecoder(
     (proofValue, verificationMethod, created) => EddsaJcs2022Proof(proofValue, verificationMethod, created),
     "eddsa-jcs-2022"
   )
@@ -245,39 +245,41 @@ object EcdsaSecp256k1Signature2019Proof {
 }
 
 object DataIntegrityProofCodecs {
-  def zioProofEncoder[T <: DataIntegrityProof](cryptoSuiteValue: String): JsonEncoder[T] =
-    JsonEncoder[ZioJson].contramap { proof =>
-      (for {
-        id <- proof.id.toJsonAST
-        typ <- proof.`type`.toJsonAST
-        proofPurpose <- proof.proofPurpose.toJsonAST
-        verificationMethod <- proof.verificationMethod.toJsonAST
-        created <- proof.created.map(_.atOffset(ZoneOffset.UTC)).toJsonAST
-        domain <- proof.domain.toJsonAST
-        challenge <- proof.challenge.toJsonAST
-        proofValue <- proof.proofValue.toJsonAST
-        cryptoSuite <- cryptoSuiteValue.toJsonAST
-        previousProof <- proof.previousProof.toJsonAST
-        nonce <- proof.nonce.toJsonAST
-      } yield ZioJson.Obj(
-        "id" -> id,
-        "type" -> typ,
-        "proofPurpose" -> proofPurpose,
-        "verificationMethod" -> verificationMethod,
-        "created" -> created,
-        "domain" -> domain,
-        "challenge" -> challenge,
-        "proofValue" -> proofValue,
-        "cryptoSuite" -> cryptoSuite,
-        "previousProof" -> previousProof,
-        "nonce" -> nonce
-      )).getOrElse(UnexpectedCodeExecutionPath)
+  private case class Json_DataIntegrityProof(
+      id: Option[String] = None,
+      `type`: String,
+      proofPurpose: String,
+      verificationMethod: String,
+      created: Option[OffsetDateTime] = None,
+      domain: Option[String] = None,
+      challenge: Option[String] = None,
+      proofValue: String,
+      cryptoSuite: String,
+      previousProof: Option[String] = None,
+      nonce: Option[String] = None
+  )
+  private given JsonEncoder[Json_DataIntegrityProof] = DeriveJsonEncoder.gen
+  def proofEncoder[T <: DataIntegrityProof](cryptoSuiteValue: String): JsonEncoder[T] =
+    JsonEncoder[Json_DataIntegrityProof].contramap { proof =>
+      Json_DataIntegrityProof(
+        proof.id,
+        proof.`type`,
+        proof.proofPurpose,
+        proof.verificationMethod,
+        proof.created.map(_.atOffset(ZoneOffset.UTC)),
+        proof.domain,
+        proof.challenge,
+        proof.proofValue,
+        cryptoSuiteValue,
+        proof.previousProof,
+        proof.nonce
+      )
     }
 
-  def zioProofDecoder[T <: DataIntegrityProof](
+  def proofDecoder[T <: DataIntegrityProof](
       createProof: (String, String, Option[Instant]) => T,
       cryptoSuiteValue: String
-  ): JsonDecoder[T] = JsonDecoder[ZioJson].mapOrFail { json =>
+  ): JsonDecoder[T] = JsonDecoder[Json].mapOrFail { json =>
     for {
       proofValue <- json.get(JsonCursor.field("proofValue").isString).map(_.value)
       verificationMethod <- json.get(JsonCursor.field("verificationMethod").isString).map(_.value)

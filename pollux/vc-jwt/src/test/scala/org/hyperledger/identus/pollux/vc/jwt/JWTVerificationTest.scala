@@ -4,12 +4,13 @@ import com.nimbusds.jose.crypto.bc.BouncyCastleProviderSingleton
 import com.nimbusds.jose.jwk.{Curve, ECKey}
 import com.nimbusds.jose.jwk.gen.ECKeyGenerator
 import org.hyperledger.identus.castor.core.model.did.{DID, VerificationRelationship}
-import org.hyperledger.identus.pollux.vc.jwt.CredentialPayload.Implicits.*
+import org.hyperledger.identus.pollux.vc.jwt.CredentialPayload.Implicits.given
 import org.hyperledger.identus.pollux.vc.jwt.StatusPurpose.Revocation
 import org.hyperledger.identus.shared.http.*
 import org.hyperledger.identus.shared.json.JsonInterop
 import zio.*
 import zio.json.ast.Json
+import zio.json.EncoderOps
 import zio.test.*
 import zio.test.Assertion.*
 
@@ -95,7 +96,7 @@ object JWTVerificationTest extends ZIOSpecDefault {
       maybeExp = Some(jwtCredentialExp), // EXPIRATION DATE
       maybeJti = Some("http://example.edu/credentials/3732") // CREDENTIAL ID
     )
-    issuer.issuer.signer.encode(JsonInterop.toZioJsonAst(io.circe.syntax.EncoderOps(jwtCredentialPayload).asJson))
+    issuer.issuer.signer.encode(jwtCredentialPayload.toJsonAST.toOption.get)
   }
 
   private def generateDidDocument(

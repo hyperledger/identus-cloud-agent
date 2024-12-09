@@ -14,7 +14,7 @@ class VCStatusList2021 private (val vcPayload: W3cCredentialPayload, jwtIssuer: 
   def encoded: UIO[JWT] = ZIO.succeed(W3CCredential.toEncodedJwt(vcPayload, jwtIssuer))
 
   def toJsonWithEmbeddedProof: Task[Json] =
-    W3CCredential.toJsonWithEmbeddedProof(vcPayload, jwtIssuer).map(JsonInterop.toZioJsonAst)
+    W3CCredential.toJsonWithEmbeddedProof(vcPayload, jwtIssuer)
 
   def updateBitString(bitString: BitString): IO[VCStatusList2021Error, VCStatusList2021] = {
     import CredentialPayload.Implicits.*

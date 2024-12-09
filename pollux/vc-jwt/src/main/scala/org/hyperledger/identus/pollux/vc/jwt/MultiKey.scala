@@ -1,7 +1,6 @@
 package org.hyperledger.identus.pollux.vc.jwt
 
-import zio.json.{EncoderOps, JsonDecoder, JsonEncoder}
-import zio.json.ast.{Json as ZioJson, JsonCursor}
+import zio.json.{DeriveJsonDecoder, DeriveJsonEncoder, JsonDecoder, JsonEncoder}
 
 case class MultiKey(
     publicKeyMultibase: Option[MultiBaseString] = None,
@@ -11,29 +10,20 @@ case class MultiKey(
   val `@context`: Set[String] = Set("https://w3id.org/security/multikey/v1")
 }
 object MultiKey {
-
-  given JsonEncoder[MultiKey] = JsonEncoder[ZioJson].contramap { multiKey =>
-    (for {
-      context <- multiKey.`@context`.toJsonAST
-      typ <- multiKey.`type`.toJsonAST
-      publicKeyMultibase <- multiKey.publicKeyMultibase.toJsonAST
-      secretKeyMultibase <- multiKey.secretKeyMultibase.toJsonAST
-    } yield ZioJson.Obj(
-      "@context" -> context,
-      "type" -> typ,
-      "publicKeyMultibase" -> publicKeyMultibase,
-      "secretKeyMultibase" -> secretKeyMultibase,
-    )).getOrElse(UnexpectedCodeExecutionPath)
-  }
-
-  given JsonDecoder[MultiKey] = JsonDecoder[ZioJson].mapOrFail { json =>
-    for {
-      publicKeyMultibase <- json.get(JsonCursor.field("publicKeyMultibase")).flatMap(_.as[Option[MultiBaseString]])
-      secretKeyMultibase <- json.get(JsonCursor.field("secretKeyMultibase")).flatMap(_.as[Option[MultiBaseString]])
-    } yield MultiKey(
-      publicKeyMultibase = publicKeyMultibase,
-      secretKeyMultibase = secretKeyMultibase,
+  private case class Json_MultiKey(
+      `@context`: Set[String],
+      `type`: String,
+      publicKeyMultibase: Option[MultiBaseString],
+      secretKeyMultibase: Option[MultiBaseString],
+  )
+  private given JsonEncoder[Json_MultiKey] = DeriveJsonEncoder.gen
+  given JsonEncoder[MultiKey] = JsonEncoder[Json_MultiKey].contramap({ key =>
+    Json_MultiKey(
+      key.`@context`,
+      key.`type`,
+      key.publicKeyMultibase,
+      key.secretKeyMultibase
     )
-  }
-
+  })
+  given JsonDecoder[MultiKey] = DeriveJsonDecoder.gen
 }

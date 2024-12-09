@@ -4,7 +4,6 @@ import com.nimbusds.jwt.SignedJWT
 import io.circe.*
 import io.circe.generic.auto.*
 import io.circe.parser.decode
-import io.circe.syntax.*
 import org.hyperledger.identus.castor.core.model.did.{DID, VerificationRelationship}
 import org.hyperledger.identus.pollux.vc.jwt.revocation.BitString
 import org.hyperledger.identus.shared.crypto.KmpSecp256k1KeyOps
@@ -14,13 +13,14 @@ import org.hyperledger.identus.shared.json.JsonOps.*
 import org.hyperledger.identus.shared.utils.Base64Utils
 import pdi.jwt.*
 import zio.*
-import zio.json.DecoderOps
-import zio.json.ast.{JsonCursor, Json as ZioJson}
+import zio.json.{DecoderOps, DeriveJsonDecoder, DeriveJsonEncoder, EncoderOps, JsonDecoder, JsonEncoder}
+import zio.json.ast.{Json as ZioJson, JsonCursor}
+import zio.json.internal.Write
 import zio.prelude.*
 
 import java.security.PublicKey
-import java.time.temporal.TemporalAmount
 import java.time.{Clock, Instant, OffsetDateTime, ZoneId}
+import java.time.temporal.TemporalAmount
 import scala.util.{Failure, Try}
 
 case class Issuer(did: DID, signer: Signer, publicKey: PublicKey)
@@ -203,132 +203,141 @@ case class W3cCredentialPayload(
 object CredentialPayload {
   object Implicits {
 
-    import InstantDecoderEncoder.*
+    import InstantDecoderEncoder.{*, given}
     import JwtProof.Implicits.*
 
-    implicit val refreshServiceEncoder: Encoder[RefreshService] =
-      (refreshService: RefreshService) =>
-        Json
-          .obj(
-            ("id", refreshService.id.asJson),
-            ("type", refreshService.`type`.asJson)
-          )
+    given JsonEncoder[RefreshService] = DeriveJsonEncoder.gen
+    given JsonEncoder[CredentialSchema] = DeriveJsonEncoder.gen
+    given JsonEncoder[CredentialIssuer] = DeriveJsonEncoder.gen
+    given JsonEncoder[StatusPurpose] = JsonEncoder.string.contramap(_.toString)
+    given JsonEncoder[CredentialStatus] = DeriveJsonEncoder.gen
 
-    implicit val credentialSchemaEncoder: Encoder[CredentialSchema] =
-      (credentialSchema: CredentialSchema) =>
-        Json
-          .obj(
-            ("id", credentialSchema.id.asJson),
-            ("type", credentialSchema.`type`.asJson)
-          )
+    given _credentialStatusOrListEncoder: JsonEncoder[CredentialStatus | List[CredentialStatus]] =
+      (a: CredentialStatus | List[CredentialStatus], indent: Option[Int], out: Write) =>
+        a match {
+          case s: CredentialStatus       => JsonEncoder[CredentialStatus].unsafeEncode(s, indent, out)
+          case s: List[CredentialStatus] => JsonEncoder[List[CredentialStatus]].unsafeEncode(s, indent, out)
+        }
 
-    implicit val credentialIssuerEncoder: Encoder[CredentialIssuer] =
-      (credentialIssuer: CredentialIssuer) =>
-        Json
-          .obj(
-            ("id", credentialIssuer.id.asJson),
-            ("type", credentialIssuer.`type`.asJson)
-          )
+    given _stringOrCredentialIssuerEncoder: JsonEncoder[String | CredentialIssuer] =
+      (a: String | CredentialIssuer, indent: Option[Int], out: Write) =>
+        a match {
+          case s: String           => JsonEncoder.string.unsafeEncode(s, indent, out)
+          case s: CredentialIssuer => JsonEncoder[CredentialIssuer].unsafeEncode(s, indent, out)
+        }
 
-    implicit val credentialStatusPurposeEncoder: Encoder[StatusPurpose] = (a: StatusPurpose) => a.toString.asJson
+    given _credentialSchemaOrListEncoder: JsonEncoder[CredentialSchema | List[CredentialSchema]] =
+      (a: CredentialSchema | List[CredentialSchema], indent: Option[Int], out: Write) =>
+        a match {
+          case s: CredentialSchema       => JsonEncoder[CredentialSchema].unsafeEncode(s, indent, out)
+          case s: List[CredentialSchema] => JsonEncoder[List[CredentialSchema]].unsafeEncode(s, indent, out)
+        }
 
-    implicit val credentialStatusEncoder: Encoder[CredentialStatus] =
-      (credentialStatus: CredentialStatus) =>
-        Json
-          .obj(
-            ("id", credentialStatus.id.asJson),
-            ("type", credentialStatus.`type`.asJson),
-            ("statusPurpose", credentialStatus.statusPurpose.asJson),
-            ("statusListIndex", credentialStatus.statusListIndex.asJson),
-            ("statusListCredential", credentialStatus.statusListCredential.asJson)
-          )
-
-    implicit val credentialStatusOrListEncoder: Encoder[CredentialStatus | List[CredentialStatus]] = Encoder.instance {
-      case status: CredentialStatus           => Encoder[CredentialStatus].apply(status)
-      case statusList: List[CredentialStatus] => Encoder[List[CredentialStatus]].apply(statusList)
+    private case class Json_W3cCredentialPayload(
+        `@context`: Set[String],
+        `type`: Set[String],
+        id: Option[String],
+        issuer: String | CredentialIssuer,
+        issuanceDate: Instant,
+        expirationDate: Option[Instant],
+        validFrom: Option[Instant],
+        validUntil: Option[Instant],
+        credentialSchema: Option[CredentialSchema | List[CredentialSchema]],
+        credentialSubject: ZioJson,
+        credentialStatus: Option[CredentialStatus | List[CredentialStatus]],
+        refreshService: Option[RefreshService],
+        evidence: Option[ZioJson],
+        termsOfUse: Option[ZioJson]
+    )
+    private given JsonEncoder[Json_W3cCredentialPayload] = DeriveJsonEncoder.gen
+    given JsonEncoder[W3cCredentialPayload] = JsonEncoder[Json_W3cCredentialPayload].contramap { payload =>
+      Json_W3cCredentialPayload(
+        payload.`@context`,
+        payload.`type`,
+        payload.maybeId,
+        payload.issuer,
+        payload.issuanceDate,
+        payload.maybeExpirationDate,
+        payload.maybeValidFrom,
+        payload.maybeValidUntil,
+        payload.maybeCredentialSchema,
+        JsonInterop.toZioJsonAst(payload.credentialSubject),
+        payload.maybeCredentialStatus,
+        payload.maybeRefreshService,
+        payload.maybeEvidence.map(JsonInterop.toZioJsonAst),
+        payload.maybeTermsOfUse.map(JsonInterop.toZioJsonAst)
+      )
     }
 
-    implicit val stringOrCredentialIssuerEncoder: Encoder[String | CredentialIssuer] = Encoder.instance {
-      case string: String                     => Encoder[String].apply(string)
-      case credentialIssuer: CredentialIssuer => Encoder[CredentialIssuer].apply(credentialIssuer)
+    private case class Json_JwtVc(
+        `@context`: Set[String],
+        `type`: Set[String],
+        credentialSchema: Option[CredentialSchema | List[CredentialSchema]],
+        credentialSubject: ZioJson,
+        credentialStatus: Option[CredentialStatus | List[CredentialStatus]],
+        refreshService: Option[RefreshService],
+        evidence: Option[ZioJson],
+        termsOfUse: Option[ZioJson],
+        validFrom: Option[Instant],
+        validUntil: Option[Instant],
+        issuer: Option[String | CredentialIssuer]
+    )
+    private given JsonEncoder[Json_JwtVc] = DeriveJsonEncoder.gen
+    given JsonEncoder[JwtVc] = JsonEncoder[Json_JwtVc].contramap { vc =>
+      Json_JwtVc(
+        vc.`@context`,
+        vc.`type`,
+        vc.maybeCredentialSchema,
+        JsonInterop.toZioJsonAst(vc.credentialSubject),
+        vc.maybeCredentialStatus,
+        vc.maybeRefreshService,
+        vc.maybeEvidence.map(JsonInterop.toZioJsonAst),
+        vc.maybeTermsOfUse.map(JsonInterop.toZioJsonAst),
+        vc.maybeValidFrom,
+        vc.maybeValidUntil,
+        vc.maybeIssuer
+      )
     }
 
-    implicit val credentialSchemaOrListEncoder: Encoder[CredentialSchema | List[CredentialSchema]] = Encoder.instance {
-      case schema: CredentialSchema           => Encoder[CredentialSchema].apply(schema)
-      case schemaList: List[CredentialSchema] => Encoder[List[CredentialSchema]].apply(schemaList)
+    private case class Json_JwtCredentialPayload(
+        iss: String,
+        sub: Option[String],
+        vc: JwtVc,
+        nbf: Instant,
+        aud: Set[String],
+        exp: Option[Instant],
+        jti: Option[String]
+    )
+    private given JsonEncoder[Json_JwtCredentialPayload] = DeriveJsonEncoder.gen
+    given JsonEncoder[JwtCredentialPayload] = JsonEncoder[Json_JwtCredentialPayload].contramap { payload =>
+      Json_JwtCredentialPayload(
+        payload.iss,
+        payload.maybeSub,
+        payload.vc,
+        payload.nbf,
+        payload.aud,
+        payload.maybeExp,
+        payload.maybeJti
+      )
     }
 
-    implicit val w3cCredentialPayloadEncoder: Encoder[W3cCredentialPayload] =
-      (w3cCredentialPayload: W3cCredentialPayload) =>
-        Json
-          .obj(
-            ("@context", w3cCredentialPayload.`@context`.asJson),
-            ("type", w3cCredentialPayload.`type`.asJson),
-            ("id", w3cCredentialPayload.maybeId.asJson),
-            ("issuer", w3cCredentialPayload.issuer.asJson),
-            ("issuanceDate", w3cCredentialPayload.issuanceDate.asJson),
-            ("expirationDate", w3cCredentialPayload.maybeExpirationDate.asJson),
-            ("validFrom", w3cCredentialPayload.maybeValidFrom.asJson),
-            ("validUntil", w3cCredentialPayload.maybeValidUntil.asJson),
-            ("credentialSchema", w3cCredentialPayload.maybeCredentialSchema.asJson),
-            ("credentialSubject", w3cCredentialPayload.credentialSubject),
-            ("credentialStatus", w3cCredentialPayload.maybeCredentialStatus.asJson),
-            ("refreshService", w3cCredentialPayload.maybeRefreshService.asJson),
-            ("evidence", w3cCredentialPayload.maybeEvidence.asJson),
-            ("termsOfUse", w3cCredentialPayload.maybeTermsOfUse.asJson),
-            ("validFrom", w3cCredentialPayload.maybeValidFrom.asJson),
-            ("validUntil", w3cCredentialPayload.maybeValidUntil.asJson)
-          )
-          .deepDropNullValues
-          .dropEmptyValues
-
-    implicit val jwtVcEncoder: Encoder[JwtVc] =
-      (jwtVc: JwtVc) =>
-        Json
-          .obj(
-            ("@context", jwtVc.`@context`.asJson),
-            ("type", jwtVc.`type`.asJson),
-            ("credentialSchema", jwtVc.maybeCredentialSchema.asJson),
-            ("credentialSubject", jwtVc.credentialSubject),
-            ("credentialStatus", jwtVc.maybeCredentialStatus.asJson),
-            ("refreshService", jwtVc.maybeRefreshService.asJson),
-            ("evidence", jwtVc.maybeEvidence.asJson),
-            ("termsOfUse", jwtVc.maybeTermsOfUse.asJson),
-            ("validFrom", jwtVc.maybeValidFrom.asJson),
-            ("validUntil", jwtVc.maybeValidUntil.asJson),
-            ("issuer", jwtVc.maybeIssuer.asJson)
-          )
-          .deepDropNullValues
-          .dropEmptyValues
-
-    implicit val jwtCredentialPayloadEncoder: Encoder[JwtCredentialPayload] =
-      (jwtCredentialPayload: JwtCredentialPayload) =>
-        Json
-          .obj(
-            ("iss", jwtCredentialPayload.iss.asJson),
-            ("sub", jwtCredentialPayload.maybeSub.asJson),
-            ("vc", jwtCredentialPayload.vc.asJson),
-            ("nbf", jwtCredentialPayload.nbf.asJson),
-            ("aud", jwtCredentialPayload.aud.asJson),
-            ("exp", jwtCredentialPayload.maybeExp.asJson),
-            ("jti", jwtCredentialPayload.maybeJti.asJson)
-          )
-          .deepDropNullValues
-          .dropEmptyValues
-
-    implicit val w3CVerifiableCredentialPayloadEncoder: Encoder[W3cVerifiableCredentialPayload] =
-      (w3cVerifiableCredentialPayload: W3cVerifiableCredentialPayload) =>
-        w3cVerifiableCredentialPayload.payload.asJson
-          .deepMerge(Map("proof" -> w3cVerifiableCredentialPayload.proof).asJson)
-
-    implicit val jwtVerifiableCredentialPayloadEncoder: Encoder[JwtVerifiableCredentialPayload] =
-      (jwtVerifiableCredentialPayload: JwtVerifiableCredentialPayload) =>
-        jwtVerifiableCredentialPayload.jwt.value.asJson
-
-    implicit val verifiableCredentialPayloadEncoder: Encoder[VerifiableCredentialPayload] = {
-      case (w3cVerifiableCredentialPayload: W3cVerifiableCredentialPayload) => w3cVerifiableCredentialPayload.asJson
-      case (jwtVerifiableCredentialPayload: JwtVerifiableCredentialPayload) => jwtVerifiableCredentialPayload.asJson
+    given JsonEncoder[W3cVerifiableCredentialPayload] = JsonEncoder[ZioJson].contramap { payload =>
+      (for {
+        jsonObject <- payload.toJsonAST.flatMap(_.asObject.toRight("Payload's json representation is not an object"))
+        payload <- payload.proof.toJsonAST.map(p => jsonObject.add("proof", p))
+      } yield payload).getOrElse(UnexpectedCodeExecutionPath)
     }
+
+    given JsonEncoder[JwtVerifiableCredentialPayload] = JsonEncoder.string.contramap(_.jwt.value)
+
+    given JsonEncoder[VerifiableCredentialPayload] =
+      (a: VerifiableCredentialPayload, indent: Option[RuntimeFlags], out: Write) => {
+        a match
+          case p @ W3cVerifiableCredentialPayload(payload, proof) =>
+            JsonEncoder[W3cVerifiableCredentialPayload].unsafeEncode(p, indent, out)
+          case p @ JwtVerifiableCredentialPayload(jwt) =>
+            JsonEncoder[JwtVerifiableCredentialPayload].unsafeEncode(p, indent, out)
+      }
 
     implicit val refreshServiceDecoder: Decoder[RefreshService] =
       (c: HCursor) =>
@@ -338,6 +347,7 @@ object CredentialPayload {
         } yield {
           RefreshService(id = id, `type` = `type`)
         }
+    given JsonDecoder[RefreshService] = DeriveJsonDecoder.gen
 
     implicit val credentialSchemaDecoder: Decoder[CredentialSchema] =
       (c: HCursor) =>
@@ -347,6 +357,7 @@ object CredentialPayload {
         } yield {
           CredentialSchema(id = id, `type` = `type`)
         }
+    given JsonDecoder[CredentialSchema] = DeriveJsonDecoder.gen
 
     implicit val credentialIssuerDecoder: Decoder[CredentialIssuer] =
       (c: HCursor) =>
@@ -356,6 +367,7 @@ object CredentialPayload {
         } yield {
           CredentialIssuer(id = id, `type` = `type`)
         }
+    given JsonDecoder[CredentialIssuer] = DeriveJsonDecoder.gen
 
     implicit val credentialStatusPurposeDecoder: Decoder[StatusPurpose] = (c: HCursor) =>
       Decoder.decodeString(c).flatMap { str =>
@@ -363,6 +375,7 @@ object CredentialPayload {
           DecodingFailure(s"no enum value matched for $str", List(CursorOp.Field(str)))
         }
       }
+    given JsonDecoder[StatusPurpose] = DeriveJsonDecoder.gen
 
     implicit val credentialStatusDecoder: Decoder[CredentialStatus] =
       (c: HCursor) =>
@@ -381,6 +394,7 @@ object CredentialPayload {
             statusListCredential = statusListCredential
           )
         }
+    given JsonDecoder[CredentialStatus] = DeriveJsonDecoder.gen
 
     implicit val stringOrCredentialIssuerDecoder: Decoder[String | CredentialIssuer] =
       Decoder[String]
@@ -732,10 +746,10 @@ object CredentialVerification {
 
 object JwtCredential {
 
-  import CredentialPayload.Implicits.*
+  import CredentialPayload.Implicits.{*, given}
 
   def encodeJwt(payload: JwtCredentialPayload, issuer: Issuer): JWT =
-    issuer.signer.encode(JsonInterop.toZioJsonAst(payload.asJson))
+    issuer.signer.encode(payload.toJsonAST.getOrElse(UnexpectedCodeExecutionPath))
 
   def decodeJwt(jwt: JWT, publicKey: PublicKey): Try[JwtCredentialPayload] = {
     val signedJWT = SignedJWT.parse(jwt.value)
@@ -875,14 +889,14 @@ object JwtCredential {
 
 object W3CCredential {
 
-  import CredentialPayload.Implicits.*
+  import CredentialPayload.Implicits.{*, given}
 
   def encodeW3C(payload: W3cCredentialPayload, issuer: Issuer): W3cVerifiableCredentialPayload = {
     W3cVerifiableCredentialPayload(
       payload = payload,
       proof = JwtProof(
         `type` = "JwtProof2020",
-        jwt = issuer.signer.encode(JsonInterop.toZioJsonAst(payload.asJson))
+        jwt = issuer.signer.encode(payload.toJsonAST.getOrElse(UnexpectedCodeExecutionPath))
       )
     )
   }
@@ -890,15 +904,15 @@ object W3CCredential {
   def toEncodedJwt(payload: W3cCredentialPayload, issuer: Issuer): JWT =
     JwtCredential.encodeJwt(payload.toJwtCredentialPayload, issuer)
 
-  def toJsonWithEmbeddedProof(payload: W3cCredentialPayload, issuer: Issuer): Task[Json] = {
-    val jsonCred = payload.asJson
+  def toJsonWithEmbeddedProof(payload: W3cCredentialPayload, issuer: Issuer): Task[ZioJson] = {
+    val jsonCred = payload.toJsonAST.toOption.flatMap(_.asObject).getOrElse(UnexpectedCodeExecutionPath)
 
     for {
-      proof <- issuer.signer.generateProofForJson(JsonInterop.toZioJsonAst(jsonCred), issuer.publicKey)
+      proof <- issuer.signer.generateProofForJson(jsonCred, issuer.publicKey)
       jsonProof <- proof match
-        case b: EcdsaSecp256k1Signature2019Proof => ZIO.succeed(b.asJson.dropNullValues)
-        case c: EddsaJcs2022Proof                => ZIO.succeed(c.asJson.dropNullValues)
-      verifiableCredentialWithProof = jsonCred.deepMerge(Map("proof" -> jsonProof).asJson)
+        case b: EcdsaSecp256k1Signature2019Proof => ZIO.succeed(b.toJsonAST.getOrElse(UnexpectedCodeExecutionPath))
+        case c: EddsaJcs2022Proof                => ZIO.succeed(c.toJsonAST.getOrElse(UnexpectedCodeExecutionPath))
+      verifiableCredentialWithProof = jsonCred.add("proof", jsonProof)
     } yield verifiableCredentialWithProof
 
   }

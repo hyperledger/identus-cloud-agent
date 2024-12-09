@@ -1,15 +1,12 @@
 package org.hyperledger.identus.pollux.vc.jwt
 
-import io.circe
 import io.circe.*
-import io.circe.generic.auto.*
 import io.circe.parser.decode
-import io.circe.syntax.*
 import org.hyperledger.identus.castor.core.model.did.VerificationRelationship
 import org.hyperledger.identus.shared.http.UriResolver
-import org.hyperledger.identus.shared.json.JsonInterop
 import pdi.jwt.{JwtCirce, JwtOptions}
 import zio.*
+import zio.json.{DeriveJsonEncoder, EncoderOps, JsonEncoder}
 import zio.prelude.*
 
 import java.security.PublicKey
@@ -147,51 +144,69 @@ object PresentationPayload {
 
   object Implicits {
 
-    import CredentialPayload.Implicits.*
+    import CredentialPayload.Implicits.{*, given}
     import InstantDecoderEncoder.*
     import JwtProof.Implicits.*
 
-    implicit val w3cPresentationPayloadEncoder: Encoder[W3cPresentationPayload] =
-      (w3cPresentationPayload: W3cPresentationPayload) =>
-        Json
-          .obj(
-            ("@context", w3cPresentationPayload.`@context`.asJson),
-            ("id", w3cPresentationPayload.maybeId.asJson),
-            ("type", w3cPresentationPayload.`type`.asJson),
-            ("verifiableCredential", w3cPresentationPayload.verifiableCredential.asJson),
-            ("holder", w3cPresentationPayload.holder.asJson),
-            ("verifier", w3cPresentationPayload.verifier.asJson),
-            ("issuanceDate", w3cPresentationPayload.maybeIssuanceDate.asJson),
-            ("expirationDate", w3cPresentationPayload.maybeExpirationDate.asJson)
-          )
-          .deepDropNullValues
-          .dropEmptyValues
+    private case class Json_W3cPresentationPayload(
+        `@context`: Set[String],
+        `type`: Set[String],
+        id: Option[String],
+        verifiableCredential: Set[VerifiableCredentialPayload],
+        holder: String,
+        verifier: Set[String],
+        issuanceDate: Option[Instant],
+        expirationDate: Option[Instant]
+    )
+    private given JsonEncoder[Json_W3cPresentationPayload] = DeriveJsonEncoder.gen
+    given JsonEncoder[W3cPresentationPayload] = JsonEncoder[Json_W3cPresentationPayload].contramap { payload =>
+      Json_W3cPresentationPayload(
+        payload.`@context`.toSet,
+        payload.`type`.toSet,
+        payload.maybeId,
+        payload.verifiableCredential.toSet,
+        payload.holder,
+        payload.verifier.toSet,
+        payload.maybeIssuanceDate,
+        payload.maybeExpirationDate
+      )
+    }
 
-    implicit val jwtVpEncoder: Encoder[JwtVp] =
-      (jwtVp: JwtVp) =>
-        Json
-          .obj(
-            ("@context", jwtVp.`@context`.asJson),
-            ("type", jwtVp.`type`.asJson),
-            ("verifiableCredential", jwtVp.verifiableCredential.asJson)
-          )
-          .deepDropNullValues
-          .dropEmptyValues
+    private case class Json_JwtVp(
+        `@context`: Set[String],
+        `type`: Set[String],
+        verifiableCredential: Set[VerifiableCredentialPayload]
+    )
+    private given JsonEncoder[Json_JwtVp] = DeriveJsonEncoder.gen
+    given JsonEncoder[JwtVp] = JsonEncoder[Json_JwtVp].contramap { payload =>
+      Json_JwtVp(
+        payload.`@context`.toSet,
+        payload.`type`.toSet,
+        payload.verifiableCredential.toSet
+      )
+    }
 
-    implicit val jwtPresentationPayloadEncoder: Encoder[JwtPresentationPayload] =
-      (jwtPresentationPayload: JwtPresentationPayload) =>
-        Json
-          .obj(
-            ("iss", jwtPresentationPayload.iss.asJson),
-            ("vp", jwtPresentationPayload.vp.asJson),
-            ("nbf", jwtPresentationPayload.maybeNbf.asJson),
-            ("aud", jwtPresentationPayload.aud.asJson),
-            ("exp", jwtPresentationPayload.maybeExp.asJson),
-            ("jti", jwtPresentationPayload.maybeJti.asJson),
-            ("nonce", jwtPresentationPayload.maybeNonce.asJson)
-          )
-          .deepDropNullValues
-          .dropEmptyValues
+    case class Json_JwtPresentationPayload(
+        iss: String,
+        vp: JwtVp,
+        nbf: Option[Instant],
+        aud: Set[String],
+        exp: Option[Instant],
+        jti: Option[String],
+        nonce: Option[String]
+    )
+    private given JsonEncoder[Json_JwtPresentationPayload] = DeriveJsonEncoder.gen
+    given JsonEncoder[JwtPresentationPayload] = JsonEncoder[Json_JwtPresentationPayload].contramap { payload =>
+      Json_JwtPresentationPayload(
+        payload.iss,
+        payload.vp,
+        payload.maybeNbf,
+        payload.aud.toSet,
+        payload.maybeExp,
+        payload.maybeJti,
+        payload.maybeNonce
+      )
+    }
 
     implicit val w3cPresentationPayloadDecoder: Decoder[W3cPresentationPayload] =
       (c: HCursor) =>
@@ -315,17 +330,17 @@ object PresentationPayload {
 
 object JwtPresentation {
 
-  import PresentationPayload.Implicits.*
+  import PresentationPayload.Implicits.{*, given}
 
   def encodeJwt(payload: JwtPresentationPayload, issuer: Issuer): JWT =
-    issuer.signer.encode(JsonInterop.toZioJsonAst(payload.asJson))
+    issuer.signer.encode(payload.toJsonAST.toOption.get)
 
   def toEncodeW3C(payload: W3cPresentationPayload, issuer: Issuer): W3cVerifiablePresentationPayload = {
     W3cVerifiablePresentationPayload(
       payload = payload,
       proof = JwtProof(
         `type` = "JwtProof2020",
-        jwt = issuer.signer.encode(JsonInterop.toZioJsonAst(payload.asJson))
+        jwt = issuer.signer.encode(payload.toJsonAST.toOption.get)
       )
     )
   }

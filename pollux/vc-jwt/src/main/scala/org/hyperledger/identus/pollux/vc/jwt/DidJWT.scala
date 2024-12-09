@@ -9,7 +9,7 @@ import org.hyperledger.identus.shared.crypto.{Ed25519KeyPair, Secp256k1PrivateKe
 import org.hyperledger.identus.shared.models.KeyId
 import zio.*
 import zio.json.ast.Json as ZioJson
-import zio.json.EncoderOps
+import zio.json.{EncoderOps, JsonDecoder, JsonEncoder}
 
 import java.security.*
 import java.security.interfaces.ECPublicKey
@@ -22,6 +22,9 @@ object JWT {
   extension (jwt: JWT) {
     def value: String = jwt
   }
+
+  given JsonEncoder[JWT] = JsonEncoder.string.contramap(jwt => jwt.value)
+  given JsonDecoder[JWT] = JsonDecoder.string.map(JWT(_))
 }
 
 object JwtSignerImplicits {

@@ -1,17 +1,17 @@
 package org.hyperledger.identus.pollux.core.service.verification
 
-import io.circe.syntax.EncoderOps
 import org.hyperledger.identus.agent.walletapi.service.MockManagedDIDService
 import org.hyperledger.identus.castor.core.service.MockDIDService
 import org.hyperledger.identus.pollux.core.service.uriResolvers.ResourceUrlResolver
 import org.hyperledger.identus.pollux.vc.jwt.*
-import org.hyperledger.identus.pollux.vc.jwt.CredentialPayload.Implicits.*
+import org.hyperledger.identus.pollux.vc.jwt.CredentialPayload.Implicits.given
 import org.hyperledger.identus.shared.json.JsonInterop
 import org.hyperledger.identus.shared.models.{WalletAccessContext, WalletId}
 import zio.*
+import zio.Config.OffsetDateTime
+import zio.json.EncoderOps
 import zio.json.ast.Json
 import zio.test.*
-import zio.Config.OffsetDateTime
 
 import java.time.Instant
 
@@ -65,7 +65,7 @@ object VcVerificationServiceImplSpec extends ZIOSpecDefault with VcVerificationS
             maybeTermsOfUse = Option.empty,
             aud = Set(verifier)
           ).toJwtCredentialPayload
-          signedJwtCredential = issuer.signer.encode(JsonInterop.toZioJsonAst(jwtCredentialPayload.asJson))
+          signedJwtCredential = issuer.signer.encode(jwtCredentialPayload.toJsonAST.toOption.get)
           result <-
             svc.verify(
               List(
@@ -132,7 +132,7 @@ object VcVerificationServiceImplSpec extends ZIOSpecDefault with VcVerificationS
             maybeTermsOfUse = Option.empty,
             aud = Set(verifier)
           ).toJwtCredentialPayload
-          signedJwtCredential = issuer.signer.encode(JsonInterop.toZioJsonAst(jwtCredentialPayload.asJson))
+          signedJwtCredential = issuer.signer.encode(jwtCredentialPayload.toJsonAST.toOption.get)
           result <-
             svc.verify(
               List(
@@ -199,7 +199,7 @@ object VcVerificationServiceImplSpec extends ZIOSpecDefault with VcVerificationS
             maybeTermsOfUse = Option.empty,
             aud = Set(verifier)
           ).toJwtCredentialPayload
-          signedJwtCredential = issuer.signer.encode(JsonInterop.toZioJsonAst(jwtCredentialPayload.asJson))
+          signedJwtCredential = issuer.signer.encode(jwtCredentialPayload.toJsonAST.toOption.get)
           result <-
             svc.verify(
               List(
@@ -266,7 +266,7 @@ object VcVerificationServiceImplSpec extends ZIOSpecDefault with VcVerificationS
             maybeTermsOfUse = Option.empty,
             aud = Set(verifier)
           ).toJwtCredentialPayload
-          signedJwtCredential = issuer.signer.encode(JsonInterop.toZioJsonAst(jwtCredentialPayload.asJson))
+          signedJwtCredential = issuer.signer.encode(jwtCredentialPayload.toJsonAST.toOption.get)
           result <-
             svc.verify(
               List(
@@ -340,7 +340,7 @@ object VcVerificationServiceImplSpec extends ZIOSpecDefault with VcVerificationS
             maybeTermsOfUse = Option.empty,
             aud = Set(verifier)
           ).toJwtCredentialPayload
-          signedJwtCredential = issuer.signer.encode(JsonInterop.toZioJsonAst(jwtCredentialPayload.asJson))
+          signedJwtCredential = issuer.signer.encode(jwtCredentialPayload.toJsonAST.toOption.get)
           result <-
             svc.verify(
               List(
@@ -411,7 +411,7 @@ object VcVerificationServiceImplSpec extends ZIOSpecDefault with VcVerificationS
             maybeTermsOfUse = Option.empty,
             aud = Set(verifier)
           ).toJwtCredentialPayload
-          signedJwtCredential = issuer.signer.encode(JsonInterop.toZioJsonAst(jwtCredentialPayload.asJson))
+          signedJwtCredential = issuer.signer.encode(jwtCredentialPayload.toJsonAST.toOption.get)
           result <-
             svc.verify(
               List(
@@ -491,7 +491,7 @@ object VcVerificationServiceImplSpec extends ZIOSpecDefault with VcVerificationS
             maybeTermsOfUse = Option.empty,
             aud = Set(verifier)
           ).toJwtCredentialPayload
-          signedJwtCredential = issuer.signer.encode(JsonInterop.toZioJsonAst(jwtCredentialPayload.asJson))
+          signedJwtCredential = issuer.signer.encode(jwtCredentialPayload.toJsonAST.toOption.get)
           result <-
             svc.verify(
               List(
@@ -571,7 +571,7 @@ object VcVerificationServiceImplSpec extends ZIOSpecDefault with VcVerificationS
             maybeTermsOfUse = Option.empty,
             aud = Set(verifier)
           ).toJwtCredentialPayload
-          signedJwtCredential = issuer.signer.encode(JsonInterop.toZioJsonAst(jwtCredentialPayload.asJson))
+          signedJwtCredential = issuer.signer.encode(jwtCredentialPayload.toJsonAST.toOption.get)
           result <-
             svc.verify(
               List(
@@ -643,7 +643,7 @@ object VcVerificationServiceImplSpec extends ZIOSpecDefault with VcVerificationS
             maybeTermsOfUse = Option.empty,
             aud = Set(verifier)
           ).toJwtCredentialPayload
-          signedJwtCredential = issuer.signer.encode(JsonInterop.toZioJsonAst(jwtCredentialPayload.asJson))
+          signedJwtCredential = issuer.signer.encode(jwtCredentialPayload.toJsonAST.toOption.get)
           result <-
             svc.verify(
               List(
@@ -711,7 +711,7 @@ object VcVerificationServiceImplSpec extends ZIOSpecDefault with VcVerificationS
             maybeTermsOfUse = Option.empty,
             aud = Set(verifier)
           ).toJwtCredentialPayload
-          signedJwtCredential = issuer.signer.encode(JsonInterop.toZioJsonAst(jwtCredentialPayload.asJson))
+          signedJwtCredential = issuer.signer.encode(jwtCredentialPayload.toJsonAST.toOption.get)
           result <-
             svc.verify(
               List(
@@ -779,7 +779,7 @@ object VcVerificationServiceImplSpec extends ZIOSpecDefault with VcVerificationS
             maybeTermsOfUse = Option.empty,
             aud = Set(verifier)
           ).toJwtCredentialPayload
-          signedJwtCredential = issuer.signer.encode(JsonInterop.toZioJsonAst(jwtCredentialPayload.asJson))
+          signedJwtCredential = issuer.signer.encode(jwtCredentialPayload.toJsonAST.toOption.get)
           result <-
             svc.verify(
               List(
@@ -847,7 +847,7 @@ object VcVerificationServiceImplSpec extends ZIOSpecDefault with VcVerificationS
             maybeTermsOfUse = Option.empty,
             aud = Set(verifier)
           ).toJwtCredentialPayload
-          signedJwtCredential = issuer.signer.encode(JsonInterop.toZioJsonAst(jwtCredentialPayload.asJson))
+          signedJwtCredential = issuer.signer.encode(jwtCredentialPayload.toJsonAST.toOption.get)
           result <-
             svc.verify(
               List(
