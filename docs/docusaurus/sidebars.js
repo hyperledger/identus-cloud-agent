@@ -23,6 +23,7 @@ const sidebars = {
         'credentials/connectionless/issue',
         'credentials/oid4ci/issue',
         'credentials/didcomm/present-proof',
+        'credentials/connectionless/present-proof',
         'credentials/revocation'
       ]
     },
