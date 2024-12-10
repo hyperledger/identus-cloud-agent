@@ -2,7 +2,7 @@ package org.hyperledger.identus.pollux.vc.jwt
 
 import org.hyperledger.identus.castor.core.model.did.VerificationRelationship
 import org.hyperledger.identus.shared.http.UriResolver
-import pdi.jwt.{JwtCirce, JwtOptions}
+import pdi.jwt.{JwtOptions, JwtZIOJson}
 import zio.*
 import zio.json.{DecoderOps, DeriveJsonDecoder, DeriveJsonEncoder, EncoderOps, JsonDecoder, JsonEncoder}
 import zio.json.ast.{Json, JsonCursor}
@@ -314,7 +314,7 @@ object JwtPresentation {
     encodeJwt(payload.toJwtPresentationPayload, issuer)
 
   def decodeJwt[A](jwt: JWT)(using decoder: JsonDecoder[A]): Try[A] = {
-    JwtCirce
+    JwtZIOJson
       .decodeRaw(jwt.value, options = JwtOptions(signature = false, expiration = false, notBefore = false))
       .flatMap(a => a.fromJson[A].left.map(s => new RuntimeException(s)).toTry)
   }

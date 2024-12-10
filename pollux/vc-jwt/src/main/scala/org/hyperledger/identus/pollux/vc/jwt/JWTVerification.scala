@@ -30,13 +30,13 @@ object JWTVerification {
   def validateAlgorithm(jwt: JWT): Validation[String, Unit] = {
     val decodedJWT =
       Validation
-        .fromTry(JwtCirce.decodeRawAll(jwt.value, JwtOptions(false, false, false)))
+        .fromTry(JwtZIOJson.decodeRawAll(jwt.value, JwtOptions(false, false, false)))
         .mapError(_.getMessage)
     for {
       decodedJwtTask <- decodedJWT
       (header, _, _) = decodedJwtTask
       algorithm <- Validation
-        .fromOptionWith("An algorithm must be specified in the header")(JwtCirce.parseHeader(header).algorithm)
+        .fromOptionWith("An algorithm must be specified in the header")(JwtZIOJson.parseHeader(header).algorithm)
       result <-
         Validation
           .fromPredicateWith("Algorithm Not Supported")(
@@ -52,7 +52,7 @@ object JWTVerification {
   )(issuerDidExtractor: T => String): IO[String, Validation[String, DIDDocument]] = {
     val decodedJWT =
       Validation
-        .fromTry(JwtCirce.decodeRawAll(jwt.value, JwtOptions(false, false, false)))
+        .fromTry(JwtZIOJson.decodeRawAll(jwt.value, JwtOptions(false, false, false)))
         .mapError(_.getMessage)
 
     val claim: Validation[String, String] =
@@ -100,7 +100,7 @@ object JWTVerification {
       didResolver: DidResolver
   )(decoder: String => Validation[String, T])(issuerDidExtractor: T => String): IO[String, Validation[String, Unit]] = {
     val decodedJWT = Validation
-      .fromTry(JwtCirce.decodeRawAll(jwt.value, JwtOptions(false, false, false)))
+      .fromTry(JwtZIOJson.decodeRawAll(jwt.value, JwtOptions(false, false, false)))
       .mapError(_.getMessage)
 
     val extractAlgorithm: Validation[String, JwtAlgorithm] =
@@ -108,7 +108,7 @@ object JWTVerification {
         decodedJwtTask <- decodedJWT
         (header, _, _) = decodedJwtTask
         algorithm <- Validation
-          .fromOptionWith("An algorithm must be specified in the header")(JwtCirce.parseHeader(header).algorithm)
+          .fromOptionWith("An algorithm must be specified in the header")(JwtZIOJson.parseHeader(header).algorithm)
       } yield algorithm
 
     val claim: Validation[String, String] =
@@ -243,7 +243,7 @@ object JWTVerification {
 
   def extractJwtHeader(jwt: JWT): Validation[String, JwtHeader] = {
     def parseHeaderUnsafe(json: Json): Either[String, JwtHeader] =
-      Try(JwtCirce.parseHeader(json.toJson)).toEither.left.map(_.getMessage)
+      Try(JwtZIOJson.parseHeader(json.toJson)).toEither.left.map(_.getMessage)
 
     def decodeJwtHeader(header: String): Validation[String, JwtHeader] = {
       val eitherResult = for {
@@ -254,7 +254,7 @@ object JWTVerification {
     }
     for {
       decodedJwt <- Validation
-        .fromTry(JwtCirce.decodeRawAll(jwt.value, JwtOptions(false, false, false)))
+        .fromTry(JwtZIOJson.decodeRawAll(jwt.value, JwtOptions(false, false, false)))
         .mapError(_.getMessage)
       (header, _, _) = decodedJwt
       jwtHeader <- decodeJwtHeader(header)

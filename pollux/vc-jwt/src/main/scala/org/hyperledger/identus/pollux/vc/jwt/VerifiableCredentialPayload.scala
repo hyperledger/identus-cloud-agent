@@ -635,7 +635,7 @@ object JwtCredential {
 
   def decodeJwt(jwt: JWT): IO[String, JwtCredentialPayload] = {
     val decodeJWT =
-      ZIO.fromTry(JwtCirce.decodeRawAll(jwt.value, JwtOptions(false, false, false))).mapError(_.getMessage)
+      ZIO.fromTry(JwtZIOJson.decodeRawAll(jwt.value, JwtOptions(false, false, false))).mapError(_.getMessage)
 
     val validatedDecodedClaim: IO[String, JwtCredentialPayload] =
       for {
@@ -672,7 +672,7 @@ object JwtCredential {
   def validateExpiration(jwt: JWT, dateTime: OffsetDateTime): Validation[String, Unit] = {
     Validation
       .fromTry(
-        JwtCirce(Clock.fixed(dateTime.toInstant, ZoneId.of(dateTime.getOffset.getId)))
+        JwtZIOJson(Clock.fixed(dateTime.toInstant, ZoneId.of(dateTime.getOffset.getId)))
           .decodeRawAll(jwt.value, JwtOptions(false, true, false))
       )
       .flatMap(_ => Validation.unit)
@@ -682,7 +682,7 @@ object JwtCredential {
   def validateNotBefore(jwt: JWT, dateTime: OffsetDateTime): Validation[String, Unit] = {
     Validation
       .fromTry(
-        JwtCirce(Clock.fixed(dateTime.toInstant, ZoneId.of(dateTime.getOffset.getId)))
+        JwtZIOJson(Clock.fixed(dateTime.toInstant, ZoneId.of(dateTime.getOffset.getId)))
           .decodeRawAll(jwt.value, JwtOptions(false, false, true))
       )
       .flatMap(_ => Validation.unit)
@@ -692,7 +692,7 @@ object JwtCredential {
   def verifyDates(jwt: JWT, leeway: TemporalAmount)(implicit clock: Clock): Validation[String, Unit] = {
     val decodeJWT =
       Validation
-        .fromTry(JwtCirce.decodeRaw(jwt.value, options = JwtOptions(false, false, false)))
+        .fromTry(JwtZIOJson.decodeRaw(jwt.value, options = JwtOptions(false, false, false)))
         .mapError(_.getMessage)
 
     for {
@@ -734,7 +734,7 @@ object JwtCredential {
   def verifyRevocationStatusJwt(jwt: JWT)(uriResolver: UriResolver): IO[String, Validation[String, Unit]] = {
     val decodeJWT =
       ZIO
-        .fromTry(JwtCirce.decodeRaw(jwt.value, options = JwtOptions(false, false, false)))
+        .fromTry(JwtZIOJson.decodeRaw(jwt.value, options = JwtOptions(false, false, false)))
         .mapError(_.getMessage)
 
     val res = for {
