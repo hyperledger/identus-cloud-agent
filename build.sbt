@@ -37,7 +37,7 @@ inThisBuild(
     // scalacOptions += "-Ysafe-init",
     // scalacOptions +=  "-Werror", // <=> "-Xfatal-warnings"
     scalacOptions += "-Dquill.macro.log=false", // disable quill macro logs // TODO https://github.com/zio/zio-protoquill/issues/470,
-    scalacOptions ++= Seq("-Xmax-inlines", "50") // manually increase max-inlines above 32 (https://github.com/circe/circe/issues/2162)
+    scalacOptions ++= Seq("-Xmax-inlines", "50")
   )
 )
 
@@ -57,9 +57,6 @@ lazy val V = new {
   val zioKafka = "2.7.5"
   val mockito = "3.2.18.0"
   val monocle = "3.2.0"
-
-  // https://mvnrepository.com/artifact/io.circe/circe-core
-  val circe = "0.14.7"
 
   val tapir = "1.11.7" // scala-steward:off // TODO "1.10.5"
   val http4sBlaze = "0.23.15" // scala-steward:off  // TODO "0.23.16"
@@ -123,10 +120,6 @@ lazy val D = new {
   val zioConfigMagnolia: ModuleID = "dev.zio" %% "zio-config-magnolia" % V.zioConfig
   val zioConfigTypesafe: ModuleID = "dev.zio" %% "zio-config-typesafe" % V.zioConfig
 
-  val circeCore: ModuleID = "io.circe" %% "circe-core" % V.circe
-  val circeGeneric: ModuleID = "io.circe" %% "circe-generic" % V.circe
-  val circeParser: ModuleID = "io.circe" %% "circe-parser" % V.circe
-
   val networkntJsonSchemaValidator = "com.networknt" % "json-schema-validator" % V.jsonSchemaValidator
   val jwtCirce = "com.github.jwt-scala" %% "jwt-circe" % V.jwtCirceVersion
   val jsonCanonicalization: ModuleID = "io.github.erdtman" % "java-json-canonicalization" % "1.1"
@@ -156,7 +149,6 @@ lazy val D = new {
     "com.github.dasniko" % "testcontainers-keycloak" % V.testContainersJavaKeycloak % Test
 
   val doobiePostgres: ModuleID = "org.tpolecat" %% "doobie-postgres" % V.doobie
-  val doobiePostgresCirce: ModuleID = "org.tpolecat" %% "doobie-postgres-circe" % V.doobie
   val doobieHikari: ModuleID = "org.tpolecat" %% "doobie-hikari" % V.doobie
   val flyway: ModuleID = "org.flywaydb" % "flyway-core" % V.flyway
 
@@ -185,7 +177,7 @@ lazy val D = new {
 
   // LIST of Dependencies
   val doobieDependencies: Seq[ModuleID] =
-    Seq(doobiePostgres, doobiePostgresCirce, doobieHikari, flyway)
+    Seq(doobiePostgres, doobieHikari, flyway)
 }
 
 lazy val D_Shared = new {
@@ -210,9 +202,6 @@ lazy val D_SharedJson = new {
     Seq(
       D.zio,
       D.zioJson,
-      D.circeCore,
-      D.circeGeneric,
-      D.circeParser,
       D.jsonCanonicalization,
       D.titaniumJsonLd,
       D.jakartaJson,
@@ -274,9 +263,6 @@ lazy val D_Castor = new {
       D.zioMock,
       D.zioTestSbt,
       D.zioTestMagnolia,
-      D.circeCore,
-      D.circeGeneric,
-      D.circeParser
     )
 
   // Project Dependencies
@@ -533,13 +519,7 @@ lazy val models = project
   .configure(commonConfigure)
   .settings(name := "mercury-data-models")
   .settings(
-    libraryDependencies ++= Seq(D.zio),
-    libraryDependencies ++= Seq(
-      D.circeCore,
-      D.circeGeneric,
-      D.circeParser
-    ), // TODO try to remove this from this module
-    // libraryDependencies += D.didScala
+    libraryDependencies ++= Seq(D.zio)
   )
   .settings(libraryDependencies += D.nimbusJwt) // FIXME just for the DidAgent
   .dependsOn(shared)
@@ -561,7 +541,6 @@ lazy val protocolConnection = project
   .configure(commonConfigure)
   .settings(name := "mercury-protocol-connection")
   .settings(libraryDependencies += D.zio)
-  .settings(libraryDependencies ++= Seq(D.circeCore, D.circeGeneric, D.circeParser))
   .settings(libraryDependencies += D.munitZio)
   .dependsOn(models, protocolInvitation)
 
@@ -570,7 +549,6 @@ lazy val protocolCoordinateMediation = project
   .configure(commonConfigure)
   .settings(name := "mercury-protocol-coordinate-mediation")
   .settings(libraryDependencies += D.zio)
-  .settings(libraryDependencies ++= Seq(D.circeCore, D.circeGeneric, D.circeParser))
   .settings(libraryDependencies += D.munitZio)
   .dependsOn(models)
 
@@ -579,7 +557,6 @@ lazy val protocolDidExchange = project
   .configure(commonConfigure)
   .settings(name := "mercury-protocol-did-exchange")
   .settings(libraryDependencies += D.zio)
-  .settings(libraryDependencies ++= Seq(D.circeCore, D.circeGeneric, D.circeParser))
   .dependsOn(models, protocolInvitation)
 
 lazy val protocolInvitation = project
@@ -589,9 +566,6 @@ lazy val protocolInvitation = project
   .settings(libraryDependencies += D.zio)
   .settings(
     libraryDependencies ++= Seq(
-      D.circeCore,
-      D.circeGeneric,
-      D.circeParser,
       D.munit,
       D.munitZio
     )
@@ -611,7 +585,6 @@ lazy val protocolLogin = project
   .settings(name := "mercury-protocol-outofband-login")
   .settings(libraryDependencies += D.zio)
   .settings(libraryDependencies += D.zio)
-  .settings(libraryDependencies ++= Seq(D.circeCore, D.circeGeneric, D.circeParser))
   .settings(libraryDependencies += D.munitZio)
   .dependsOn(models)
 
@@ -634,7 +607,6 @@ lazy val protocolIssueCredential = project
   .configure(commonConfigure)
   .settings(name := "mercury-protocol-issue-credential")
   .settings(libraryDependencies += D.zio)
-  .settings(libraryDependencies ++= Seq(D.circeCore, D.circeGeneric, D.circeParser))
   .settings(libraryDependencies += D.munitZio)
   .dependsOn(models, protocolInvitation)
 
@@ -643,7 +615,6 @@ lazy val protocolRevocationNotification = project
   .configure(commonConfigure)
   .settings(name := "mercury-protocol-revocation-notification")
   .settings(libraryDependencies += D.zio)
-  .settings(libraryDependencies ++= Seq(D.circeCore, D.circeGeneric, D.circeParser))
   .settings(libraryDependencies += D.munitZio)
   .dependsOn(models)
 
@@ -652,7 +623,6 @@ lazy val protocolPresentProof = project
   .configure(commonConfigure)
   .settings(name := "mercury-protocol-present-proof")
   .settings(libraryDependencies += D.zio)
-  .settings(libraryDependencies ++= Seq(D.circeCore, D.circeGeneric, D.circeParser))
   .settings(libraryDependencies += D.munitZio)
   .dependsOn(models, protocolInvitation)
 
@@ -667,7 +637,6 @@ lazy val protocolTrustPing = project
   .configure(commonConfigure)
   .settings(name := "mercury-protocol-trust-ping")
   .settings(libraryDependencies += D.zio)
-  .settings(libraryDependencies ++= Seq(D.circeCore, D.circeGeneric, D.circeParser))
   .settings(libraryDependencies += D.munitZio)
   .dependsOn(models)
 
