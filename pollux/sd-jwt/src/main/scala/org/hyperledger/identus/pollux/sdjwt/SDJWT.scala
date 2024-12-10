@@ -3,6 +3,7 @@ package org.hyperledger.identus.pollux.sdjwt
 import sdjwtwrapper.*
 import zio.json.*
 import zio.json.ast.Json
+import zio.json.internal.Write
 
 import scala.util.{Failure, Success, Try}
 
@@ -50,12 +51,10 @@ object SDJWT {
       claimsMap: Map[String, String],
   ): CredentialCompact = {
 
-    given encoder: JsonEncoder[String | Int] = new JsonEncoder[String | Int] {
-      override def unsafeEncode(b: String | Int, indent: Option[Int], out: zio.json.internal.Write): Unit = {
-        b match {
-          case obj: String => JsonEncoder.string.unsafeEncode(obj, indent, out)
-          case obj: Int    => JsonEncoder.int.unsafeEncode(obj, indent, out)
-        }
+    given encoder: JsonEncoder[String | Int] = (b: String | Int, indent: Option[Int], out: Write) => {
+      b match {
+        case obj: String => JsonEncoder.string.unsafeEncode(obj, indent, out)
+        case obj: Int    => JsonEncoder.int.unsafeEncode(obj, indent, out)
       }
     }
 

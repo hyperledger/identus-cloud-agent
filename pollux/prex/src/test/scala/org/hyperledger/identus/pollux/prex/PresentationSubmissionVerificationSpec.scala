@@ -4,7 +4,6 @@ import org.hyperledger.identus.castor.core.model.did.DID
 import org.hyperledger.identus.pollux.prex.PresentationSubmissionError.*
 import org.hyperledger.identus.pollux.vc.jwt.*
 import org.hyperledger.identus.shared.crypto.Apollo
-import org.hyperledger.identus.shared.json.JsonInterop
 import zio.*
 import zio.json.{DecoderOps, JsonDecoder}
 import zio.json.ast.Json
@@ -49,7 +48,7 @@ object PresentationSubmissionVerificationSpec extends ZIOSpecDefault {
         `@context` = Set("https://www.w3.org/2018/credentials/v1", "https://www.w3.org/2018/credentials/examples/v1"),
         `type` = Set("VerifiableCredential", "UniversityDegreeCredential"),
         maybeCredentialSchema = None,
-        credentialSubject = JsonInterop.toCirceJsonAst(subject),
+        credentialSubject = subject,
         maybeCredentialStatus = None,
         maybeRefreshService = None,
         maybeEvidence = None,

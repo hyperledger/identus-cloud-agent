@@ -1,7 +1,6 @@
 package org.hyperledger.identus.pollux.vc.jwt
 
-import io.circe.*
-import io.circe.syntax.*
+import zio.json.{DeriveJsonDecoder, DeriveJsonEncoder, JsonDecoder, JsonEncoder}
 
 case class MultiKey(
     publicKeyMultibase: Option[MultiBaseString] = None,
@@ -11,26 +10,20 @@ case class MultiKey(
   val `@context`: Set[String] = Set("https://w3id.org/security/multikey/v1")
 }
 object MultiKey {
-  given multiKeyEncoder: Encoder[MultiKey] =
-    (multiKey: MultiKey) =>
-      Json
-        .obj(
-          ("@context", multiKey.`@context`.asJson),
-          ("type", multiKey.`type`.asJson),
-          ("publicKeyMultibase", multiKey.publicKeyMultibase.asJson),
-          ("secretKeyMultibase", multiKey.secretKeyMultibase.asJson),
-        )
-
-  given multiKeyDecoder: Decoder[MultiKey] =
-    (c: HCursor) =>
-      for {
-        publicKeyMultibase <- c.downField("publicKeyMultibase").as[Option[MultiBaseString]]
-        secretKeyMultibase <- c.downField("secretKeyMultibase").as[Option[MultiBaseString]]
-      } yield {
-        MultiKey(
-          publicKeyMultibase = publicKeyMultibase,
-          secretKeyMultibase = secretKeyMultibase,
-        )
-      }
-
+  private case class Json_MultiKey(
+      `@context`: Set[String],
+      `type`: String,
+      publicKeyMultibase: Option[MultiBaseString],
+      secretKeyMultibase: Option[MultiBaseString],
+  )
+  private given JsonEncoder[Json_MultiKey] = DeriveJsonEncoder.gen
+  given JsonEncoder[MultiKey] = JsonEncoder[Json_MultiKey].contramap({ key =>
+    Json_MultiKey(
+      key.`@context`,
+      key.`type`,
+      key.publicKeyMultibase,
+      key.secretKeyMultibase
+    )
+  })
+  given JsonDecoder[MultiKey] = DeriveJsonDecoder.gen
 }

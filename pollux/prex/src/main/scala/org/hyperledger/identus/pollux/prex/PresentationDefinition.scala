@@ -4,7 +4,7 @@ import com.networknt.schema.{JsonSchema, SpecVersion}
 import org.hyperledger.identus.shared.json.{JsonPath, JsonPathError, JsonSchemaError, JsonSchemaUtils}
 import zio.*
 import zio.json.{JsonDecoder, JsonEncoder}
-import zio.json.ast.Json as ZioJson
+import zio.json.ast.Json
 
 opaque type JsonPathValue = String
 
@@ -20,16 +20,16 @@ object JsonPathValue {
   }
 }
 
-opaque type FieldFilter = ZioJson
+opaque type FieldFilter = Json
 
 object FieldFilter {
-  given Conversion[ZioJson, FieldFilter] = identity
+  given Conversion[Json, FieldFilter] = identity
 
-  given JsonEncoder[FieldFilter] = ZioJson.encoder
-  given JsonDecoder[FieldFilter] = ZioJson.decoder
+  given JsonEncoder[FieldFilter] = Json.encoder
+  given JsonDecoder[FieldFilter] = Json.decoder
 
   extension (f: FieldFilter)
-    def asJsonZio: ZioJson = f
+    def asJsonZio: Json = f
 
     // Json schema draft 7 must be used
     // https://identity.foundation/presentation-exchange/spec/v2.1.1/#json-schema

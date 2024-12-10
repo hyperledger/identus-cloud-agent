@@ -1,20 +1,19 @@
 package org.hyperledger.identus.pollux.vc.jwt
 
-import cats.implicits.*
 import com.nimbusds.jose.{JWSAlgorithm, JWSHeader, JWSObject, Payload}
 import com.nimbusds.jose.crypto.ECDSASigner
 import com.nimbusds.jwt.SignedJWT
-import io.circe.*
-import io.circe.syntax.*
 import org.hyperledger.identus.shared.crypto.{Ed25519KeyPair, Ed25519PublicKey, KmpEd25519KeyOps}
 import org.hyperledger.identus.shared.json.Json as JsonUtils
 import org.hyperledger.identus.shared.utils.Base64Utils
 import scodec.bits.ByteVector
 import zio.*
+import zio.json.{DecoderOps, DeriveJsonDecoder, DeriveJsonEncoder, EncoderOps, JsonDecoder, JsonEncoder}
+import zio.json.ast.{Json, JsonCursor}
 
-import java.security.*
+import java.io.IOException
 import java.security.interfaces.ECPublicKey
-import java.time.{Instant, ZoneOffset}
+import java.time.{Instant, OffsetDateTime, ZoneOffset}
 import scala.jdk.CollectionConverters.*
 
 sealed trait Proof {
@@ -29,24 +28,15 @@ sealed trait Proof {
   val nonce: Option[String] = None
 }
 
-trait DataIntegrityProof extends Proof {
+sealed trait DataIntegrityProof extends Proof {
   val proofValue: String
 }
 
 object Proof {
-  given decodeProof: Decoder[Proof] = new Decoder[Proof] {
-    final def apply(c: HCursor): Decoder.Result[Proof] = {
-      val decoders: List[Decoder[Proof]] = List(
-        Decoder[EddsaJcs2022Proof].widen,
-        Decoder[EcdsaSecp256k1Signature2019Proof].widen,
-        // Note: Add another proof types here when available
-      )
-      decoders.foldLeft(
-        Left[DecodingFailure, Proof](DecodingFailure("Cannot decode as Proof", c.history)): Decoder.Result[Proof]
-      ) { (acc, decoder) =>
-        acc.orElse(decoder.tryDecode(c))
-      }
-    }
+  given JsonDecoder[Proof] = JsonDecoder[Json].mapOrFail { json =>
+    json
+      .as[EddsaJcs2022Proof]
+      .orElse(json.as[EcdsaSecp256k1Signature2019Proof])
   }
 }
 
@@ -56,7 +46,7 @@ object EcdsaSecp256k1Signature2019ProofGenerator {
   }
   def generateProof(payload: Json, signer: ECDSASigner, pk: ECPublicKey): Task[EcdsaSecp256k1Signature2019Proof] = {
     for {
-      dataToSign <- ZIO.fromEither(JsonUtils.canonicalizeJsonLDoRdf(payload.spaces2))
+      dataToSign <- ZIO.fromEither(JsonUtils.canonicalizeJsonLDoRdf(payload.toJson))
       created = Instant.now()
       header = new JWSHeader.Builder(JWSAlgorithm.ES256K)
         .base64URLEncodePayload(false)
@@ -79,7 +69,7 @@ object EcdsaSecp256k1Signature2019ProofGenerator {
         publicKeyJwk = jwk
       )
       verificationMethodUrl = Base64Utils.createDataUrl(
-        ecdaSecp256k1VerificationKey2019.asJson.dropNullValues.noSpaces.getBytes,
+        ecdaSecp256k1VerificationKey2019.toJson.getBytes,
         "application/json"
       )
     } yield EcdsaSecp256k1Signature2019Proof(
@@ -91,7 +81,7 @@ object EcdsaSecp256k1Signature2019ProofGenerator {
 
   def verifyProof(payload: Json, jws: String, pk: ECPublicKey): Task[Boolean] = {
     for {
-      dataToVerify <- ZIO.fromEither(JsonUtils.canonicalizeJsonLDoRdf(payload.spaces2))
+      dataToVerify <- ZIO.fromEither(JsonUtils.canonicalizeJsonLDoRdf(payload.toJson))
       verifier = JWTVerification.toECDSAVerifier(pk)
       signedJws = SignedJWT.parse(jws)
       header = signedJws.getHeader
@@ -141,9 +131,9 @@ object EddsaJcs2022ProofGenerator {
 
   def generateProof(payload: Json, ed25519KeyPair: Ed25519KeyPair): Task[EddsaJcs2022Proof] = {
     for {
-      canonicalizedJsonString <- ZIO.fromEither(JsonUtils.canonicalizeToJcs(payload.spaces2))
-      canonicalizedJson <- ZIO.fromEither(parser.parse(canonicalizedJsonString))
-      dataToSign = canonicalizedJson.noSpaces.getBytes
+      canonicalizedJsonString <- ZIO.fromEither(JsonUtils.canonicalizeToJcs(payload.toJson))
+      canonicalizedJson <- ZIO.fromEither(canonicalizedJsonString.fromJson[Json].left.map(e => IOException(e)))
+      dataToSign = canonicalizedJson.toJson.getBytes
       signature = ed25519KeyPair.privateKey.sign(dataToSign)
       base58BtsEncodedSignature = MultiBaseString(
         header = MultiBaseString.Header.Base58Btc,
@@ -152,7 +142,7 @@ object EddsaJcs2022ProofGenerator {
       created = Instant.now()
       multiKey = pkToMultiKey(ed25519KeyPair.publicKey)
       verificationMethod = Base64Utils.createDataUrl(
-        multiKey.asJson.dropNullValues.noSpaces.getBytes,
+        multiKey.toJson.getBytes,
         "application/json"
       )
     } yield EddsaJcs2022Proof(
@@ -162,25 +152,16 @@ object EddsaJcs2022ProofGenerator {
     )
   }
 
-  def verifyProof(payload: Json, proofValue: String, pk: MultiKey): IO[ParsingFailure, Boolean] = for {
-    canonicalizedJsonString <- ZIO
-      .fromEither(JsonUtils.canonicalizeToJcs(payload.spaces2))
-      .mapError(ioError => ParsingFailure("Error Parsing canonicalized", ioError))
-    canonicalizedJson <- ZIO
-      .fromEither(parser.parse(canonicalizedJsonString))
-    dataToVerify = canonicalizedJson.noSpaces.getBytes
+  def verifyProof(payload: Json, proofValue: String, pk: MultiKey): IO[IOException, Boolean] = for {
+    canonicalizedJsonString <- ZIO.fromEither(JsonUtils.canonicalizeToJcs(payload.toJson))
+    canonicalizedJson <- ZIO.fromEither(canonicalizedJsonString.fromJson[Json].left.map(e => IOException(e)))
+    dataToVerify = canonicalizedJson.toJson.getBytes
     signature <- ZIO
       .fromEither(MultiBaseString.fromString(proofValue).flatMap(_.getBytes))
-      .mapError(error =>
-        // TODO fix RuntimeException
-        ParsingFailure(error, new RuntimeException(error))
-      )
+      .mapError(error => IOException(error))
     kmmPk <- ZIO
       .fromEither(multiKeytoPk(pk))
-      .mapError(error =>
-        // TODO fix RuntimeException
-        ParsingFailure("Error Parsing MultiBaseString", new RuntimeException("Error Parsing MultiBaseString"))
-      )
+      .mapError(error => IOException(error))
 
     isValid = verify(kmmPk, signature, dataToVerify)
   } yield isValid
@@ -200,10 +181,8 @@ case class EddsaJcs2022Proof(proofValue: String, verificationMethod: String, may
 }
 
 object EddsaJcs2022Proof {
-  given proofEncoder: Encoder[EddsaJcs2022Proof] =
-    DataIntegrityProofCodecs.proofEncoder[EddsaJcs2022Proof]("eddsa-jcs-2022")
-
-  given proofDecoder: Decoder[EddsaJcs2022Proof] = DataIntegrityProofCodecs.proofDecoder[EddsaJcs2022Proof](
+  given JsonEncoder[EddsaJcs2022Proof] = DataIntegrityProofCodecs.proofEncoder("eddsa-jcs-2022")
+  given JsonDecoder[EddsaJcs2022Proof] = DataIntegrityProofCodecs.proofDecoder(
     (proofValue, verificationMethod, created) => EddsaJcs2022Proof(proofValue, verificationMethod, created),
     "eddsa-jcs-2022"
   )
@@ -222,78 +201,89 @@ case class EcdsaSecp256k1Signature2019Proof(
 }
 
 object EcdsaSecp256k1Signature2019Proof {
+  private case class Json_EcdsaSecp256k1Signature2019Proof(
+      id: Option[String],
+      `type`: String = "EcdsaSecp256k1Signature2019",
+      proofPurpose: String = "assertionMethod",
+      verificationMethod: String,
+      created: Option[Instant],
+      domain: Option[String],
+      challenge: Option[String],
+      jws: String,
+      nonce: Option[String]
+  )
+  private object Json_EcdsaSecp256k1Signature2019Proof {
+    given JsonEncoder[Json_EcdsaSecp256k1Signature2019Proof] = DeriveJsonEncoder.gen
+    given JsonDecoder[Json_EcdsaSecp256k1Signature2019Proof] = DeriveJsonDecoder.gen
+  }
+  given JsonEncoder[EcdsaSecp256k1Signature2019Proof] = JsonEncoder[Json_EcdsaSecp256k1Signature2019Proof].contramap {
+    proof =>
+      Json_EcdsaSecp256k1Signature2019Proof(
+        id = proof.id,
+        `type` = proof.`type`,
+        proofPurpose = proof.proofPurpose,
+        verificationMethod = proof.verificationMethod,
+        created = proof.created,
+        domain = proof.domain,
+        challenge = proof.challenge,
+        jws = proof.jws,
+        nonce = proof.nonce
+      )
+  }
+  given JsonDecoder[EcdsaSecp256k1Signature2019Proof] = JsonDecoder[Json_EcdsaSecp256k1Signature2019Proof].map {
+    jsonProof =>
+      EcdsaSecp256k1Signature2019Proof(
+        jws = jsonProof.jws,
+        verificationMethod = jsonProof.verificationMethod,
+        created = jsonProof.created,
+        challenge = jsonProof.challenge,
+        domain = jsonProof.domain,
+        nonce = jsonProof.nonce
+      )
+  }
 
-  given proofEncoder: Encoder[EcdsaSecp256k1Signature2019Proof] =
-    (proof: EcdsaSecp256k1Signature2019Proof) =>
-      Json
-        .obj(
-          ("id", proof.id.asJson),
-          ("type", proof.`type`.asJson),
-          ("proofPurpose", proof.proofPurpose.asJson),
-          ("verificationMethod", proof.verificationMethod.asJson),
-          ("created", proof.created.map(_.atOffset(ZoneOffset.UTC)).asJson),
-          ("domain", proof.domain.asJson),
-          ("challenge", proof.challenge.asJson),
-          ("jws", proof.jws.asJson),
-          ("nonce", proof.nonce.asJson),
-        )
-
-  given proofDecoder: Decoder[EcdsaSecp256k1Signature2019Proof] =
-    (c: HCursor) =>
-      for {
-        id <- c.downField("id").as[Option[String]]
-        `type` <- c.downField("type").as[String]
-        proofPurpose <- c.downField("proofPurpose").as[String]
-        verificationMethod <- c.downField("verificationMethod").as[String]
-        created <- c.downField("created").as[Option[Instant]]
-        domain <- c.downField("domain").as[Option[String]]
-        challenge <- c.downField("challenge").as[Option[String]]
-        jws <- c.downField("jws").as[String]
-        nonce <- c.downField("nonce").as[Option[String]]
-      } yield {
-        EcdsaSecp256k1Signature2019Proof(
-          jws = jws,
-          verificationMethod = verificationMethod,
-          created = created,
-          challenge = challenge,
-          domain = domain,
-          nonce = nonce
-        )
-      }
 }
 
 object DataIntegrityProofCodecs {
-  def proofEncoder[T <: DataIntegrityProof](cryptoSuiteValue: String): Encoder[T] = (proof: T) =>
-    Json.obj(
-      ("id", proof.id.asJson),
-      ("type", proof.`type`.asJson),
-      ("proofPurpose", proof.proofPurpose.asJson),
-      ("verificationMethod", proof.verificationMethod.asJson),
-      ("created", proof.created.map(_.atOffset(ZoneOffset.UTC)).asJson),
-      ("domain", proof.domain.asJson),
-      ("challenge", proof.challenge.asJson),
-      ("proofValue", proof.proofValue.asJson),
-      ("cryptoSuite", Json.fromString(cryptoSuiteValue)),
-      ("previousProof", proof.previousProof.asJson),
-      ("nonce", proof.nonce.asJson)
-    )
+  private case class Json_DataIntegrityProof(
+      id: Option[String] = None,
+      `type`: String,
+      proofPurpose: String,
+      verificationMethod: String,
+      created: Option[OffsetDateTime] = None,
+      domain: Option[String] = None,
+      challenge: Option[String] = None,
+      proofValue: String,
+      cryptoSuite: String,
+      previousProof: Option[String] = None,
+      nonce: Option[String] = None
+  )
+  private given JsonEncoder[Json_DataIntegrityProof] = DeriveJsonEncoder.gen
+  def proofEncoder[T <: DataIntegrityProof](cryptoSuiteValue: String): JsonEncoder[T] =
+    JsonEncoder[Json_DataIntegrityProof].contramap { proof =>
+      Json_DataIntegrityProof(
+        proof.id,
+        proof.`type`,
+        proof.proofPurpose,
+        proof.verificationMethod,
+        proof.created.map(_.atOffset(ZoneOffset.UTC)),
+        proof.domain,
+        proof.challenge,
+        proof.proofValue,
+        cryptoSuiteValue,
+        proof.previousProof,
+        proof.nonce
+      )
+    }
 
   def proofDecoder[T <: DataIntegrityProof](
       createProof: (String, String, Option[Instant]) => T,
       cryptoSuiteValue: String
-  ): Decoder[T] =
-    (c: HCursor) =>
-      for {
-        id <- c.downField("id").as[Option[String]]
-        `type` <- c.downField("type").as[String]
-        proofPurpose <- c.downField("proofPurpose").as[String]
-        verificationMethod <- c.downField("verificationMethod").as[String]
-        created <- c.downField("created").as[Option[Instant]]
-        domain <- c.downField("domain").as[Option[String]]
-        challenge <- c.downField("challenge").as[Option[String]]
-        proofValue <- c.downField("proofValue").as[String]
-        previousProof <- c.downField("previousProof").as[Option[String]]
-        nonce <- c.downField("nonce").as[Option[String]]
-        cryptoSuite <- c.downField("cryptoSuite").as[String]
-      } yield createProof(proofValue, verificationMethod, created)
+  ): JsonDecoder[T] = JsonDecoder[Json].mapOrFail { json =>
+    for {
+      proofValue <- json.get(JsonCursor.field("proofValue").isString).map(_.value)
+      verificationMethod <- json.get(JsonCursor.field("verificationMethod").isString).map(_.value)
+      maybeCreated <- json.get(JsonCursor.field("created")).map(_.as[Instant])
+    } yield createProof(proofValue, verificationMethod, maybeCreated.toOption)
+  }
 }

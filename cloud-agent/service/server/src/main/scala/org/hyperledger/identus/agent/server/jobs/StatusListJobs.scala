@@ -10,14 +10,13 @@ import org.hyperledger.identus.pollux.core.model.{CredInStatusList, CredentialSt
 import org.hyperledger.identus.pollux.core.service.{CredentialService, CredentialStatusListService}
 import org.hyperledger.identus.pollux.vc.jwt.revocation.{BitString, VCStatusList2021, VCStatusList2021Error}
 import org.hyperledger.identus.resolvers.DIDResolver
-import org.hyperledger.identus.shared.json.JsonInterop
 import org.hyperledger.identus.shared.messaging
 import org.hyperledger.identus.shared.messaging.{Message, Producer, WalletIdAndRecordId}
 import org.hyperledger.identus.shared.models.{WalletAccessContext, WalletId}
 import org.hyperledger.identus.shared.utils.DurationOps.toMetricsSeconds
 import zio.*
+import zio.json.{DecoderOps, EncoderOps}
 import zio.json.ast.Json
-import zio.json.DecoderOps
 import zio.metrics.Metric
 
 import java.util.UUID
@@ -78,7 +77,7 @@ object StatusListJobs extends BackgroundJobsHelper {
         vcStatusListCredJson <- ZIO.fromEither(vcStatusListCredString.fromJson[Json])
         issuer <- createJwtVcIssuer(statusListWithCreds.issuer, VerificationRelationship.AssertionMethod, None)
         vcStatusListCred <- VCStatusList2021
-          .decodeFromJson(JsonInterop.toCirceJsonAst(vcStatusListCredJson), issuer)
+          .decodeFromJson(vcStatusListCredJson, issuer)
           .mapError(x => new Throwable(x.msg))
         bitString <- vcStatusListCred.getBitString.mapError(x => new Throwable(x.msg))
         _ <- ZIO.collectAll(
@@ -99,7 +98,7 @@ object StatusListJobs extends BackgroundJobsHelper {
           case VCStatusList2021Error.EncodingError(msg: String) => new Throwable(msg)
           case VCStatusList2021Error.DecodingError(msg: String) => new Throwable(msg)
         }
-        vcStatusListCredJsonString <- updatedVcStatusListCred.toJsonWithEmbeddedProof.map(_.spaces2)
+        vcStatusListCredJsonString <- updatedVcStatusListCred.toJsonWithEmbeddedProof.map(_.toJson)
         _ <- credentialStatusListService.updateStatusListCredential(
           statusListWithCreds.id,
           vcStatusListCredJsonString

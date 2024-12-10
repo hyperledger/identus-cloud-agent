@@ -1,12 +1,10 @@
 package org.hyperledger.identus.verification.controller
 
 import org.hyperledger.identus.agent.walletapi.model.BaseEntity
-import org.hyperledger.identus.agent.walletapi.service.{ManagedDIDService, MockManagedDIDService}
+import org.hyperledger.identus.agent.walletapi.service.MockManagedDIDService
 import org.hyperledger.identus.castor.core.service.MockDIDService
 import org.hyperledger.identus.iam.authentication.AuthenticatorWithAuthZ
 import org.hyperledger.identus.pollux.vc.jwt.*
-import org.hyperledger.identus.pollux.vc.jwt.CredentialPayload.Implicits.*
-import org.hyperledger.identus.shared.json.JsonInterop
 import org.hyperledger.identus.verification.controller.http.*
 import sttp.client3.{basicRequest, DeserializationException, Response, UriContext}
 import sttp.client3.ziojson.*
@@ -47,12 +45,10 @@ object VcVerificationControllerImplSpec extends ZIOSpecDefault with VcVerificati
               `type` = "JsonSchemaValidator2018"
             )
           ),
-          credentialSubject = JsonInterop.toCirceJsonAst(
-            Json.Obj(
-              "userName" -> Json.Str("Bob"),
-              "age" -> Json.Num(42),
-              "email" -> Json.Str("email")
-            )
+          credentialSubject = Json.Obj(
+            "userName" -> Json.Str("Bob"),
+            "age" -> Json.Num(42),
+            "email" -> Json.Str("email")
           ),
           maybeCredentialStatus = Some(
             CredentialStatus(
@@ -73,7 +69,7 @@ object VcVerificationControllerImplSpec extends ZIOSpecDefault with VcVerificati
           maybeTermsOfUse = Option.empty,
           aud = Set(verifier)
         ).toJwtCredentialPayload
-        signedJwtCredential = issuer.signer.encode(io.circe.syntax.EncoderOps(jwtCredentialPayload).asJson)
+        signedJwtCredential = issuer.signer.encode(jwtCredentialPayload.toJsonAST.toOption.get)
         authenticator <- ZIO.service[AuthenticatorWithAuthZ[BaseEntity]]
         backend = httpBackend(vcVerificationController, authenticator)
         request = List(

@@ -7,7 +7,7 @@ import org.hyperledger.identus.iam.authentication.AuthenticationError.{
   InvalidCredentials
 }
 import org.hyperledger.identus.shared.utils.Traverse.*
-import pdi.jwt.{JwtCirce, JwtClaim, JwtOptions}
+import pdi.jwt.{JwtClaim, JwtOptions, JwtZIOJson}
 import zio.*
 import zio.json.ast.Json
 
@@ -61,7 +61,7 @@ final class AccessToken private (token: String, claims: JwtClaim, rolesClaimPath
 
 object AccessToken {
   def fromString(token: String, rolesClaimPath: Seq[String] = Nil): Either[String, AccessToken] =
-    JwtCirce
+    JwtZIOJson
       .decode(token, JwtOptions(false, false, false))
       .map(claims => AccessToken(token, claims, rolesClaimPath))
       .toEither
