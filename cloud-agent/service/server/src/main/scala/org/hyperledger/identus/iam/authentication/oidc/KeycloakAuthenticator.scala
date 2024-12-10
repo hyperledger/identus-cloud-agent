@@ -7,7 +7,7 @@ import org.hyperledger.identus.iam.authentication.AuthenticationError.{
   InvalidCredentials
 }
 import org.hyperledger.identus.shared.utils.Traverse.*
-import pdi.jwt.{JwtZIOJson, JwtClaim, JwtOptions}
+import pdi.jwt.{JwtClaim, JwtOptions, JwtZIOJson}
 import zio.*
 import zio.json.ast.Json
 

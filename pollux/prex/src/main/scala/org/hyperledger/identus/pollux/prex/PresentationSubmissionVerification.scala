@@ -5,7 +5,7 @@ import org.hyperledger.identus.pollux.vc.jwt.{JWT, JwtCredential, JwtPresentatio
 import org.hyperledger.identus.shared.json.{JsonPathError, JsonSchemaValidatorImpl}
 import org.hyperledger.identus.shared.models.{Failure, StatusCode}
 import zio.*
-import zio.json.ast.Json as ZioJson
+import zio.json.ast.Json
 import zio.json.EncoderOps
 
 sealed trait PresentationSubmissionError extends Failure {
@@ -81,7 +81,7 @@ object PresentationSubmissionVerification {
   def verify(
       pd: PresentationDefinition,
       ps: PresentationSubmission,
-      rootTraversalObject: ZioJson,
+      rootTraversalObject: Json,
   )(formatVerification: ClaimFormatVerification): IO[PresentationSubmissionError, Unit] = {
     for {
       _ <- verifySubmissionId(pd, ps)
@@ -118,7 +118,7 @@ object PresentationSubmissionVerification {
 
   private def verifyInputConstraints(
       pd: PresentationDefinition,
-      entries: Seq[(String, ZioJson)]
+      entries: Seq[(String, Json)]
   ): IO[PresentationSubmissionError, Unit] = {
     val descriptorLookup = pd.input_descriptors.map(d => d.id -> d).toMap
     val descriptorWithEntry = entries.flatMap { case (id, entry) => descriptorLookup.get(id).map(_ -> entry) }
@@ -131,7 +131,7 @@ object PresentationSubmissionVerification {
 
   private def verifyInputConstraint(
       descriptor: InputDescriptor,
-      entry: ZioJson
+      entry: Json
   ): IO[PresentationSubmissionError, Unit] = {
     val mandatoryFields = descriptor.constraints.fields
       .getOrElse(Nil)
@@ -156,9 +156,9 @@ object PresentationSubmissionVerification {
   }
 
   private def extractSubmissionEntry(
-      traversalObject: ZioJson,
+      traversalObject: Json,
       descriptor: InputDescriptorMapping
-  )(formatVerification: ClaimFormatVerification): IO[PresentationSubmissionError, ZioJson] = {
+  )(formatVerification: ClaimFormatVerification): IO[PresentationSubmissionError, Json] = {
     for {
       path <- ZIO
         .fromEither(descriptor.path.toJsonPath)
@@ -179,9 +179,9 @@ object PresentationSubmissionVerification {
   }
 
   private def verifyJwtVc(
-      json: ZioJson,
+      json: Json,
       path: JsonPathValue
-  )(formatVerification: JWT => IO[String, Unit]): IO[PresentationSubmissionError, ZioJson] = {
+  )(formatVerification: JWT => IO[String, Unit]): IO[PresentationSubmissionError, Json] = {
     val format = ClaimFormatValue.jwt_vc
     for {
       jwt <- ZIO
@@ -197,9 +197,9 @@ object PresentationSubmissionVerification {
   }
 
   private def verifyJwtVp(
-      json: ZioJson,
+      json: Json,
       path: JsonPathValue
-  )(formatVerification: JWT => IO[String, Unit]): IO[PresentationSubmissionError, ZioJson] = {
+  )(formatVerification: JWT => IO[String, Unit]): IO[PresentationSubmissionError, Json] = {
     val format = ClaimFormatValue.jwt_vp
     for {
       jwt <- ZIO

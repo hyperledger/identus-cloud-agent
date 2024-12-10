@@ -18,6 +18,6 @@ case class JsonWebKey(
 )
 
 object JsonWebKey {
-  given jsonWebKeyEncoderCirceZioJson: JsonEncoder[JsonWebKey] = DeriveJsonEncoder.gen
-  given jsonWebKeyDecoderCirceZioJson: JsonDecoder[JsonWebKey] = DeriveJsonDecoder.gen
+  given JsonEncoder[JsonWebKey] = DeriveJsonEncoder.gen
+  given JsonDecoder[JsonWebKey] = DeriveJsonDecoder.gen
 }

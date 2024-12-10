@@ -9,7 +9,7 @@ import org.hyperledger.identus.shared.crypto.{Ed25519KeyPair, Secp256k1PrivateKe
 import org.hyperledger.identus.shared.models.KeyId
 import zio.*
 import zio.json.{EncoderOps, JsonDecoder, JsonEncoder}
-import zio.json.ast.Json as ZioJson
+import zio.json.ast.Json
 
 import java.security.*
 import java.security.interfaces.ECPublicKey
@@ -41,9 +41,9 @@ object JwtSignerImplicits {
 }
 
 trait Signer {
-  def encode(claim: ZioJson): JWT
+  def encode(claim: Json): JWT
 
-  def generateProofForJson(payload: ZioJson, pk: PublicKey): Task[Proof]
+  def generateProofForJson(payload: Json, pk: PublicKey): Task[Proof]
 }
 
 // works with java 7, 8, 11 & bouncycastle provider
@@ -56,7 +56,7 @@ class ES256KSigner(privateKey: PrivateKey, keyId: Option[KeyId] = None) extends 
     ecdsaSigner
   }
 
-  override def generateProofForJson(payload: ZioJson, pk: PublicKey): Task[Proof] = {
+  override def generateProofForJson(payload: Json, pk: PublicKey): Task[Proof] = {
     val err = Throwable("Public key must be secp256k1 EC public key")
     pk match
       case pk: ECPublicKey =>
@@ -64,7 +64,7 @@ class ES256KSigner(privateKey: PrivateKey, keyId: Option[KeyId] = None) extends 
       case _ => ZIO.fail(err)
   }
 
-  override def encode(claim: ZioJson): JWT = {
+  override def encode(claim: Json): JWT = {
     val claimSet = JWTClaimsSet.parse(claim.toJson)
     val signedJwt = SignedJWT(
       keyId
@@ -84,11 +84,11 @@ class EdSigner(ed25519KeyPair: Ed25519KeyPair, keyId: Option[KeyId] = None) exte
     ed25519Signer
   }
 
-  override def generateProofForJson(payload: ZioJson, pk: PublicKey): Task[Proof] = {
+  override def generateProofForJson(payload: Json, pk: PublicKey): Task[Proof] = {
     EddsaJcs2022ProofGenerator.generateProof(payload, ed25519KeyPair)
   }
 
-  override def encode(claim: ZioJson): JWT = {
+  override def encode(claim: Json): JWT = {
     val claimSet = JWTClaimsSet.parse(claim.toJson)
 
     val signedJwt = SignedJWT(
