@@ -1,12 +1,11 @@
 package org.hyperledger.identus.pollux.vc.jwt
 
-import io.circe.*
-import io.circe.parser.decode
 import org.hyperledger.identus.castor.core.model.did.VerificationRelationship
 import org.hyperledger.identus.shared.http.UriResolver
 import pdi.jwt.{JwtCirce, JwtOptions}
 import zio.*
-import zio.json.{DeriveJsonEncoder, EncoderOps, JsonEncoder}
+import zio.json.{DecoderOps, DeriveJsonDecoder, DeriveJsonEncoder, EncoderOps, JsonDecoder, JsonEncoder}
+import zio.json.ast.{Json, JsonCursor}
 import zio.prelude.*
 
 import java.security.PublicKey
@@ -16,13 +15,33 @@ import scala.util.Try
 
 sealed trait VerifiablePresentationPayload
 
-case class Prover(did: String, signer: Signer, publicKey: PublicKey)
+object VerifiablePresentationPayload {
+  given JsonDecoder[VerifiablePresentationPayload] = JsonDecoder[Json].mapOrFail { json =>
+    json
+      .as[JwtVerifiablePresentationPayload]
+      .orElse(json.as[W3cVerifiablePresentationPayload])
+  }
+}
 
 case class W3cVerifiablePresentationPayload(payload: W3cPresentationPayload, proof: JwtProof)
     extends Verifiable(proof),
       VerifiablePresentationPayload
 
+object W3cVerifiablePresentationPayload {
+  given JsonDecoder[W3cVerifiablePresentationPayload] = JsonDecoder[Json].mapOrFail { json =>
+    for {
+      payload <- json.as[W3cPresentationPayload]
+      proof <- json.get(JsonCursor.field("proof")).flatMap(_.as[JwtProof])
+    } yield W3cVerifiablePresentationPayload(payload, proof)
+  }
+}
+
 case class JwtVerifiablePresentationPayload(jwt: JWT) extends VerifiablePresentationPayload
+
+object JwtVerifiablePresentationPayload {
+  given JsonDecoder[JwtVerifiablePresentationPayload] =
+    JsonDecoder.string.map(s => JwtVerifiablePresentationPayload(JWT(s)))
+}
 
 sealed trait PresentationPayload(
     `@context`: IndexedSeq[String],
@@ -88,11 +107,105 @@ case class W3cPresentationPayload(
       maybeNonce = maybeNonce
     )
 
+object W3cPresentationPayload {
+  import JsonEncoders.given
+  private case class Json_W3cPresentationPayload(
+      `@context`: String | IndexedSeq[String],
+      `type`: String | IndexedSeq[String],
+      id: Option[String],
+      verifiableCredential: IndexedSeq[VerifiableCredentialPayload],
+      holder: String,
+      verifier: String | IndexedSeq[String],
+      issuanceDate: Option[Instant],
+      expirationDate: Option[Instant]
+  )
+
+  private given JsonEncoder[Json_W3cPresentationPayload] = DeriveJsonEncoder.gen
+  private given JsonDecoder[Json_W3cPresentationPayload] = DeriveJsonDecoder.gen
+
+  given JsonEncoder[W3cPresentationPayload] = JsonEncoder[Json_W3cPresentationPayload].contramap { payload =>
+    Json_W3cPresentationPayload(
+      payload.`@context`,
+      payload.`type`,
+      payload.maybeId,
+      payload.verifiableCredential,
+      payload.holder,
+      payload.verifier,
+      payload.maybeIssuanceDate,
+      payload.maybeExpirationDate
+    )
+  }
+  given JsonDecoder[W3cPresentationPayload] = JsonDecoder[Json_W3cPresentationPayload].map { payload =>
+    W3cPresentationPayload(
+      payload.`@context` match
+        case str: String             => IndexedSeq(str)
+        case set: IndexedSeq[String] => set
+      ,
+      payload.id,
+      payload.`type` match
+        case str: String             => IndexedSeq(str)
+        case set: IndexedSeq[String] => set
+      ,
+      payload.verifiableCredential match
+        case str: VerifiableCredentialPayload             => IndexedSeq(str)
+        case set: IndexedSeq[VerifiableCredentialPayload] => set
+      ,
+      payload.holder,
+      payload.verifier match
+        case str: String             => IndexedSeq(str)
+        case set: IndexedSeq[String] => set
+      ,
+      payload.issuanceDate,
+      payload.expirationDate,
+      None
+    )
+  }
+}
+
 case class JwtVp(
     `@context`: IndexedSeq[String],
     `type`: IndexedSeq[String],
     verifiableCredential: IndexedSeq[VerifiableCredentialPayload]
 )
+
+object JwtVp {
+  private case class Json_JwtVp(
+      `@context`: IndexedSeq[String],
+      `type`: IndexedSeq[String],
+      verifiableCredential: IndexedSeq[VerifiableCredentialPayload]
+  )
+
+  private given JsonEncoder[Json_JwtVp] = DeriveJsonEncoder.gen
+  private given JsonDecoder[Json_JwtVp] = JsonDecoder[Json].mapOrFail { json =>
+    for {
+      context <- json
+        .get(JsonCursor.field("@context"))
+        .flatMap(ctx => ctx.as[String].map(IndexedSeq(_)).orElse(ctx.as[IndexedSeq[String]]))
+      typ <- json
+        .get(JsonCursor.field("type"))
+        .flatMap(ctx => ctx.as[String].map(IndexedSeq(_)).orElse(ctx.as[IndexedSeq[String]]))
+      vcp <- json
+        .get(JsonCursor.field("verifiableCredential"))
+        .flatMap(ctx =>
+          ctx
+            .as[VerifiableCredentialPayload]
+            .map(IndexedSeq(_))
+            .orElse(ctx.as[IndexedSeq[VerifiableCredentialPayload]])
+        )
+    } yield Json_JwtVp(context, typ, vcp)
+  }
+
+  given JsonEncoder[JwtVp] = JsonEncoder[Json_JwtVp].contramap { payload =>
+    Json_JwtVp(
+      payload.`@context`,
+      payload.`type`,
+      payload.verifiableCredential
+    )
+  }
+  given JsonDecoder[JwtVp] = JsonDecoder[Json_JwtVp].map { payload =>
+    JwtVp(payload.`@context`, payload.`type`, payload.verifiableCredential)
+  }
+}
 
 case class JwtPresentationPayload(
     iss: String,
@@ -113,6 +226,48 @@ case class JwtPresentationPayload(
       maybeJti = maybeJti,
       maybeNonce = maybeNonce
     )
+
+object JwtPresentationPayload {
+  import JsonEncoders.given
+  private case class Json_JwtPresentationPayload(
+      iss: String,
+      vp: JwtVp,
+      nbf: Option[Instant],
+      aud: String | IndexedSeq[String] = IndexedSeq.empty,
+      exp: Option[Instant],
+      jti: Option[String],
+      nonce: Option[String]
+  )
+
+  private given JsonEncoder[Json_JwtPresentationPayload] = DeriveJsonEncoder.gen
+  private given JsonDecoder[Json_JwtPresentationPayload] = DeriveJsonDecoder.gen
+
+  given JsonEncoder[JwtPresentationPayload] = JsonEncoder[Json_JwtPresentationPayload].contramap { payload =>
+    Json_JwtPresentationPayload(
+      payload.iss,
+      payload.vp,
+      payload.maybeNbf,
+      payload.aud,
+      payload.maybeExp,
+      payload.maybeJti,
+      payload.maybeNonce
+    )
+  }
+  given JsonDecoder[JwtPresentationPayload] = JsonDecoder[Json_JwtPresentationPayload].map { payload =>
+    JwtPresentationPayload(
+      payload.iss,
+      payload.vp,
+      payload.nbf,
+      payload.aud match
+        case str: String             => IndexedSeq(str)
+        case set: IndexedSeq[String] => set.distinct
+      ,
+      payload.exp,
+      payload.jti,
+      payload.nonce
+    )
+  }
+}
 
 //FIXME THIS WILL NOT WORK like that
 case class AnomcredVp(
@@ -140,197 +295,7 @@ case class AnomcredPresentationPayload(
       maybeNonce = maybeNonce
     )
 
-object PresentationPayload {
-
-  object Implicits {
-
-    import CredentialPayload.Implicits.{*, given}
-    import InstantDecoderEncoder.*
-    import JwtProof.Implicits.*
-
-    private case class Json_W3cPresentationPayload(
-        `@context`: Set[String],
-        `type`: Set[String],
-        id: Option[String],
-        verifiableCredential: Set[VerifiableCredentialPayload],
-        holder: String,
-        verifier: Set[String],
-        issuanceDate: Option[Instant],
-        expirationDate: Option[Instant]
-    )
-    private given JsonEncoder[Json_W3cPresentationPayload] = DeriveJsonEncoder.gen
-    given JsonEncoder[W3cPresentationPayload] = JsonEncoder[Json_W3cPresentationPayload].contramap { payload =>
-      Json_W3cPresentationPayload(
-        payload.`@context`.toSet,
-        payload.`type`.toSet,
-        payload.maybeId,
-        payload.verifiableCredential.toSet,
-        payload.holder,
-        payload.verifier.toSet,
-        payload.maybeIssuanceDate,
-        payload.maybeExpirationDate
-      )
-    }
-
-    private case class Json_JwtVp(
-        `@context`: Set[String],
-        `type`: Set[String],
-        verifiableCredential: Set[VerifiableCredentialPayload]
-    )
-    private given JsonEncoder[Json_JwtVp] = DeriveJsonEncoder.gen
-    given JsonEncoder[JwtVp] = JsonEncoder[Json_JwtVp].contramap { payload =>
-      Json_JwtVp(
-        payload.`@context`.toSet,
-        payload.`type`.toSet,
-        payload.verifiableCredential.toSet
-      )
-    }
-
-    case class Json_JwtPresentationPayload(
-        iss: String,
-        vp: JwtVp,
-        nbf: Option[Instant],
-        aud: Set[String],
-        exp: Option[Instant],
-        jti: Option[String],
-        nonce: Option[String]
-    )
-    private given JsonEncoder[Json_JwtPresentationPayload] = DeriveJsonEncoder.gen
-    given JsonEncoder[JwtPresentationPayload] = JsonEncoder[Json_JwtPresentationPayload].contramap { payload =>
-      Json_JwtPresentationPayload(
-        payload.iss,
-        payload.vp,
-        payload.maybeNbf,
-        payload.aud.toSet,
-        payload.maybeExp,
-        payload.maybeJti,
-        payload.maybeNonce
-      )
-    }
-
-    implicit val w3cPresentationPayloadDecoder: Decoder[W3cPresentationPayload] =
-      (c: HCursor) =>
-        for {
-          `@context` <- c
-            .downField("@context")
-            .as[IndexedSeq[String]]
-            .orElse(c.downField("@context").as[String].map(IndexedSeq(_)))
-          maybeId <- c.downField("id").as[Option[String]]
-          `type` <- c
-            .downField("type")
-            .as[IndexedSeq[String]]
-            .orElse(c.downField("type").as[String].map(IndexedSeq(_)))
-          holder <- c.downField("holder").as[String]
-          verifiableCredential <- c
-            .downField("verifiableCredential")
-            .as[Option[VerifiableCredentialPayload]]
-            .map(_.iterator.toIndexedSeq)
-            .orElse(
-              c.downField("verifiableCredential")
-                .as[Option[IndexedSeq[VerifiableCredentialPayload]]]
-                .map(_.iterator.toIndexedSeq.flatten)
-            )
-          verifier <- c
-            .downField("verifier")
-            .as[Option[String]]
-            .map(_.iterator.toIndexedSeq)
-            .orElse(c.downField("verifier").as[Option[IndexedSeq[String]]].map(_.iterator.toIndexedSeq.flatten))
-          maybeIssuanceDate <- c.downField("issuanceDate").as[Option[Instant]]
-          maybeExpirationDate <- c.downField("expirationDate").as[Option[Instant]]
-        } yield {
-          W3cPresentationPayload(
-            `@context` = `@context`.distinct,
-            maybeId = maybeId,
-            `type` = `type`.distinct,
-            verifiableCredential = verifiableCredential.distinct,
-            holder = holder,
-            verifier = verifier.distinct,
-            maybeIssuanceDate = maybeIssuanceDate,
-            maybeExpirationDate = maybeExpirationDate,
-            maybeNonce = Option.empty
-          )
-        }
-
-    implicit val jwtVpDecoder: Decoder[JwtVp] =
-      (c: HCursor) =>
-        for {
-          `@context` <- c
-            .downField("@context")
-            .as[IndexedSeq[String]]
-            .orElse(c.downField("@context").as[String].map(IndexedSeq(_)))
-          `type` <- c
-            .downField("type")
-            .as[IndexedSeq[String]]
-            .orElse(c.downField("type").as[String].map(IndexedSeq(_)))
-          maybeVerifiableCredential <- c
-            .downField("verifiableCredential")
-            .as[Option[IndexedSeq[VerifiableCredentialPayload]]]
-        } yield {
-          JwtVp(
-            `@context` = `@context`.distinct,
-            `type` = `type`.distinct,
-            verifiableCredential = maybeVerifiableCredential.toIndexedSeq.flatten
-          )
-        }
-
-    implicit val JwtPresentationPayloadDecoder: Decoder[JwtPresentationPayload] =
-      (c: HCursor) =>
-        for {
-          iss <- c.downField("iss").as[String]
-          vp <- c.downField("vp").as[JwtVp]
-          maybeNbf <- c.downField("nbf").as[Option[Instant]]
-          aud <- c
-            .downField("aud")
-            .as[Option[String]]
-            .map(_.iterator.toIndexedSeq)
-            .orElse(c.downField("aud").as[Option[IndexedSeq[String]]].map(_.iterator.toIndexedSeq.flatten))
-          maybeExp <- c.downField("exp").as[Option[Instant]]
-          maybeJti <- c.downField("jti").as[Option[String]]
-          maybeNonce <- c.downField("nonce").as[Option[String]]
-        } yield {
-          JwtPresentationPayload(
-            iss = iss,
-            vp = vp,
-            maybeNbf = maybeNbf,
-            aud = aud.distinct,
-            maybeExp = maybeExp,
-            maybeJti = maybeJti,
-            maybeNonce = maybeNonce
-          )
-        }
-
-    implicit val w3cVerifiablePresentationPayloadDecoder: Decoder[W3cVerifiablePresentationPayload] =
-      (c: HCursor) =>
-        for {
-          payload <- c.as[W3cPresentationPayload]
-          proof <- c.downField("proof").as[JwtProof]
-        } yield {
-          W3cVerifiablePresentationPayload(
-            payload = payload,
-            proof = proof
-          )
-        }
-
-    implicit val jwtVerifiablePresentationPayloadDecoder: Decoder[JwtVerifiablePresentationPayload] =
-      (c: HCursor) =>
-        for {
-          jwt <- c.as[String]
-        } yield {
-          JwtVerifiablePresentationPayload(
-            jwt = JWT(jwt)
-          )
-        }
-
-    implicit val verifiablePresentationPayloadDecoder: Decoder[VerifiablePresentationPayload] =
-      jwtVerifiablePresentationPayloadDecoder.or(
-        w3cVerifiablePresentationPayloadDecoder.asInstanceOf[Decoder[VerifiablePresentationPayload]]
-      )
-  }
-}
-
 object JwtPresentation {
-
-  import PresentationPayload.Implicits.{*, given}
 
   def encodeJwt(payload: JwtPresentationPayload, issuer: Issuer): JWT =
     issuer.signer.encode(payload.toJsonAST.toOption.get)
@@ -348,22 +313,10 @@ object JwtPresentation {
   def toEncodedJwt(payload: W3cPresentationPayload, issuer: Issuer): JWT =
     encodeJwt(payload.toJwtPresentationPayload, issuer)
 
-  def decodeJwt(jwt: JWT): Try[JwtPresentationPayload] = {
-    JwtCirce
-      .decodeRaw(jwt.value, JwtOptions(signature = false, expiration = false, notBefore = false))
-      .flatMap(decode[JwtPresentationPayload](_).toTry)
-  }
-
-  def decodeJwt[A](jwt: JWT)(using decoder: io.circe.Decoder[A]): Try[A] = {
+  def decodeJwt[A](jwt: JWT)(using decoder: JsonDecoder[A]): Try[A] = {
     JwtCirce
       .decodeRaw(jwt.value, options = JwtOptions(signature = false, expiration = false, notBefore = false))
-      .flatMap(decode[A](_).toTry)
-  }
-
-  def decodeJwt(jwt: JWT, publicKey: PublicKey): Try[JwtPresentationPayload] = {
-    JwtCirce
-      .decodeRaw(jwt.value, publicKey, JwtOptions(expiration = false, notBefore = false))
-      .flatMap(decode[JwtPresentationPayload](_).toTry)
+      .flatMap(a => a.fromJson[A].left.map(s => new RuntimeException(s)).toTry)
   }
 
   def validateEncodedJwt(jwt: JWT, publicKey: PublicKey): Validation[String, Unit] =
@@ -374,7 +327,7 @@ object JwtPresentation {
       proofPurpose: Option[VerificationRelationship]
   )(didResolver: DidResolver): IO[String, Validation[String, Unit]] = {
     JWTVerification.validateEncodedJwt(jwt, proofPurpose)(didResolver: DidResolver)(claim =>
-      Validation.fromEither(decode[JwtPresentationPayload](claim).left.map(_.toString))
+      Validation.fromEither(claim.fromJson[JwtPresentationPayload])
     )(_.iss)
   }
 
@@ -383,7 +336,7 @@ object JwtPresentation {
       proofPurpose: Option[VerificationRelationship]
   )(didResolver: DidResolver): IO[String, Validation[String, Unit]] = {
     JWTVerification.validateEncodedJwt(jwt, proofPurpose)(didResolver: DidResolver)(claim =>
-      Validation.fromEither(decode[W3cPresentationPayload](claim).left.map(_.toString))
+      Validation.fromEither(claim.fromJson[W3cPresentationPayload])
     )(_.holder)
   }
 
@@ -457,7 +410,6 @@ object JwtPresentation {
       decodedJwtPresentation: JwtPresentationPayload,
       schemaIdAndTrustedIssuers: Seq[CredentialSchemaAndTrustedIssuersConstraint]
   ): Validation[String, Unit] = {
-    import org.hyperledger.identus.pollux.vc.jwt.CredentialPayload.Implicits.*
 
     val vcList = decodedJwtPresentation.vp.verifiableCredential
     val expectedSchemaIds = schemaIdAndTrustedIssuers.map(_.schemaId)
@@ -537,7 +489,6 @@ object JwtPresentation {
   }
 
   def verifyHolderBinding(jwt: JWT): Validation[String, Unit] = {
-    import org.hyperledger.identus.pollux.vc.jwt.CredentialPayload.Implicits.*
 
     def validateCredentialSubjectId(
         vcList: IndexedSeq[VerifiableCredentialPayload],
@@ -547,9 +498,9 @@ object JwtPresentation {
         .validateAll(
           vcList.map {
             case (w3cVerifiableCredentialPayload: W3cVerifiableCredentialPayload) =>
-              val mayBeSubjectDid = w3cVerifiableCredentialPayload.payload.credentialSubject.hcursor
-                .downField("id")
-                .as[String]
+              val mayBeSubjectDid = w3cVerifiableCredentialPayload.payload.credentialSubject
+                .get(JsonCursor.field("id").isString)
+                .map(_.value)
                 .toOption
               if (mayBeSubjectDid.contains(iss)) {
                 Validation.unit

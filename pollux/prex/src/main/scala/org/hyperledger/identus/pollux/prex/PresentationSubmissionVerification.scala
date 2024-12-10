@@ -1,14 +1,12 @@
 package org.hyperledger.identus.pollux.prex
 
 import org.hyperledger.identus.pollux.prex.PresentationSubmissionError.*
-import org.hyperledger.identus.pollux.vc.jwt.CredentialPayload.Implicits.given
-import org.hyperledger.identus.pollux.vc.jwt.PresentationPayload.Implicits.{*, given}
 import org.hyperledger.identus.pollux.vc.jwt.{JWT, JwtCredential, JwtPresentation, JwtPresentationPayload}
 import org.hyperledger.identus.shared.json.{JsonPathError, JsonSchemaValidatorImpl}
 import org.hyperledger.identus.shared.models.{Failure, StatusCode}
 import zio.*
-import zio.json.EncoderOps
 import zio.json.ast.Json as ZioJson
+import zio.json.EncoderOps
 
 sealed trait PresentationSubmissionError extends Failure {
   override def namespace: String = "PresentationSubmissionError"

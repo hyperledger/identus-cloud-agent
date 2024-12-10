@@ -4,10 +4,8 @@ import com.nimbusds.jose.crypto.bc.BouncyCastleProviderSingleton
 import com.nimbusds.jose.jwk.{Curve, ECKey}
 import com.nimbusds.jose.jwk.gen.ECKeyGenerator
 import org.hyperledger.identus.castor.core.model.did.{DID, VerificationRelationship}
-import org.hyperledger.identus.pollux.vc.jwt.CredentialPayload.Implicits.given
 import org.hyperledger.identus.pollux.vc.jwt.StatusPurpose.Revocation
 import org.hyperledger.identus.shared.http.*
-import org.hyperledger.identus.shared.json.JsonInterop
 import zio.*
 import zio.json.ast.Json
 import zio.json.EncoderOps
@@ -79,7 +77,7 @@ object JWTVerificationTest extends ZIOSpecDefault {
         `@context` = Set("https://www.w3.org/2018/credentials/v1", "https://www.w3.org/2018/credentials/examples/v1"),
         `type` = Set("VerifiableCredential", "UniversityDegreeCredential"),
         maybeCredentialSchema = None,
-        credentialSubject = JsonInterop.toCirceJsonAst(Json.Obj("id" -> Json.Str("1"))),
+        credentialSubject = Json.Obj("id" -> Json.Str("1")),
         maybeCredentialStatus = credentialStatus,
         maybeRefreshService = None,
         maybeEvidence = None,

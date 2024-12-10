@@ -2,10 +2,8 @@ package org.hyperledger.identus.pollux.vc.jwt.revocation
 
 import org.hyperledger.identus.pollux.vc.jwt.*
 import org.hyperledger.identus.pollux.vc.jwt.revocation.VCStatusList2021Error.{DecodingError, EncodingError}
-import org.hyperledger.identus.shared.json.JsonInterop
 import zio.*
-import zio.json.ast.Json
-import zio.json.EncoderOps
+import zio.json.ast.{Json, JsonCursor}
 
 import java.time.Instant
 
@@ -17,13 +15,12 @@ class VCStatusList2021 private (val vcPayload: W3cCredentialPayload, jwtIssuer: 
     W3CCredential.toJsonWithEmbeddedProof(vcPayload, jwtIssuer)
 
   def updateBitString(bitString: BitString): IO[VCStatusList2021Error, VCStatusList2021] = {
-    import CredentialPayload.Implicits.*
 
     val res = for {
       vcId <- ZIO.fromOption(vcPayload.maybeId).mapError(_ => DecodingError("VC id not found"))
       purpose <- ZIO
-        .fromEither(vcPayload.credentialSubject.hcursor.downField("statusPurpose").as[StatusPurpose])
-        .mapError(x => DecodingError(x.message))
+        .fromEither(vcPayload.credentialSubject.get(JsonCursor.field("statusPurpose")).flatMap(_.as[StatusPurpose]))
+        .mapError(x => DecodingError(x))
     } yield VCStatusList2021.build(vcId, jwtIssuer, bitString, purpose)
 
     res.flatten
@@ -33,7 +30,7 @@ class VCStatusList2021 private (val vcPayload: W3cCredentialPayload, jwtIssuer: 
     for {
       encodedBitString <- ZIO
         .fromOption(
-          vcPayload.credentialSubject.hcursor.downField("encodedList").as[String].toOption
+          vcPayload.credentialSubject.get(JsonCursor.field("encodedList").isString).map(_.value).toOption
         )
         .mapError(_ => DecodingError("'encodedList' attribute not found in credential subject"))
       bitString <- BitString.valueOf(encodedBitString).mapError(e => DecodingError(e.message))
@@ -68,7 +65,7 @@ object VCStatusList2021 {
         issuanceDate = Instant.now,
         maybeExpirationDate = None,
         maybeCredentialSchema = None,
-        credentialSubject = JsonInterop.toCirceJsonAst(claims),
+        credentialSubject = claims,
         maybeCredentialStatus = None,
         maybeRefreshService = None,
         maybeEvidence = None,
@@ -81,11 +78,10 @@ object VCStatusList2021 {
   }
 
   def decodeFromJson(json: Json, issuer: Issuer): IO[DecodingError, VCStatusList2021] = {
-    import CredentialPayload.Implicits.*
     for {
       w3cCredentialPayload <- ZIO
-        .fromEither(io.circe.parser.decode[W3cCredentialPayload](json.toJson))
-        .mapError(t => DecodingError(t.getMessage))
+        .fromEither(json.as[W3cCredentialPayload])
+        .mapError(t => DecodingError(t))
     } yield VCStatusList2021(w3cCredentialPayload, issuer)
   }
 

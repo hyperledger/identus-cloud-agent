@@ -8,8 +8,8 @@ import com.nimbusds.jwt.{JWTClaimsSet, SignedJWT}
 import org.hyperledger.identus.shared.crypto.{Ed25519KeyPair, Secp256k1PrivateKey}
 import org.hyperledger.identus.shared.models.KeyId
 import zio.*
-import zio.json.ast.Json as ZioJson
 import zio.json.{EncoderOps, JsonDecoder, JsonEncoder}
+import zio.json.ast.Json as ZioJson
 
 import java.security.*
 import java.security.interfaces.ECPublicKey

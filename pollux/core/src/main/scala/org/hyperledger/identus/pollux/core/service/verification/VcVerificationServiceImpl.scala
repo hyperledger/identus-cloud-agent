@@ -9,7 +9,6 @@ import org.hyperledger.identus.pollux.vc.jwt.{
   JWTVerification,
   JwtCredential
 }
-import org.hyperledger.identus.pollux.vc.jwt.CredentialPayload.Implicits.given
 import org.hyperledger.identus.shared.http.UriResolver
 import zio.*
 import zio.json.EncoderOps

@@ -44,7 +44,7 @@ object VCStatusList2021Spec extends ZIOSpecDefault {
         statusList <- VCStatusList2021.build(VC_ID, issuer, bitString)
         encodedJwtVC <- statusList.encoded
         jwtVCPayload <- ZIO.fromTry(JwtCredential.decodeJwt(encodedJwtVC, issuer.publicKey))
-        credentialSubjectKeys <- ZIO.fromOption(jwtVCPayload.credentialSubject.hcursor.keys)
+        credentialSubjectKeys <- ZIO.fromOption(jwtVCPayload.credentialSubject.asObject.map(_.keys.toSet))
       } yield {
         assertTrue(credentialSubjectKeys.toSet == Set("type", "statusPurpose", "encodedList"))
       }

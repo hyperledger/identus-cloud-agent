@@ -22,10 +22,8 @@ import org.hyperledger.identus.pollux.core.repository.{CredentialRepository, Cre
 import org.hyperledger.identus.pollux.prex.{ClaimFormat, Jwt, PresentationDefinition}
 import org.hyperledger.identus.pollux.sdjwt.*
 import org.hyperledger.identus.pollux.vc.jwt.{Issuer as JwtIssuer, *}
-import org.hyperledger.identus.pollux.vc.jwt.PresentationPayload.Implicits.*
 import org.hyperledger.identus.shared.crypto.{Ed25519KeyPair, Secp256k1KeyPair}
 import org.hyperledger.identus.shared.http.UriResolver
-import org.hyperledger.identus.shared.json.JsonInterop
 import org.hyperledger.identus.shared.messaging.{Producer, WalletIdAndRecordId}
 import org.hyperledger.identus.shared.models.*
 import org.hyperledger.identus.shared.models.Failure.orDieAsUnmanagedFailure
@@ -1219,7 +1217,7 @@ class CredentialServiceImpl(
           ids.map(id => org.hyperledger.identus.pollux.vc.jwt.CredentialSchema(id, VC_JSON_SCHEMA_TYPE))
         ),
         maybeCredentialStatus = Some(credentialStatus),
-        credentialSubject = JsonInterop.toCirceJsonAst(claims.add("id", Json.Str(jwtPresentation.iss))),
+        credentialSubject = claims.add("id", Json.Str(jwtPresentation.iss)),
         maybeRefreshService = None,
         maybeEvidence = None,
         maybeTermsOfUse = None,
