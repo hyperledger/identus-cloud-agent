@@ -5,7 +5,6 @@ import org.hyperledger.identus.castor.core.model.did.{DID, DIDUrl, PrismDID, Ver
 import org.hyperledger.identus.oid4vci.domain.{IssuanceSession, Openid4VCIProofJwtOps}
 import org.hyperledger.identus.oid4vci.http.*
 import org.hyperledger.identus.oid4vci.storage.IssuanceSessionStorage
-import org.hyperledger.identus.pollux.core.model.primitives.UriString
 import org.hyperledger.identus.pollux.core.model.primitives.UriString.toUriString
 import org.hyperledger.identus.pollux.core.model.schema.CredentialSchema
 import org.hyperledger.identus.pollux.core.service.{
@@ -23,7 +22,6 @@ import org.hyperledger.identus.pollux.vc.jwt.{
   *
 }
 import org.hyperledger.identus.shared.http.UriResolver
-import org.hyperledger.identus.shared.json.JsonInterop
 import org.hyperledger.identus.shared.models.*
 import zio.*
 import zio.json.ast.Json
@@ -206,7 +204,7 @@ case class OIDCCredentialIssuerServiceImpl(
       issuanceDate = Instant.now(),
       maybeExpirationDate = None, // TODO: Add expiration date
       maybeCredentialSchema = None, // TODO: Add schema from schema registry
-      credentialSubject = JsonInterop.toCirceJsonAst(buildCredentialSubject(subjectDid, claims)),
+      credentialSubject = buildCredentialSubject(subjectDid, claims),
       maybeCredentialStatus = None, // TODO: Add credential status
       maybeRefreshService = None, // TODO: Add refresh service
       maybeEvidence = None, // TODO: Add evidence
