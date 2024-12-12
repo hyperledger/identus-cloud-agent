@@ -5,10 +5,11 @@ import com.nimbusds.jose.crypto.{ECDSASigner, Ed25519Signer}
 import com.nimbusds.jose.crypto.bc.BouncyCastleProviderSingleton
 import com.nimbusds.jose.jwk.{Curve, ECKey}
 import com.nimbusds.jwt.{JWTClaimsSet, SignedJWT}
-import io.circe.*
 import org.hyperledger.identus.shared.crypto.{Ed25519KeyPair, Secp256k1PrivateKey}
 import org.hyperledger.identus.shared.models.KeyId
 import zio.*
+import zio.json.{EncoderOps, JsonDecoder, JsonEncoder}
+import zio.json.ast.Json
 
 import java.security.*
 import java.security.interfaces.ECPublicKey
@@ -21,6 +22,9 @@ object JWT {
   extension (jwt: JWT) {
     def value: String = jwt
   }
+
+  given JsonEncoder[JWT] = JsonEncoder.string.contramap(jwt => jwt.value)
+  given JsonDecoder[JWT] = JsonDecoder.string.map(JWT(_))
 }
 
 object JwtSignerImplicits {
@@ -61,7 +65,7 @@ class ES256KSigner(privateKey: PrivateKey, keyId: Option[KeyId] = None) extends 
   }
 
   override def encode(claim: Json): JWT = {
-    val claimSet = JWTClaimsSet.parse(claim.noSpaces)
+    val claimSet = JWTClaimsSet.parse(claim.toJson)
     val signedJwt = SignedJWT(
       keyId
         .map(kid => new JWSHeader.Builder(JWSAlgorithm.ES256K).`type`(JOSEObjectType.JWT).keyID(kid.value))
@@ -85,7 +89,7 @@ class EdSigner(ed25519KeyPair: Ed25519KeyPair, keyId: Option[KeyId] = None) exte
   }
 
   override def encode(claim: Json): JWT = {
-    val claimSet = JWTClaimsSet.parse(claim.noSpaces)
+    val claimSet = JWTClaimsSet.parse(claim.toJson)
 
     val signedJwt = SignedJWT(
       keyId

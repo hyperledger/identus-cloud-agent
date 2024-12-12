@@ -4,7 +4,8 @@ import org.hyperledger.identus.castor.core.model.did.DID
 import org.hyperledger.identus.pollux.vc.jwt.{ES256KSigner, Issuer, JwtCredential}
 import org.hyperledger.identus.shared.crypto.KmpSecp256k1KeyOps
 import zio.{UIO, ZIO}
-import zio.test.{assertTrue, Spec, ZIOSpecDefault}
+import zio.json.ast.JsonCursor
+import zio.test.{assertTrue, ZIOSpecDefault}
 
 object VCStatusList2021Spec extends ZIOSpecDefault {
 
@@ -33,7 +34,7 @@ object VCStatusList2021Spec extends ZIOSpecDefault {
         statusList <- VCStatusList2021.build(VC_ID, issuer, bitString)
         json <- statusList.toJsonWithEmbeddedProof
       } yield {
-        assertTrue(json.hcursor.downField("proof").focus.isDefined)
+        assertTrue(json.get(JsonCursor.field("proof")).isRight)
       }
     },
     test("Generate VC contains required fields in 'credentialSubject'") {
@@ -43,7 +44,7 @@ object VCStatusList2021Spec extends ZIOSpecDefault {
         statusList <- VCStatusList2021.build(VC_ID, issuer, bitString)
         encodedJwtVC <- statusList.encoded
         jwtVCPayload <- ZIO.fromTry(JwtCredential.decodeJwt(encodedJwtVC, issuer.publicKey))
-        credentialSubjectKeys <- ZIO.fromOption(jwtVCPayload.credentialSubject.hcursor.keys)
+        credentialSubjectKeys <- ZIO.fromOption(jwtVCPayload.credentialSubject.asObject.map(_.keys.toSet))
       } yield {
         assertTrue(credentialSubjectKeys.toSet == Set("type", "statusPurpose", "encodedList"))
       }
