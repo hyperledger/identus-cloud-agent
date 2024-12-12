@@ -39,13 +39,9 @@ class JwtCredential {
         val provider: Provider = BouncyCastleProvider()
         val keys: MutableMap<String, Key<out Serializable>> = mutableMapOf()
 
-        fun parseBase64(base64: String): JwtCredential {
-            return JwtCredential().parseBase64(base64)
-        }
+        fun parseBase64(base64: String): JwtCredential = JwtCredential().parseBase64(base64)
 
-        fun parseJwt(jwt: String): JwtCredential {
-            return JwtCredential().parseJwt(jwt)
-        }
+        fun parseJwt(jwt: String): JwtCredential = JwtCredential().parseJwt(jwt)
 
         fun verify(jwt: String, verification: List<VerificationMethod>): Boolean {
             val signedJWT = SignedJWT.parse(jwt)
@@ -118,15 +114,13 @@ class JwtCredential {
             return signer
         }
 
-        private fun parseKey(key: String): JWK {
-            return try {
-                ECKey.parse(key)
+        private fun parseKey(key: String): JWK = try {
+            ECKey.parse(key)
+        } catch (e: Exception) {
+            try {
+                OctetKeyPair.parse(key)
             } catch (e: Exception) {
-                try {
-                    OctetKeyPair.parse(key)
-                } catch (e: Exception) {
-                    throw IllegalArgumentException("Invalid key [$key]", e)
-                }
+                throw IllegalArgumentException("Invalid key [$key]", e)
             }
         }
 
@@ -209,7 +203,5 @@ class JwtCredential {
         return this
     }
 
-    fun serialize(): String {
-        return SignedJWT(header!!.toBase64URL(), payload!!.toBase64URL(), signature!!).serialize()
-    }
+    fun serialize(): String = SignedJWT(header!!.toBase64URL(), payload!!.toBase64URL(), signature!!).serialize()
 }
