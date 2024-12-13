@@ -24,6 +24,8 @@ services:
   identus-cloud-agent:
     image: ghcr.io/hyperledger/identus-cloud-agent:${AGENT_VERSION}
     environment:
+      API_KEY_ENABLED: true
+      API_KEY_AUTHENTICATE_AS_DEFAULT_USER: false
       PRISM_NODE_HOST: host.docker.internal
       PRISM_NODE_PORT:
       CASTOR_DB_HOST: postgres
@@ -41,7 +43,6 @@ services:
       DIDCOMM_SERVICE_URL:
       REST_SERVICE_URL:
       POLLUX_STATUS_LIST_REGISTRY_PUBLIC_URL:
-      API_KEY_ENABLED:
       STATUS_LIST_SYNC_TRIGGER_RECURRENCE_DELAY: 5 seconds
       DID_STATE_SYNC_TRIGGER_RECURRENCE_DELAY: 5 seconds
       # Secret storage configuration
