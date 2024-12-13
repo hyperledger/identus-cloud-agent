@@ -215,7 +215,7 @@ object CredentialService {
           case Some("application/json") =>
             val jsonBytes = java.util.Base64.getUrlDecoder.decode(attr.value.getBytes(StandardCharsets.UTF_8))
             new String(jsonBytes, StandardCharsets.UTF_8).fromJson[Json] match
-              case Right(value) => ZIO.succeed(Json.Obj().add(attr.name, value))
+              case Right(value) => ZIO.succeed(jsonObject.add(attr.name, value))
               case Left(error)  => ZIO.fail(VCClaimsValueParsingError(error))
 
           case Some(media_type) =>
