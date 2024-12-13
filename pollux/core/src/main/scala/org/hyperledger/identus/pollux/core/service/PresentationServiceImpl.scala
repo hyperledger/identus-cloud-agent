@@ -453,6 +453,7 @@ private class PresentationServiceImpl(
         anoncredCredentialsToUse = None,
         sdJwtClaimsToUseJsonSchemaId = None,
         sdJwtClaimsToDisclose = None,
+        sdJwtDisclosedClaims = None,
         metaRetries = maxRetries,
         metaNextRetry = Some(Instant.now()),
         metaLastFailure = None
@@ -532,6 +533,7 @@ private class PresentationServiceImpl(
         anoncredCredentialsToUse = None,
         sdJwtClaimsToUseJsonSchemaId = None,
         sdJwtClaimsToDisclose = None,
+        sdJwtDisclosedClaims = None,
         metaRetries = maxRetries,
         metaNextRetry = Some(Instant.now()),
         metaLastFailure = None,
@@ -861,6 +863,22 @@ private class PresentationServiceImpl(
       _ <- messageProducer
         .produce(TOPIC_NAME, record.id.uuid, WalletIdAndRecordId(walletAccessContext.walletId.toUUID, record.id.uuid))
         .orDie
+      record <- getRecord(recordId)
+    } yield record
+  }
+
+  def updateWithSDJWTDisclosedClaims(
+      recordId: DidCommID,
+      claimsDisclosed: ast.Json.Obj
+  ): ZIO[WalletAccessContext, PresentationError, PresentationRecord] = {
+    for {
+      record <- getRecordWithState(recordId, ProtocolState.PresentationReceived)
+      _ <-
+        presentationRepository
+          .updateWithSDJWTDisclosedClaims(
+            recordId,
+            claimsDisclosed
+          )
       record <- getRecord(recordId)
     } yield record
   }
