@@ -1260,7 +1260,10 @@ class CredentialServiceImpl(
         .fromOption(record.offerCredentialData)
         .orElse(ZIO.dieMessage(s"Offer credential data not found in record: ${recordId.value}"))
       preview = offerCredentialData.body.credential_preview
+      _ = println(s"+++++++++++++++++++++$preview")
       claims <- CredentialService.convertAttributesToJsonClaims(preview.body.attributes).orDieAsUnmanagedFailure
+      _ = println(s"+++++++++++++++++++++$claims")
+
       jwtPresentation <- validateRequestCredentialDataProof(maybeOfferOptions, requestJwt)
         .tapError(error =>
           credentialRepository
