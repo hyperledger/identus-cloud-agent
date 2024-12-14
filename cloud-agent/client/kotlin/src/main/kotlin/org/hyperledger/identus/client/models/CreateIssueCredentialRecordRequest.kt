@@ -82,5 +82,11 @@ data class CreateIssueCredentialRecordRequest(
     @SerializedName("goal")
     val goal: kotlin.String? = null
 
+//    @SerializedName("jwtVcPropertiesV1")
+//    val jwtVcPropertiesV1: kotlin.collections.List<kotlin.String>? = null
+//    @SerializedName("jwtVcPropertiesV1")
+//    val anoncredsVcPropertiesV1: Option[AnonCredsVCPropertiesV1] = None
+//    @SerializedName("sdJwtVcPropertiesV1")
+//    val sdJwtVcPropertiesV1: Option[SDJWTVCPropertiesV1] = None
 )
 

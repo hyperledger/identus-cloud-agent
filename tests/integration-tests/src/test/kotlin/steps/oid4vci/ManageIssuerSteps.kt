@@ -104,7 +104,7 @@ class ManageIssuerSteps {
     fun issuerTriesToUpdateTheOID4VCIIssuer(issuer: Actor, property: String, value: String) {
         val credentialIssuer = issuer.recall<CredentialIssuer>("oid4vciCredentialIssuer")
         val body = JsonObject()
-        val propertyValue = if (value == "null") { null } else { value }
+        val propertyValue = value.takeIf { it != "null" }
         body.addProperty(property, propertyValue)
 
         val gson = GsonBuilder().serializeNulls().create()

@@ -7,7 +7,7 @@ import net.serenitybdd.screenplay.Actor
 
 enum class SchemaErrorTemplate {
     TYPE_AND_PROPERTIES_WITHOUT_SCHEMA_TYPE {
-        override fun inner_schema(): String {
+        override fun innerSchema(): String {
             return """
                 {
                     "type": "object",
@@ -25,7 +25,7 @@ enum class SchemaErrorTemplate {
         }
     },
     CUSTOM_WORDS_NOT_DEFINED {
-        override fun inner_schema(): String {
+        override fun innerSchema(): String {
             return """
                 {
                   "${"$"}schema": "http://json-schema.org/draft-2020-12/schema#",
@@ -44,7 +44,7 @@ enum class SchemaErrorTemplate {
         }
     },
     MISSING_REQUIRED_FOR_MANDATORY_PROPERTY {
-        override fun inner_schema(): String {
+        override fun innerSchema(): String {
             return """
             {
               "${"$"}schema": "http://json-schema.org/draft-2020-12/schema#",
@@ -62,10 +62,10 @@ enum class SchemaErrorTemplate {
         }
     }, ;
 
-    abstract fun inner_schema(): String
+    abstract fun innerSchema(): String
 
     fun schema(actor: Actor): String {
-        val innerSchema = Gson().fromJson(inner_schema(), JsonObject::class.java)
+        val innerSchema = Gson().fromJson(innerSchema(), JsonObject::class.java)
         val json = getJson(actor)
         json.add("schema", innerSchema)
         return json.toString()

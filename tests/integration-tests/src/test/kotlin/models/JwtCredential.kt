@@ -119,9 +119,15 @@ class JwtCredential {
         }
 
         private fun parseKey(key: String): JWK {
-            try { return ECKey.parse(key) } catch (_: Error) { }
-            try { return OctetKeyPair.parse(key) } catch (_: Error) { }
-            throw RuntimeException("Invalid key [$key]")
+            return try {
+                ECKey.parse(key)
+            } catch (e: Exception) {
+                try {
+                    OctetKeyPair.parse(key)
+                } catch (e: Exception) {
+                    throw IllegalArgumentException("Invalid key [$key]", e)
+                }
+            }
         }
 
         private fun verifier(key: String): JWSVerifier {

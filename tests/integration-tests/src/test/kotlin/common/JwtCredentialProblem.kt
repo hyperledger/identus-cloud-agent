@@ -18,7 +18,7 @@ enum class JwtCredentialProblem {
         override fun jwt(): String {
             val jwt = VerifiableJwt.jwtVCv1()
             jwt.audience("did:wrong")
-            return jwt.sign(DEFAULT_ALGORITHM, DEFAULT_CURVE)
+            return jwt.sign(defaultAlgorithm, defaultCurve)
         }
         override val verification = VcVerification.AUDIENCE_CHECK
     },
@@ -33,7 +33,7 @@ enum class JwtCredentialProblem {
         override fun jwt(): String {
             val jwt = VerifiableJwt.jwtVCv1()
             jwt.expirationTime(OffsetDateTime.now().plusYears(10))
-            return jwt.sign(DEFAULT_ALGORITHM, DEFAULT_CURVE)
+            return jwt.sign(defaultAlgorithm, defaultCurve)
         }
 
         override val verification = VcVerification.EXPIRATION_CHECK
@@ -48,7 +48,7 @@ enum class JwtCredentialProblem {
         override fun jwt(): String {
             val jwt = VerifiableJwt.jwtVCv1()
             jwt.issuer("did:wrong")
-            return jwt.sign(DEFAULT_ALGORITHM, DEFAULT_CURVE)
+            return jwt.sign(defaultAlgorithm, defaultCurve)
         }
         override val verification = VcVerification.ISSUER_IDENTIFICATION
     },
@@ -56,7 +56,7 @@ enum class JwtCredentialProblem {
         override fun jwt(): String {
             val jwt = VerifiableJwt.jwtVCv1()
             jwt.notBefore(OffsetDateTime.now().minusYears(10))
-            return jwt.sign(DEFAULT_ALGORITHM, DEFAULT_CURVE)
+            return jwt.sign(defaultAlgorithm, defaultCurve)
         }
         override val verification = VcVerification.NOT_BEFORE_CHECK
     },
@@ -80,14 +80,14 @@ enum class JwtCredentialProblem {
             claims.putAll(jwt.claimSetBuilder.claims)
             claims.remove("iss")
             jwtCredential.claims(claims)
-            return jwt.sign(DEFAULT_ALGORITHM, DEFAULT_CURVE)
+            return jwt.sign(defaultAlgorithm, defaultCurve)
         }
         override val verification = VcVerification.SEMANTIC_CHECK_OF_CLAIMS
     },
     SIGNATURE_VERIFICATION {
         override fun jwt(): String {
             val jwt = VerifiableJwt.jwtVCv1()
-            return jwt.sign(DEFAULT_ALGORITHM, DEFAULT_CURVE)
+            return jwt.sign(defaultAlgorithm, defaultCurve)
         }
         override val verification = VcVerification.SIGNATURE_VERIFICATION
     },
@@ -112,8 +112,8 @@ enum class JwtCredentialProblem {
         }
     }
 
-    protected val DEFAULT_ALGORITHM = JWSAlgorithm.ES256K
-    protected val DEFAULT_CURVE = Curve.SECP256K1
+    protected val defaultAlgorithm = JWSAlgorithm.ES256K
+    protected val defaultCurve = Curve.SECP256K1
 
     abstract fun jwt(): String
     abstract val verification: VcVerification

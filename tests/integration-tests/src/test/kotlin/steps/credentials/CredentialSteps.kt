@@ -1,11 +1,15 @@
 package steps.credentials
 
 import abilities.ListenToEvents
+import common.*
 import interactions.Post
+import interactions.body
 import io.cucumber.java.en.Then
 import io.cucumber.java.en.When
+import io.iohk.atala.automation.extensions.get
 import io.iohk.atala.automation.serenity.ensure.Ensure
 import io.iohk.atala.automation.serenity.interactions.PollingWait
+import net.serenitybdd.rest.SerenityRest
 import net.serenitybdd.screenplay.Actor
 import org.apache.http.HttpStatus.*
 import org.hamcrest.CoreMatchers.equalTo
@@ -40,6 +44,69 @@ class CredentialSteps {
         issuer.attemptsTo(
             Post.to("/issue-credentials/records/$recordId/issue-credential"),
         )
+    }
+
+    @When("{actor} prepares the credential in '{}' format using the '{}' API")
+    fun issuerPreparesTheCredentialInFormat(issuer: Actor, credentialType: CredentialType, apiVersion: CreateCredentialOfferAPIVersion) {
+        issuer.remember("currentCredentialType", credentialType)
+        issuer.remember("currentAPI", apiVersion)
+    }
+
+    @When("{actor} prepares the '{}' to issue the credential")
+    fun issuerPreparesTheSchemaToIssueTheCredential(issuer: Actor, schema: CredentialSchema) {
+        issuer.remember("currentSchema", schema)
+    }
+
+    @When("{actor} prepares to use a '{}' form of DID with key id '{}'")
+    fun issuerPreparesTheDIDWithTheKeyId(issuer: Actor, didForm: String, assertionKey: String) {
+        val did: String = if (didForm == "short") {
+            issuer.recall("shortFormDid")
+        } else {
+            issuer.recall("longFormDid")
+        }
+        issuer.remember("currentDID", did)
+        issuer.remember("currentAssertionKey", assertionKey)
+    }
+
+    @When("{actor} prepares the claims '{}' for the credential")
+    fun issuerPreparesTheClaims(issuer: Actor, credentialClaims: CredentialClaims) {
+        issuer.remember("currentClaims", credentialClaims.claims)
+    }
+
+    @When("{actor} sends the prepared credential offer to {actor}")
+    fun issuerSendsTheCredentialOfferToHolder(issuer: Actor, holder: Actor) {
+        val api = issuer.recall<CreateCredentialOfferAPIVersion>("currentAPI")
+        val credentialType = issuer.recall<CredentialType>("currentCredentialType")
+        val did = issuer.recall<String>("currentDID")
+        val assertionKey = issuer.recall<String>("currentAssertionKey")
+        val schema = issuer.recall<CredentialSchema>("currentSchema")
+        val schemaGuid = issuer.recall<String>(schema.name)
+        val claims = issuer.recall<Map<String, Any>>("currentClaims")
+
+        val connectionId = issuer.recall<Connection>("connection-with-${holder.name}").connectionId
+
+        val schemaUrl: String? = schemaGuid?.let {
+            "${issuer.recall<String>("baseUrl")}/schema-registry/schemas/$it"
+        }
+
+        val credentialOfferRequest = api.buildCredentialOfferRequest(credentialType, did, assertionKey, schemaUrl!!, claims, connectionId)
+
+        issuer.attemptsTo(
+            Post.to("/issue-credentials/credential-offers").body(credentialOfferRequest),
+        )
+
+        saveCredentialOffer(issuer, holder)
+    }
+
+    private fun saveCredentialOffer(issuer: Actor, holder: Actor) {
+        val credentialRecord = SerenityRest.lastResponse().get<IssueCredentialRecord>()
+
+        issuer.attemptsTo(
+            Ensure.thatTheLastResponse().statusCode().isEqualTo(SC_CREATED),
+        )
+
+        issuer.remember("thid", credentialRecord.thid)
+        holder.remember("thid", credentialRecord.thid)
     }
 
     @When("{actor} issues the credential")

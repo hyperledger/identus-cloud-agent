@@ -16,7 +16,7 @@ import java.util.UUID
 
 class CredentialSchemasSteps {
 
-    @Given("{actor} has published '{}' schema")
+    @Given("{actor} has a published '{}' schema")
     fun agentHasAPublishedSchema(agent: Actor, schema: CredentialSchema) {
         if (agent.recallAll().containsKey(schema.name)) {
             return
