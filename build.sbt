@@ -113,7 +113,7 @@ lazy val D = new {
   val micrometerPrometheusRegistry = "io.micrometer" % "micrometer-core" % V.micrometer
   val scalaUri = Seq(
     "io.lemonlabs" %% "scala-uri" % V.scalaUri exclude ("org.typelevel", "cats-parse_3"), // Exclude cats-parse to avoid deps conflict
-    "org.typelevel" % "cats-parse_3" % "1.0.0", // Replace with version 1.0.0
+    "org.typelevel" % "cats-parse_3" % "1.1.0", // Replace with version 1.0.0
   )
 
   val zioConfig: ModuleID = "dev.zio" %% "zio-config" % V.zioConfig
