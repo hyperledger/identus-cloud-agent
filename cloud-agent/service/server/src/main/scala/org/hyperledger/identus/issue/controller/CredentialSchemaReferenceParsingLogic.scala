@@ -16,7 +16,7 @@ trait CredentialSchemaReferenceParsingLogic {
   // The "type" property in the "credentialSchema" object must be "JsonSchemaValidator2018".
   // Multiple schemas are not allowed in VCDM 1.1.
   def parseCredentialSchemaRef_VCDM1_1(
-      deprecatedSchemaIdProperty: Option[String | List[String]],
+      deprecatedSchemaIdProperty: Option[String],
       credentialSchemaRefOption: Option[HTTPCredentialSchemaRef]
   ): IO[ErrorResponse, DomainCredentialSchemaRef] = {
     credentialSchemaRefOption match {
@@ -31,7 +31,7 @@ trait CredentialSchemaReferenceParsingLogic {
   }
 
   def parseSchemaIdForAnonCredsModelV1(
-      deprecatedSchemaIdProperty: Option[String | List[String]],
+      deprecatedSchemaIdProperty: Option[String],
       schemaIdProperty: Option[String]
   ): IO[ErrorResponse, UriString] = {
     schemaIdProperty
@@ -40,13 +40,11 @@ trait CredentialSchemaReferenceParsingLogic {
   }
 
   private def handleDeprecatedSchemaId(
-      deprecatedSchemaIdProperty: Option[String | List[String]]
+      deprecatedSchemaIdProperty: Option[String]
   ): IO[ErrorResponse, String] = {
     deprecatedSchemaIdProperty match {
       case Some(schemaId: String) =>
         ZIO.succeed(schemaId)
-      case Some(_: List[String]) =>
-        ZIO.fail(ErrorResponse.badRequest(detail = Some("Multiple credential schemas are not allowed.")))
       case None =>
         ZIO.fail(ErrorResponse.badRequest(detail = Some("Credential schema property missed.")))
     }

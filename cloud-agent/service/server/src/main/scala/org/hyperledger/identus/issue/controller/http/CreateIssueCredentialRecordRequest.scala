@@ -37,7 +37,7 @@ final case class CreateIssueCredentialRecordRequest(
     @description(annotations.schemaId.description)
     @encodedExample(annotations.schemaId.example)
     @deprecated("Use anoncredsVcPropertiesV1.schemaId instead", "2.0.0")
-    schemaId: Option[String | List[String]] = None,
+    schemaId: Option[String] = None,
     @description(annotations.credentialDefinitionId.description)
     @encodedExample(annotations.credentialDefinitionId.example)
     @deprecated("Use anoncredsVcPropertiesV1.credentialDefinitionId instead", "2.0.0")
