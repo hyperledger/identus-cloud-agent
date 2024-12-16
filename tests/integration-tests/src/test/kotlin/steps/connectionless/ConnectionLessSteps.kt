@@ -38,7 +38,7 @@ class ConnectionLessSteps {
             issuer.recall("longFormDid")
         }
         val credentialOfferRequest = CreateIssueCredentialRecordRequest(
-            schemaId = schemaId?.let { listOf(it) },
+            schemaId = schemaId,
             claims = claims,
             issuingDID = did,
             issuingKid = "assertion-1",
