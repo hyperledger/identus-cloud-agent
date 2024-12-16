@@ -32,7 +32,7 @@ class SdJwtCredentialSteps {
         }
 
         val credentialOfferRequest = CreateIssueCredentialRecordRequest(
-            schemaId = schemaId?.let { listOf(it) },
+            schemaId = schemaId,
             claims = CredentialSchema.ID_SCHEMA.claims,
             issuingDID = did,
             connectionId = connectionId,
