@@ -83,7 +83,8 @@ class IssueControllerImpl(
                   goalCode = offerContext.goalCode,
                   goal = offerContext.goal,
                   expirationDuration = offerContext.expirationDuration,
-                  connectionId = request.connectionId
+                  connectionId = request.connectionId,
+                  domain = request.domain.getOrElse(appConfig.pollux.defaultJwtVCOfferDomain)
                 )
             } yield record
           case SDJWT =>
@@ -108,7 +109,8 @@ class IssueControllerImpl(
                   goalCode = offerContext.goalCode,
                   goal = offerContext.goal,
                   expirationDuration = offerContext.expirationDuration,
-                  connectionId = request.connectionId
+                  connectionId = request.connectionId,
+                  domain = request.domain.getOrElse(appConfig.pollux.defaultJwtVCOfferDomain)
                 )
             } yield record
           case AnonCreds =>

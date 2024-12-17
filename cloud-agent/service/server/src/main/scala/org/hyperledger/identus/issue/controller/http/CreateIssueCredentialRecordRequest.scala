@@ -69,6 +69,9 @@ final case class CreateIssueCredentialRecordRequest(
     @description(annotations.goal.description)
     @encodedExample(annotations.goal.example)
     goal: Option[String] = None,
+    @description(annotations.domain.description)
+    @encodedExample(annotations.domain.example)
+    domain: Option[String] = None,
     @description(annotations.jwtVcPropertiesV1.description)
     jwtVcPropertiesV1: Option[JwtVCPropertiesV1] = None,
     @description(annotations.anoncredsVcPropertiesV1.description)
@@ -371,6 +374,16 @@ object CreateIssueCredentialRecordRequest {
           |""".stripMargin,
           example = Some("To issue a Faber College Graduate credential")
         )
+
+    object domain
+      extends Annotation[Option[String]](
+        description =
+          """
+            | A string that specifies the intended scope or audience for the offer request. The 'domain' field binds the proof or presentation to a particular context (e.g., application, service, or verifier) to prevent misuse.
+            | It is often used alongside a 'challenge' field to ensure the freshness and uniqueness of the proof. The 'domain' field adds context to validate the origin or purpose of the proof.
+            |""".stripMargin,
+        example = Some("faber-college-jwt-vc")
+      )
 
     object jwtVcPropertiesV1
         extends Annotation[Option[JwtVCPropertiesV1]](
