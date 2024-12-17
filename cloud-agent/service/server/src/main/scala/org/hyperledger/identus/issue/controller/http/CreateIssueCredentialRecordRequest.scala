@@ -376,14 +376,13 @@ object CreateIssueCredentialRecordRequest {
         )
 
     object domain
-      extends Annotation[Option[String]](
-        description =
-          """
+        extends Annotation[Option[String]](
+          description = """
             | A string that specifies the intended scope or audience for the offer request. The 'domain' field binds the proof or presentation to a particular context (e.g., application, service, or verifier) to prevent misuse.
             | It is often used alongside a 'challenge' field to ensure the freshness and uniqueness of the proof. The 'domain' field adds context to validate the origin or purpose of the proof.
             |""".stripMargin,
-        example = Some("faber-college-jwt-vc")
-      )
+          example = Some("faber-college-jwt-vc")
+        )
 
     object jwtVcPropertiesV1
         extends Annotation[Option[JwtVCPropertiesV1]](
