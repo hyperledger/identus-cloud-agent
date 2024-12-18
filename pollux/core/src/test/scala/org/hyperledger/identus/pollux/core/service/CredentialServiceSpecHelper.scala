@@ -142,7 +142,8 @@ trait CredentialServiceSpecHelper {
         goalCode = None,
         goal = None,
         expirationDuration = None,
-        connectionId = Some(UUID.randomUUID())
+        connectionId = Some(UUID.randomUUID()),
+        domain = "domain"
       )
     } yield record
 

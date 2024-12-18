@@ -139,7 +139,8 @@ object MockCredentialService extends Mock[CredentialService] {
           goalCode: Option[String],
           goal: Option[String],
           expirationDuration: Option[Duration],
-          connectionId: Option[UUID]
+          connectionId: Option[UUID],
+          domain: String
       ): URIO[WalletAccessContext, IssueCredentialRecord] =
         proxy(
           CreateJWTIssueCredentialRecord,
@@ -170,7 +171,8 @@ object MockCredentialService extends Mock[CredentialService] {
           goalCode: Option[String],
           goal: Option[String],
           expirationDuration: Option[Duration],
-          connectionId: Option[UUID]
+          connectionId: Option[UUID],
+          domain: String
       ): URIO[WalletAccessContext, IssueCredentialRecord] =
         proxy(
           CreateSDJWTIssueCredentialRecord,

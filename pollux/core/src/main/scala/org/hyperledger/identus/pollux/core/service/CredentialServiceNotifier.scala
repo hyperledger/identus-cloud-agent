@@ -38,6 +38,7 @@ class CredentialServiceNotifier(
       goal: Option[String],
       expirationDuration: Option[Duration],
       connectionId: Option[UUID],
+      domain: String
   ): URIO[WalletAccessContext, IssueCredentialRecord] =
     notifyOnSuccess(
       svc.createJWTIssueCredentialRecord(
@@ -53,7 +54,8 @@ class CredentialServiceNotifier(
         goalCode,
         goal,
         expirationDuration,
-        connectionId
+        connectionId,
+        domain
       )
     )
 
@@ -71,6 +73,7 @@ class CredentialServiceNotifier(
       goal: Option[String],
       expirationDuration: Option[Duration],
       connectionId: Option[UUID],
+      domain: String
   ): URIO[WalletAccessContext, IssueCredentialRecord] =
     notifyOnSuccess(
       svc.createSDJWTIssueCredentialRecord(
@@ -86,7 +89,8 @@ class CredentialServiceNotifier(
         goalCode,
         goal,
         expirationDuration,
-        connectionId
+        connectionId,
+        domain
       )
     )
 

@@ -37,6 +37,7 @@ trait CredentialService {
       goal: Option[String],
       expirationDuration: Option[Duration],
       connectionId: Option[UUID],
+      domain: String
   ): URIO[WalletAccessContext, IssueCredentialRecord]
 
   def createSDJWTIssueCredentialRecord(
@@ -53,6 +54,7 @@ trait CredentialService {
       goal: Option[String],
       expirationDuration: Option[Duration],
       connectionId: Option[UUID],
+      domain: String
   ): URIO[WalletAccessContext, IssueCredentialRecord]
 
   def createAnonCredsIssueCredentialRecord(
@@ -67,7 +69,7 @@ trait CredentialService {
       goalCode: Option[String],
       goal: Option[String],
       expirationDuration: Option[Duration],
-      connectionId: Option[UUID],
+      connectionId: Option[UUID]
   ): URIO[WalletAccessContext, IssueCredentialRecord]
 
   /** Return a list of records as well as a count of all filtered items */
