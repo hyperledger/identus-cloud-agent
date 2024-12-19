@@ -332,7 +332,7 @@ class PresentationServiceNotifier(
 
   override def updateWithSDJWTDisclosedClaims(
       recordId: DidCommID,
-      claimsDisclosed: Json.Obj
+      claimsDisclosed: Json
   ): ZIO[WalletAccessContext, PresentationError, PresentationRecord] =
     svc.updateWithSDJWTDisclosedClaims(recordId, claimsDisclosed)
 }

@@ -173,7 +173,7 @@ trait PresentationService {
 
   def updateWithSDJWTDisclosedClaims(
       recordId: DidCommID,
-      claimsDisclosed: ast.Json.Obj
+      claimsDisclosed: SdJwtDisclosedClaims
   ): ZIO[WalletAccessContext, PresentationError, PresentationRecord]
 
   def verifyAnoncredPresentation(
