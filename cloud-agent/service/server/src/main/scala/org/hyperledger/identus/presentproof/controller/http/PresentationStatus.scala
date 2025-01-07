@@ -7,7 +7,9 @@ import org.hyperledger.identus.pollux.core.model.PresentationRecord
 import org.hyperledger.identus.presentproof.controller.http.PresentationStatus.annotations
 import org.hyperledger.identus.shared.models.{FailureInfo, StatusCode}
 import sttp.tapir.{Schema, Validator}
+import sttp.tapir.json.zio.schemaForZioJsonValue
 import sttp.tapir.Schema.annotations.{description, encodedExample, validate}
+import zio.json.*
 import zio.json.{DeriveJsonDecoder, DeriveJsonEncoder, JsonDecoder, JsonEncoder}
 import zio.json.EncoderOps
 
@@ -35,6 +37,9 @@ final case class PresentationStatus(
     @description(annotations.requestData.description)
     @encodedExample(annotations.requestData.example)
     requestData: Seq[String],
+    @description(annotations.disclosedClaims.description)
+    @encodedExample(annotations.disclosedClaims.example)
+    disclosedClaims: Option[zio.json.ast.Json],
     @description(annotations.connectionId.description)
     @encodedExample(annotations.connectionId.example)
     connectionId: Option[String] = None,
@@ -68,6 +73,7 @@ object PresentationStatus {
       status = domain.protocolState.toString,
       proofs = Seq.empty,
       data = data,
+      disclosedClaims = domain.sdJwtDisclosedClaims,
       requestData = requestData,
       connectionId = domain.connectionId,
       invitation = domain.invitation.map(invitation => OOBPresentationInvitation.fromDomain(invitation)),
@@ -158,6 +164,17 @@ object PresentationStatus {
         extends Annotation[Seq[String]](
           description = "The list of proofs presented by the prover to the verifier.",
           example = Seq.empty
+        )
+
+    object disclosedClaims
+        extends Annotation[zio.json.ast.Json](
+          description = """
+            |The set of claims disclosed from the issued credential, this field is applicable to credential type SDJWT only.
+            |""".stripMargin,
+          example = zio.json.ast.Json.Obj(
+            "firstname" -> zio.json.ast.Json.Str("Alice"),
+            "lastname" -> zio.json.ast.Json.Str("Wonderland"),
+          )
         )
     object requestData
         extends Annotation[Seq[String]](
