@@ -336,7 +336,7 @@ object MockPresentationService extends Mock[PresentationService] {
           recordId: DidCommID,
           claimsDisclosed: ast.Json.Obj
       ): ZIO[WalletAccessContext, PresentationError, PresentationRecord] = ???
-      
+
       override def findPresentationRecordByThreadId(
           thid: DidCommID
       ): IO[PresentationError, Option[PresentationRecord]] =
