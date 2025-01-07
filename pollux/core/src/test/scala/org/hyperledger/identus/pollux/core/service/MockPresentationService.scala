@@ -334,7 +334,7 @@ object MockPresentationService extends Mock[PresentationService] {
 
       def updateWithSDJWTDisclosedClaims(
           recordId: DidCommID,
-          claimsDisclosed: ast.Json.Obj
+          claimsDisclosed: ast.Json
       ): ZIO[WalletAccessContext, PresentationError, PresentationRecord] = ???
 
       override def findPresentationRecordByThreadId(
