@@ -20,8 +20,8 @@ systems.
 Webhook notifications in the CLoud Agent serve as a vital feature, enabling you to receive timely updates on various events
 occurring within the agent. Webhooks allow you to receive HTTP requests containing event details at a specified
 endpoint (webhook URL). These events are specifically related to the execution of
-the [Connect](/tutorials/connections/connection), [Issue](/tutorials/credentials/issue),
-and [Presentation](/tutorials/credentials/present-proof) flows. Webhook notifications will be sent each time there is a
+the [Connect](/tutorials/connections/connection), [Issue](/tutorials/credentials/didcomm/issue),
+and [Presentation](/tutorials/credentials/didcomm/present-proof) flows. Webhook notifications will be sent each time there is a
 state
 change during the execution of these protocols.
 
