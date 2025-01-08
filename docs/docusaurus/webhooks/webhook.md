@@ -156,8 +156,8 @@ generated):
 ### Common Event Types
 
 The Cloud Agent sends webhook notifications for events related to protocol state changes in
-the [Connect](/tutorials/connections/connection), [Issue](/tutorials/credentials/issue),
-[Presentation](/tutorials/credentials/present-proof) flows, and also [DID publication](/tutorials/dids/publish)
+the [Connect](/tutorials/connections/connection), [Issue](/tutorials/credentials/didcomm/issue),
+[Presentation](/tutorials/credentials/didcomm/present-proof) flows, and also [DID publication](/tutorials/dids/publish)
 state changes. These events allow you to track the progress and updates within these flows in real-time.
 
 The `id` field of the common event structure is the unique identifier (UUID) of the event and is randomly generated at
