@@ -48,12 +48,24 @@ final case class FeatureFlagConfig(
   def enableSDJWT: Boolean = true // Hardcoded for now // TODO FeatureNotImplemented
 
   def ifJWTIsEnabled[R, E, A](program: ZIO[R, E, A]) =
-    if (enableJWT) program else ZIO.logWarning("Feature Disabled: Credential format JWT VC")
+    if (enableJWT) program else ZIO.logWarning(FeatureFlagConfig.messageIfDisableForJWT)
   def ifSDJWTIsEnabled[R, E, A](program: ZIO[R, E, A]) =
-    if (enableSDJWT) program else ZIO.logWarning("Feature Disabled: Credential format SD JWT VC")
+    if (enableSDJWT) program else ZIO.logWarning(FeatureFlagConfig.messageIfDisableForSDJWT)
   def ifAnomcredIsEnabled[R, E, A](program: ZIO[R, E, A]) =
-    if (enableAnomcred) program
-    else FeatureNotImplemented // ZIO.logWarning("Feature Disabled: Credential format Anomcred")
+    if (enableAnomcred) program else ZIO.logWarning(FeatureFlagConfig.messageIfDisableForAnomcred)
+
+  def ifJWTIsDisable[R, E, A](program: ZIO[R, E, A]) =
+    if (!enableJWT) ZIO.logWarning(FeatureFlagConfig.messageIfDisableForJWT) *> program else ZIO.unit
+  def ifSDJWTIsDisable[R, E, A](program: ZIO[R, E, A]) =
+    if (!enableSDJWT) ZIO.logWarning(FeatureFlagConfig.messageIfDisableForSDJWT) *> program else ZIO.unit
+  def ifAnomcredIsDisable[R, E, A](program: ZIO[R, E, A]) =
+    if (!enableAnomcred) ZIO.logWarning(FeatureFlagConfig.messageIfDisableForAnomcred) *> program else ZIO.unit
+}
+
+object FeatureFlagConfig {
+  def messageIfDisableForJWT = "Feature Disabled: Credential format JWT VC"
+  def messageIfDisableForSDJWT = "Feature Disabled: Credential format SD JWT VC"
+  def messageIfDisableForAnomcred = "Feature Disabled: Credential format Anomcred"
 }
 
 final case class VaultConfig(
