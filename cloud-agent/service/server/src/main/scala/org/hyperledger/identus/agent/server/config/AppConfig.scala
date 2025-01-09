@@ -7,6 +7,7 @@ import org.hyperledger.identus.shared.db.DbConfig
 import org.hyperledger.identus.shared.messaging.MessagingServiceConfig
 import zio.config.magnolia.*
 import zio.Config
+import zio.ZIO
 
 import java.net.URL
 import java.time.Duration
@@ -17,6 +18,7 @@ final case class AppConfig(
     agent: AgentConfig,
     connect: ConnectConfig,
     prismNode: PrismNodeConfig,
+    featureFlag: FeatureFlagConfig
 ) {
   def validate: Either[String, Unit] =
     for {
@@ -37,6 +39,21 @@ object AppConfig {
 
   val config: Config[AppConfig] = deriveConfig[AppConfig]
 
+}
+
+final case class FeatureFlagConfig(
+    enableAnomcred: Boolean
+) {
+  def enableJWT: Boolean = true // Hardcoded for now // TODO FeatureNotImplemented
+  def enableSDJWT: Boolean = true // Hardcoded for now // TODO FeatureNotImplemented
+
+  def ifJWTIsEnabled[R, E, A](program: ZIO[R, E, A]) =
+    if (enableJWT) program else ZIO.logWarning("Feature Disabled: Credential format JWT VC")
+  def ifSDJWTIsEnabled[R, E, A](program: ZIO[R, E, A]) =
+    if (enableSDJWT) program else ZIO.logWarning("Feature Disabled: Credential format SD JWT VC")
+  def ifAnomcredIsEnabled[R, E, A](program: ZIO[R, E, A]) =
+    if (enableAnomcred) program
+    else FeatureNotImplemented // ZIO.logWarning("Feature Disabled: Credential format Anomcred")
 }
 
 final case class VaultConfig(

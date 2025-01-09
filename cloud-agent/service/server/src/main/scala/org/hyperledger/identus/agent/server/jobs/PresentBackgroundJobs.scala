@@ -639,16 +639,21 @@ object PresentBackgroundJobs extends BackgroundJobsHelper {
           requestPresentation: RequestPresentation,
           credentialFormat: CredentialFormat
       ): ZIO[
-        CredentialService & DIDService & COMMON_RESOURCES,
+        AppConfig & CredentialService & DIDService & COMMON_RESOURCES,
         ERROR,
         Unit
       ] = {
-        val result =
-          credentialFormat match {
-            case CredentialFormat.JWT       => handle_JWT_VC(id, credentialsToUse, requestPresentation)
-            case CredentialFormat.SDJWT     => handle_SD_JWT_VC(id, credentialsToUse, requestPresentation)
-            case CredentialFormat.AnonCreds => handleAnoncred(id, maybeCredentialsToUseJson, requestPresentation)
+        val result = for {
+          flags <- ZIO.service[AppConfig].map(_.featureFlag)
+          ret <- credentialFormat match {
+            case CredentialFormat.JWT =>
+              flags.ifJWTIsEnabled(handle_JWT_VC(id, credentialsToUse, requestPresentation))
+            case CredentialFormat.SDJWT =>
+              flags.ifSDJWTIsEnabled(handle_SD_JWT_VC(id, credentialsToUse, requestPresentation))
+            case CredentialFormat.AnonCreds =>
+              flags.ifSDJWTIsEnabled(handleAnoncred(id, maybeCredentialsToUseJson, requestPresentation))
           }
+        } yield ret
         result @@ metric
       }
 
@@ -1045,12 +1050,17 @@ object PresentBackgroundJobs extends BackgroundJobsHelper {
         Failure,
         Unit
       ] = {
-        val result =
-          credentialFormat match {
-            case CredentialFormat.JWT       => handleJWT(id, requestPresentation, presentation, invitation)
-            case CredentialFormat.SDJWT     => handleSDJWT(id, presentation, invitation)
-            case CredentialFormat.AnonCreds => handleAnoncred(id, requestPresentation, presentation, invitation)
+        val result = for {
+          flags <- ZIO.service[AppConfig].map(_.featureFlag)
+          ret <- credentialFormat match {
+            case CredentialFormat.JWT =>
+              flags.ifJWTIsEnabled(handleJWT(id, requestPresentation, presentation, invitation))
+            case CredentialFormat.SDJWT =>
+              flags.ifSDJWTIsEnabled(handleSDJWT(id, presentation, invitation))
+            case CredentialFormat.AnonCreds =>
+              flags.ifAnomcredIsEnabled(handleAnoncred(id, requestPresentation, presentation, invitation))
           }
+        } yield ret
         result @@ metric
       }
 
