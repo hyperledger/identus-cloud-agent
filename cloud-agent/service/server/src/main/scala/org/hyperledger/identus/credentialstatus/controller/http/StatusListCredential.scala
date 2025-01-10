@@ -84,7 +84,7 @@ object StatusListCredential {
     object issuanceDate
         extends Annotation[Instant](
           description = "Issuance timestamp of status list credential",
-          example = Instant.now()
+          example = Instant.parse("2025-01-01T22:40:34.560891Z")
         )
 
     object credentialSubject {
