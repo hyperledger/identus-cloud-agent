@@ -12,7 +12,7 @@ import org.hyperledger.identus.mercury.model.DidId
 import org.hyperledger.identus.mercury.protocol.presentproof.{PresentCredentialRequestFormat, ProofType}
 import org.hyperledger.identus.pollux.core.model.{CredentialFormat, DidCommID, PresentationRecord}
 import org.hyperledger.identus.pollux.core.model.error.PresentationError
-import org.hyperledger.identus.pollux.core.model.error.PresentationError.UnsupportedCredentialFormatBecuaseDisabled
+import org.hyperledger.identus.pollux.core.model.error.PresentationError.UnsupportedCredentialFormatBecauseDisabled
 import org.hyperledger.identus.pollux.core.model.presentation.Options
 import org.hyperledger.identus.pollux.core.model.CredentialFormat.{AnonCreds, JWT, SDJWT}
 import org.hyperledger.identus.pollux.core.service.serdes.AnoncredPresentationRequestV1
@@ -39,15 +39,15 @@ class PresentProofControllerImpl(
     _ <- credentialFormat match // Fail if feature is disabled
       case JWT =>
         appConfig.featureFlag.ifJWTIsDisable(
-          ZIO.fail(UnsupportedCredentialFormatBecuaseDisabled(FeatureFlagConfig.messageIfDisableForJWT))
+          ZIO.fail(UnsupportedCredentialFormatBecauseDisabled(FeatureFlagConfig.messageIfDisableForJWT))
         )
       case SDJWT =>
         appConfig.featureFlag.ifSDJWTIsDisable(
-          ZIO.fail(UnsupportedCredentialFormatBecuaseDisabled(FeatureFlagConfig.messageIfDisableForSDJWT))
+          ZIO.fail(UnsupportedCredentialFormatBecauseDisabled(FeatureFlagConfig.messageIfDisableForSDJWT))
         )
       case AnonCreds =>
-        appConfig.featureFlag.ifAnomcredIsDisable(
-          ZIO.fail(UnsupportedCredentialFormatBecuaseDisabled(FeatureFlagConfig.messageIfDisableForAnomcred))
+        appConfig.featureFlag.ifAnoncredIsDisable(
+          ZIO.fail(UnsupportedCredentialFormatBecauseDisabled(FeatureFlagConfig.messageIfDisableForAnoncred))
         )
   } yield ()
 

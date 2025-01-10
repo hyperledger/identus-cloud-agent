@@ -37,7 +37,7 @@ given Conversion[Message, org.didcommx.didcomm.message.Message] with {
     msg.pleaseAck.foreach { seq => // https://identity.foundation/didcomm-messaging/spec/#acks
       aux.pleaseAck(true) // NOTE lib limitation the field pleaseAck MUST be a Array of string
     }
-    msg.ack.flatMap(_.headOption).foreach(str => aux.ack(str)) // NOTE: headOption becuase DidCommx only support one ack
+    msg.ack.flatMap(_.headOption).foreach(str => aux.ack(str)) // NOTE: headOption because DidCommx only support one ack
     msg.thid.foreach(str => aux.thid(str))
     msg.pthid.foreach(str => aux.pthid(str))
     aux.build()

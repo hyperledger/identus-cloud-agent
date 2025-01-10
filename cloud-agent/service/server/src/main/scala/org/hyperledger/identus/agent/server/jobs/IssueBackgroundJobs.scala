@@ -371,7 +371,7 @@ object IssueBackgroundJobs extends BackgroundJobsHelper {
             ) =>
           val holderPendingToGeneratedFlow = for {
             flags <- ZIO.service[AppConfig].map(_.featureFlag)
-            ret <- flags.ifAnomcredIsEnabled(
+            ret <- flags.ifAnoncredIsEnabled(
               for {
                 walletAccessContext <- ZIO
                   .fromOption(offer.to)
@@ -625,7 +625,7 @@ object IssueBackgroundJobs extends BackgroundJobsHelper {
           val issuerPendingToGeneratedFlow = for {
             config <- ZIO.service[AppConfig]
             ret <-
-              config.featureFlag.ifAnomcredIsEnabled(
+              config.featureFlag.ifAnoncredIsEnabled(
                 for {
                   walletAccessContext <- buildWalletAccessContextLayer(issue.from)
                   result <- (for {

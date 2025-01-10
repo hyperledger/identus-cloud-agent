@@ -58,8 +58,8 @@ class IssueControllerImpl(
           ZIO.fail(ErrorResponse.badRequestDisabled(FeatureFlagConfig.messageIfDisableForSDJWT))
         )
       case AnonCreds =>
-        appConfig.featureFlag.ifAnomcredIsDisable(
-          ZIO.fail(ErrorResponse.badRequestDisabled(FeatureFlagConfig.messageIfDisableForAnomcred))
+        appConfig.featureFlag.ifAnoncredIsDisable(
+          ZIO.fail(ErrorResponse.badRequestDisabled(FeatureFlagConfig.messageIfDisableForAnoncred))
         )
   } yield ()
 

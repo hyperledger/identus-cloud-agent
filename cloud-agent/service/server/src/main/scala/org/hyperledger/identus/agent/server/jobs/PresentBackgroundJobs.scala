@@ -1080,7 +1080,7 @@ object PresentBackgroundJobs extends BackgroundJobsHelper {
             case CredentialFormat.SDJWT =>
               flags.ifSDJWTIsEnabled(handleSDJWT(id, presentation, invitation))
             case CredentialFormat.AnonCreds =>
-              flags.ifAnomcredIsEnabled(handleAnoncred(id, requestPresentation, presentation, invitation))
+              flags.ifAnoncredIsEnabled(handleAnoncred(id, requestPresentation, presentation, invitation))
           }
         } yield ret
         result @@ metric
