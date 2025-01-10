@@ -1,23 +1,16 @@
 package org.hyperledger.identus.mercury.protocol.invitation
-import cats.implicits.*
-import io.circe.{Decoder, Encoder}
-import io.circe.generic.semiauto.{deriveDecoder, deriveEncoder}
-import io.circe.syntax.*
+import zio.json.{DeriveJsonDecoder, DeriveJsonEncoder, JsonDecoder, JsonEncoder}
+import zio.json.internal.Write
 
 sealed trait ServiceType
 
 object ServiceType {
-
-  given Encoder[ServiceType] = (a: ServiceType) => {
+  given JsonEncoder[ServiceType] = (a: ServiceType, indent: Option[Int], out: Write) => {
     a match
-      case data @ Did(_)                 => data.did.asJson
-      case data @ Service(_, _, _, _, _) => data.asJson
+      case data @ Did(did)               => JsonEncoder[String].unsafeEncode(did, indent, out)
+      case data @ Service(_, _, _, _, _) => JsonEncoder[Service].unsafeEncode(data, indent, out)
   }
-
-  given Decoder[ServiceType] = List[Decoder[ServiceType]](
-    Decoder[Did].widen,
-    Decoder[Service].widen,
-  ).reduceLeft(_ or _)
+  given JsonDecoder[ServiceType] = DeriveJsonDecoder.gen
 }
 
 /** Service block
@@ -38,13 +31,13 @@ case class Service(
 ) extends ServiceType
 
 object Service {
-  given Encoder[Service] = deriveEncoder[Service]
-  given Decoder[Service] = deriveDecoder[Service]
+  given JsonEncoder[Service] = DeriveJsonEncoder.gen
+  given JsonDecoder[Service] = DeriveJsonDecoder.gen
 }
 
 case class Did(did: String) extends ServiceType
 
 object Did {
-  given Encoder[Did] = deriveEncoder[Did]
-  given Decoder[Did] = deriveDecoder[Did]
+  given JsonEncoder[Did] = DeriveJsonEncoder.gen
+  given JsonDecoder[Did] = DeriveJsonDecoder.gen
 }

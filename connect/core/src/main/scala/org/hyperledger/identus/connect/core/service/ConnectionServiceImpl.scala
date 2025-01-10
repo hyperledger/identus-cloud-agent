@@ -13,6 +13,7 @@ import org.hyperledger.identus.shared.utils.aspects.CustomMetricsAspect
 import org.hyperledger.identus.shared.utils.Base64Utils
 import org.hyperledger.identus.shared.validation.ValidationUtils
 import zio.*
+import zio.json.DecoderOps
 import zio.prelude.*
 
 import java.time.{Duration, Instant}
@@ -108,8 +109,8 @@ private class ConnectionServiceImpl(
   ): ZIO[WalletAccessContext, InvitationParsingError | InvitationAlreadyReceived, ConnectionRecord] =
     for {
       invitation <- ZIO
-        .fromEither(io.circe.parser.decode[Invitation](Base64Utils.decodeUrlToString(invitation)))
-        .mapError(err => InvitationParsingError(err.getMessage))
+        .fromEither(Base64Utils.decodeUrlToString(invitation).fromJson[Invitation])
+        .mapError(err => InvitationParsingError(err))
       maybeRecord <- connectionRepository.findByThreadId(invitation.id)
       _ <- ZIO.noneOrFailWith(maybeRecord)(_ => InvitationAlreadyReceived(invitation.id))
       wallet <- ZIO.service[WalletAccessContext]

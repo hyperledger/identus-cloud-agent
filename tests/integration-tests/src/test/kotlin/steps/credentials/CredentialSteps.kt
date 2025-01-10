@@ -48,9 +48,6 @@ class CredentialSteps {
 
         issuer.attemptsTo(
             Ensure.thatTheLastResponse().statusCode().isEqualTo(SC_OK),
-        )
-
-        issuer.attemptsTo(
             PollingWait.until(
                 ListenToEvents.credentialState(issuer),
                 equalTo(CREDENTIAL_SENT),

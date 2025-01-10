@@ -1,6 +1,6 @@
 import { HttpService, statusChangeTimeouts } from "./HttpService";
 import {fail, sleep} from "k6";
-import {Connection, PresentationStatus} from "@input-output-hk/prism-typescript-client";
+import {Connection, PresentationStatus} from "@hyperledger/identus-cloud-agent-client-ts";
 import { WAITING_LOOP_MAX_ITERATIONS, WAITING_LOOP_PAUSE_INTERVAL } from "./Config";
 import vu from "k6/execution";
 
@@ -24,14 +24,7 @@ export class ProofsService extends HttpService {
               "challenge": "11c91493-01b3-4c4d-ac36-b336bab5bddf",
               "domain": "https://example-verifier.com"
           },
-          "proofs":[
-              {
-                  "schemaId": "https://schema.org/${vu.vu.idInInstance}-${vu.vu.idInTest}-${vu.vu.iterationInScenario}",
-                  "trustIssuers": [
-                      "did:web:atalaprism.io/users/testUser"
-                  ]
-              }
-          ]
+          "proofs":[]
       }`
     const res = this.post("present-proof/presentations", payload);
     try {

@@ -1,15 +1,16 @@
 package org.hyperledger.identus.pollux.core.service
 
-import io.circe.Json
 import org.hyperledger.identus.castor.core.model.did.{CanonicalPrismDID, PrismDID, VerificationRelationship}
 import org.hyperledger.identus.mercury.model.DidId
 import org.hyperledger.identus.mercury.protocol.issuecredential.{IssueCredential, OfferCredential, RequestCredential}
 import org.hyperledger.identus.pollux.core.model.{DidCommID, IssueCredentialRecord}
 import org.hyperledger.identus.pollux.core.model.error.CredentialServiceError
 import org.hyperledger.identus.pollux.core.model.error.CredentialServiceError.*
+import org.hyperledger.identus.pollux.core.model.schema.CredentialSchemaRef
 import org.hyperledger.identus.pollux.vc.jwt.Issuer
 import org.hyperledger.identus.shared.models.*
 import zio.{mock, Duration, IO, UIO, URIO, URLayer, ZIO, ZLayer}
+import zio.json.ast.Json
 import zio.mock.{Mock, Proxy}
 
 import java.util.UUID
@@ -22,7 +23,7 @@ object MockCredentialService extends Mock[CredentialService] {
             DidId,
             Option[DidId],
             DidCommID,
-            Option[List[String]],
+            Option[CredentialSchemaRef],
             Json,
             Option[Double],
             Option[Boolean],
@@ -41,7 +42,7 @@ object MockCredentialService extends Mock[CredentialService] {
             DidId,
             Option[DidId],
             DidCommID,
-            Option[List[String]],
+            Option[CredentialSchemaRef],
             Json,
             Option[Double],
             Option[Boolean],
@@ -130,7 +131,7 @@ object MockCredentialService extends Mock[CredentialService] {
           pairwiseHolderDID: Option[DidId],
           kidIssuer: Option[KeyId],
           thid: DidCommID,
-          maybeSchemaIds: Option[List[String]],
+          credentialSchemaRef: Option[CredentialSchemaRef],
           claims: Json,
           validityPeriod: Option[Double],
           automaticIssuance: Option[Boolean],
@@ -138,14 +139,15 @@ object MockCredentialService extends Mock[CredentialService] {
           goalCode: Option[String],
           goal: Option[String],
           expirationDuration: Option[Duration],
-          connectionId: Option[UUID]
+          connectionId: Option[UUID],
+          domain: String
       ): URIO[WalletAccessContext, IssueCredentialRecord] =
         proxy(
           CreateJWTIssueCredentialRecord,
           pairwiseIssuerDID,
           pairwiseHolderDID,
           thid,
-          maybeSchemaIds,
+          credentialSchemaRef,
           claims,
           validityPeriod,
           automaticIssuance,
@@ -161,7 +163,7 @@ object MockCredentialService extends Mock[CredentialService] {
           pairwiseHolderDID: Option[DidId],
           kidIssuer: Option[KeyId],
           thid: DidCommID,
-          maybeSchemaIds: Option[List[String]],
+          credentialSchemaRef: Option[CredentialSchemaRef],
           claims: Json,
           validityPeriod: Option[Double],
           automaticIssuance: Option[Boolean],
@@ -169,14 +171,15 @@ object MockCredentialService extends Mock[CredentialService] {
           goalCode: Option[String],
           goal: Option[String],
           expirationDuration: Option[Duration],
-          connectionId: Option[UUID]
+          connectionId: Option[UUID],
+          domain: String
       ): URIO[WalletAccessContext, IssueCredentialRecord] =
         proxy(
           CreateSDJWTIssueCredentialRecord,
           pairwiseIssuerDID,
           pairwiseHolderDID,
           thid,
-          maybeSchemaIds,
+          credentialSchemaRef,
           claims,
           validityPeriod,
           automaticIssuance,

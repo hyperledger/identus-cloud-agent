@@ -203,6 +203,12 @@ object PresentationError {
         msg
       )
 
+  final case class PresentationValidationError(msg: String)
+      extends PresentationError(
+        StatusCode.BadRequest,
+        msg
+      )
+
   final case class PresentationReceivedError(msg: String)
       extends PresentationError(
         StatusCode.InternalServerError,

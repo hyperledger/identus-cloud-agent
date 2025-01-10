@@ -103,6 +103,7 @@ final case class PolluxConfig(
     didStateSyncTriggerRecurrenceDelay: Duration,
     presentationInvitationExpiry: Duration,
     issuanceInvitationExpiry: Duration,
+    defaultJwtVCOfferDomain: String
 )
 final case class ConnectConfig(
     database: DatabaseConfig,

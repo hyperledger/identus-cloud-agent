@@ -36,7 +36,8 @@ class IssueControllerImpl(
     managedDIDService: ManagedDIDService,
     appConfig: AppConfig
 ) extends IssueController
-    with ControllerHelper {
+    with ControllerHelper
+    with CredentialSchemaReferenceParsingLogic {
 
   private case class OfferContext(
       pairwiseIssuerDID: DidId,
@@ -72,10 +73,9 @@ class IssueControllerImpl(
     )
 
     for {
-      jsonClaims <- ZIO // TODO: Get read of Circe and use zio-json all the way down
-        .fromEither(io.circe.parser.parse(request.claims.toString()))
-        .mapError(e => ErrorResponse.badRequest(detail = Some(e.getMessage)))
-      credentialFormat = request.credentialFormat.map(CredentialFormat.valueOf).getOrElse(CredentialFormat.JWT)
+      credentialFormat <- ZIO.succeed(
+        request.credentialFormat.map(CredentialFormat.valueOf).getOrElse(CredentialFormat.JWT)
+      )
       _ <- checkFeatureFlag(credentialFormat)
       outcome <-
         credentialFormat match
@@ -83,48 +83,52 @@ class IssueControllerImpl(
             for {
               issuingDID <- getIssuingDidFromRequest(request)
               _ <- validatePrismDID(issuingDID, allowUnpublished = true, Role.Issuer)
+              credentialSchemaRef <- parseCredentialSchemaRef_VCDM1_1(
+                request.schemaId,
+                request.jwtVcPropertiesV1.map(_.credentialSchema)
+              )
               record <- credentialService
                 .createJWTIssueCredentialRecord(
                   pairwiseIssuerDID = offerContext.pairwiseIssuerDID,
                   pairwiseHolderDID = offerContext.pairwiseHolderDID,
                   kidIssuer = request.issuingKid,
                   thid = DidCommID(),
-                  maybeSchemaIds = request.schemaId.map {
-                    case schemaId: String        => List(schemaId)
-                    case schemaIds: List[String] => schemaIds
-                  },
-                  claims = jsonClaims,
+                  credentialSchemaRef = Some(credentialSchemaRef),
+                  claims = request.claims,
                   validityPeriod = request.validityPeriod,
                   automaticIssuance = request.automaticIssuance.orElse(Some(true)),
                   issuingDID = issuingDID.asCanonical,
                   goalCode = offerContext.goalCode,
                   goal = offerContext.goal,
                   expirationDuration = offerContext.expirationDuration,
-                  connectionId = request.connectionId
+                  connectionId = request.connectionId,
+                  domain = request.domain.getOrElse(appConfig.pollux.defaultJwtVCOfferDomain)
                 )
             } yield record
           case SDJWT =>
             for {
               issuingDID <- getIssuingDidFromRequest(request)
               _ <- validatePrismDID(issuingDID, allowUnpublished = true, Role.Issuer)
+              credentialSchemaRef <- parseCredentialSchemaRef_VCDM1_1(
+                request.schemaId,
+                request.sdJwtVcPropertiesV1.map(_.credentialSchema)
+              )
               record <- credentialService
                 .createSDJWTIssueCredentialRecord(
                   pairwiseIssuerDID = offerContext.pairwiseIssuerDID,
                   pairwiseHolderDID = offerContext.pairwiseHolderDID,
                   kidIssuer = request.issuingKid,
                   thid = DidCommID(),
-                  maybeSchemaIds = request.schemaId.map {
-                    case schemaId: String        => List(schemaId)
-                    case schemaIds: List[String] => schemaIds
-                  },
-                  claims = jsonClaims,
+                  credentialSchemaRef = Option(credentialSchemaRef),
+                  claims = request.claims,
                   validityPeriod = request.validityPeriod,
                   automaticIssuance = request.automaticIssuance.orElse(Some(true)),
                   issuingDID = issuingDID.asCanonical,
                   goalCode = offerContext.goalCode,
                   goal = offerContext.goal,
                   expirationDuration = offerContext.expirationDuration,
-                  connectionId = request.connectionId
+                  connectionId = request.connectionId,
+                  domain = request.domain.getOrElse(appConfig.pollux.defaultJwtVCOfferDomain)
                 )
             } yield record
           case AnonCreds =>
@@ -178,7 +182,7 @@ class IssueControllerImpl(
                   thid = DidCommID(),
                   credentialDefinitionGUID = credentialDefinitionGUID,
                   credentialDefinitionId = credentialDefinitionId,
-                  claims = jsonClaims,
+                  claims = request.claims,
                   validityPeriod = request.validityPeriod,
                   automaticIssuance = request.automaticIssuance.orElse(Some(true)),
                   goalCode = offerContext.goalCode,

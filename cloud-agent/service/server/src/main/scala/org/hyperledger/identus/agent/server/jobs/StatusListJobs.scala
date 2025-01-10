@@ -15,6 +15,8 @@ import org.hyperledger.identus.shared.messaging.{Message, Producer, WalletIdAndR
 import org.hyperledger.identus.shared.models.{WalletAccessContext, WalletId}
 import org.hyperledger.identus.shared.utils.DurationOps.toMetricsSeconds
 import zio.*
+import zio.json.{DecoderOps, EncoderOps}
+import zio.json.ast.Json
 import zio.metrics.Metric
 
 import java.util.UUID
@@ -72,9 +74,7 @@ object StatusListJobs extends BackgroundJobsHelper {
       vcStatusListCredString = statusListWithCreds.statusListCredential
       walletAccessContext = WalletAccessContext(statusListWithCreds.walletId)
       effect = for {
-        vcStatusListCredJson <- ZIO
-          .fromEither(io.circe.parser.parse(vcStatusListCredString))
-          .mapError(_.underlying)
+        vcStatusListCredJson <- ZIO.fromEither(vcStatusListCredString.fromJson[Json])
         issuer <- createJwtVcIssuer(statusListWithCreds.issuer, VerificationRelationship.AssertionMethod, None)
         vcStatusListCred <- VCStatusList2021
           .decodeFromJson(vcStatusListCredJson, issuer)
@@ -98,7 +98,7 @@ object StatusListJobs extends BackgroundJobsHelper {
           case VCStatusList2021Error.EncodingError(msg: String) => new Throwable(msg)
           case VCStatusList2021Error.DecodingError(msg: String) => new Throwable(msg)
         }
-        vcStatusListCredJsonString <- updatedVcStatusListCred.toJsonWithEmbeddedProof.map(_.spaces2)
+        vcStatusListCredJsonString <- updatedVcStatusListCred.toJsonWithEmbeddedProof.map(_.toJson)
         _ <- credentialStatusListService.updateStatusListCredential(
           statusListWithCreds.id,
           vcStatusListCredJsonString

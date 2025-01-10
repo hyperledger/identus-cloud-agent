@@ -71,7 +71,7 @@ object ValidClaimsSpec extends ZIOSpecDefault {
         """.stripMargin.fromJson[ast.Json.Obj]
       } yield SDJWT.ValidClaims(claims).verifyDiscoseClaims(expected)
       assert(ret)(isRight(equalTo(SDJWT.ClaimsDoNotMatch)))
-    },
+    }
   )
 
 }

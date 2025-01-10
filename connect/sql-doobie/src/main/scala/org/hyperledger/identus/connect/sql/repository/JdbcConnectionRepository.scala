@@ -5,12 +5,10 @@ import doobie.*
 import doobie.free.connection
 import doobie.implicits.*
 import doobie.postgres.implicits.*
-import io.circe.*
-import io.circe.parser.*
-import io.circe.syntax.*
 import org.hyperledger.identus.connect.core.model.*
 import org.hyperledger.identus.connect.core.model.ConnectionRecord.{ProtocolState, Role}
 import org.hyperledger.identus.connect.core.repository.ConnectionRepository
+import org.hyperledger.identus.mercury.protocol
 import org.hyperledger.identus.mercury.protocol.connection.*
 import org.hyperledger.identus.mercury.protocol.invitation.v2.Invitation
 import org.hyperledger.identus.shared.db.ContextAwareTask
@@ -22,7 +20,6 @@ import zio.json.*
 
 import java.time.Instant
 import java.util.UUID
-import java.util as ju
 
 class JdbcConnectionRepository(xa: Transactor[ContextAwareTask], xb: Transactor[Task]) extends ConnectionRepository {
 
@@ -37,16 +34,16 @@ class JdbcConnectionRepository(xa: Transactor[ContextAwareTask], xb: Transactor[
   given roleGet: Get[Role] = Get[String].map(Role.valueOf)
   given rolePut: Put[Role] = Put[String].contramap(_.toString)
 
-  given invitationGet: Get[Invitation] = Get[String].map(decode[Invitation](_).getOrElse(UnexpectedCodeExecutionPath))
-  given invitationPut: Put[Invitation] = Put[String].contramap(_.asJson.toString)
+  given invitationGet: Get[Invitation] = Get[String].map(_.fromJson[Invitation].getOrElse(UnexpectedCodeExecutionPath))
+  given invitationPut: Put[Invitation] = Put[String].contramap(_.toJson)
 
   given connectionRequestGet: Get[ConnectionRequest] =
-    Get[String].map(decode[ConnectionRequest](_).getOrElse(UnexpectedCodeExecutionPath))
-  given connectionRequestPut: Put[ConnectionRequest] = Put[String].contramap(_.asJson.toString)
+    Get[String].map(_.fromJson[ConnectionRequest].getOrElse(UnexpectedCodeExecutionPath))
+  given connectionRequestPut: Put[ConnectionRequest] = Put[String].contramap(_.toJson)
 
   given connectionResponseGet: Get[ConnectionResponse] =
-    Get[String].map(decode[ConnectionResponse](_).getOrElse(UnexpectedCodeExecutionPath))
-  given connectionResponsePut: Put[ConnectionResponse] = Put[String].contramap(_.asJson.toString)
+    Get[String].map(_.fromJson[protocol.connection.ConnectionResponse].getOrElse(UnexpectedCodeExecutionPath))
+  given connectionResponsePut: Put[ConnectionResponse] = Put[String].contramap(_.toJson)
 
   given failureGet: Get[Failure] = Get[String].temap(_.fromJson[FailureInfo])
   given failurePut: Put[Failure] = Put[String].contramap(_.asFailureInfo.toJson)

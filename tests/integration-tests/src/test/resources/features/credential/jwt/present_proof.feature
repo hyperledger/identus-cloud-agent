@@ -25,6 +25,28 @@ Feature: Present Proof Protocol
     And Holder rejects the proof
     Then Holder sees the proof is rejected
 
+  Scenario Outline: Verifying jwt credential using <assertionMethod> assertion
+    Given Issuer and Holder have an existing connection
+    And Verifier and Holder have an existing connection
+    And Holder creates unpublished DID for 'JWT'
+    When Issuer prepares a custom PRISM DID
+    And Issuer adds a '<assertionMethod>' key for 'assertionMethod' purpose with '<assertionName>' name to the custom PRISM DID
+    And Issuer creates the custom PRISM DID
+    And Issuer publishes DID to ledger
+    When Issuer offers a jwt credential to Holder with 'short' form DID using issuingKid '<assertionName>' and STUDENT_SCHEMA schema
+    And Holder receives the credential offer
+    And Holder accepts jwt credential offer using 'auth-1' key id
+    And Issuer issues the credential
+    Then Holder receives the issued credential
+    When Verifier sends a request for jwt proof presentation to Holder
+    And Holder receives the presentation proof request
+    And Holder makes the jwt presentation of the proof
+    Then Verifier has the proof verified
+    Examples:
+      | assertionMethod | assertionName |
+      | secp256k1       | assert-1      |
+      | ed25519         | assert-1      |
+
   Scenario: Connectionless Verification Holder presents jwt credential proof to verifier
     Given Holder has a jwt issued credential from Issuer
     When Verifier creates a OOB Invitation request for JWT proof presentation
@@ -32,3 +54,20 @@ Feature: Present Proof Protocol
     And Holder receives the presentation proof request
     And Holder makes the jwt presentation of the proof
     Then Verifier has the proof verified
+
+  Scenario: Verifier request for jwt proof presentation to Holder from trusted issuer using specified schema
+    Given Verifier and Holder have an existing connection
+    And Holder has a jwt issued credential with 'STUDENT_SCHEMA' schema from Issuer
+    When Verifier sends a request for jwt proof from trustedIssuer Issuer using STUDENT_SCHEMA schema presentation to Holder
+    And Holder receives the presentation proof request
+    And Holder makes the jwt presentation of the proof
+    Then Verifier has the proof verified
+
+  Scenario: Verifier request for jwt proof presentation to Holder from trusted issuer using specified schema
+    Given Verifier and Holder have an existing connection
+    And Holder has a jwt issued credential with 'STUDENT_SCHEMA' schema from Issuer
+    And Holder has a jwt issued credential with 'EMPLOYEE_SCHEMA' schema from Issuer
+    When Verifier sends a request for jwt proof from trustedIssuer Issuer using STUDENT_SCHEMA schema presentation to Holder
+    And Holder receives the presentation proof request
+    And Holder makes the jwt presentation of the proof
+    Then Verifier sees the proof returned verification failed

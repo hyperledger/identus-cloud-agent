@@ -1,9 +1,8 @@
 package org.hyperledger.identus.mercury.protocol.reportproblem.v2
 
-import io.circe.*
-import io.circe.generic.semiauto.{deriveDecoder, deriveEncoder}
-import io.circe.syntax.*
 import org.hyperledger.identus.mercury.model.{DidId, Message, PIURI}
+import zio.json.{DeriveJsonDecoder, DeriveJsonEncoder, EncoderOps, JsonDecoder, JsonEncoder}
+import zio.json.internal.Write
 object ReportProblem {
 
   /** {{{
@@ -32,8 +31,8 @@ object ReportProblem {
   )
 
   object Body {
-    given Encoder[Body] = deriveEncoder[Body]
-    given Decoder[Body] = deriveDecoder[Body]
+    given JsonEncoder[Body] = DeriveJsonEncoder.gen
+    given JsonDecoder[Body] = DeriveJsonDecoder.gen
   }
 
   def build(
@@ -47,11 +46,11 @@ object ReportProblem {
     ReportProblem(from = fromDID, to = toDID, pthid = Some(pthid), body = body)
   }
 
-  given Encoder[ReportProblem] = deriveEncoder[ReportProblem]
-  given Decoder[ReportProblem] = deriveDecoder[ReportProblem]
+  given JsonEncoder[ReportProblem] = DeriveJsonEncoder.gen
+  given JsonDecoder[ReportProblem] = DeriveJsonDecoder.gen
 
-  def readFromMessage(message: Message): ReportProblem =
-    val body = message.body.asJson.as[ReportProblem.Body].toOption.get // TODO get
+  def fromMessage(message: Message): ReportProblem =
+    val body = message.body.as[ReportProblem.Body].toOption.get // TODO get
     ReportProblem(
       id = message.id,
       `type` = message.piuri,
@@ -81,8 +80,9 @@ object ProblemCode {
     assert(true) // TODO regex to check value
     value
   }
-  given Encoder[ProblemCode] = Encoder.encodeString.contramap(identity)
-  given Decoder[ProblemCode] = Decoder.decodeString.map(ProblemCode(_))
+  given JsonEncoder[ProblemCode] = (a: ProblemCode, indent: Option[Int], out: Write) =>
+    JsonEncoder.string.unsafeEncode(a, indent, out)
+  given JsonDecoder[ProblemCode] = JsonDecoder.string.map(ProblemCode(_))
 
 }
 
@@ -226,7 +226,7 @@ final case class ReportProblem(
     to = Seq(this.to),
     thid = this.thid,
     pthid = this.pthid,
-    body = this.body.asJson.asObject.get,
+    body = this.body.toJsonAST.toOption.flatMap(_.asObject).get,
     ack = ack
   )
 }
