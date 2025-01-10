@@ -201,14 +201,18 @@ object PresentationStatus {
     object goalcode
         extends Annotation[String](
           description =
-            "A self-attested code the receiver may want to display to the user or use in automatically deciding what to do with the out-of-band message.",
+            """A self-attested code the receiver may want to display to the user or use in automatically deciding what to do with the out-of-band message.
+              |The goalcode is optional and can be included when the presentation request originates from an invitation for connectionless proof request
+              |""".stripMargin,
           example = "present-vp"
         )
 
     object goal
         extends Annotation[String](
           description =
-            "A self-attested string that the receiver may want to display to the user about the context-specific goal of the out-of-band message.",
+            """A self-attested string that the receiver may want to display to the user about the context-specific goal of the out-of-band message.
+              |The goal is optional and can be included when the presentation request originates from an invitation for connectionless proof request
+              |""".stripMargin,
           example = "To verify a Peter College Graduate credential"
         )
 

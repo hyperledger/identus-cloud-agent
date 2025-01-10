@@ -261,15 +261,19 @@ object IssueCredentialRecord {
 
     object goalcode
         extends Annotation[String](
-          description =
-            "A self-attested code the receiver may want to display to the user or use in automatically deciding what to do with the out-of-band message.",
+          description = """
+              |A self-attested code the receiver may want to display to the user or use in automatically deciding what to do with the out-of-band message.
+              |The goalCode is optional and can be included when the credential offer originates from an invitation for connectionless issuance
+              |""".stripMargin,
           example = "issue-vc"
         )
 
     object goal
         extends Annotation[String](
-          description =
-            "A self-attested string that the receiver may want to display to the user about the context-specific goal of the out-of-band message.",
+          description = """
+              |A self-attested string that the receiver may want to display to the user about the context-specific goal of the out-of-band message.
+              |The goal is optional and can be included when the credential offer originates from an invitation for connectionless issuance
+              |""".stripMargin,
           example = "To issue a Faber College Graduate credential"
         )
 
