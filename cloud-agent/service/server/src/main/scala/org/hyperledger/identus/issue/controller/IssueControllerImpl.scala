@@ -1,6 +1,7 @@
 package org.hyperledger.identus.issue.controller
 
 import org.hyperledger.identus.agent.server.config.AppConfig
+import org.hyperledger.identus.agent.server.config.FeatureFlagConfig
 import org.hyperledger.identus.agent.server.ControllerHelper
 import org.hyperledger.identus.agent.walletapi.model.PublicationState
 import org.hyperledger.identus.agent.walletapi.model.PublicationState.{Created, PublicationPending, Published}
@@ -46,6 +47,22 @@ class IssueControllerImpl(
       expirationDuration: Option[Duration]
   )
 
+  private def checkFeatureFlag(credentialFormat: CredentialFormat) = for {
+    _ <- credentialFormat match // Fail if feature is disabled
+      case JWT =>
+        appConfig.featureFlag.ifJWTIsDisable(
+          ZIO.fail(ErrorResponse.badRequestDisabled(FeatureFlagConfig.messageIfDisableForJWT))
+        )
+      case SDJWT =>
+        appConfig.featureFlag.ifSDJWTIsDisable(
+          ZIO.fail(ErrorResponse.badRequestDisabled(FeatureFlagConfig.messageIfDisableForSDJWT))
+        )
+      case AnonCreds =>
+        appConfig.featureFlag.ifAnoncredIsDisable(
+          ZIO.fail(ErrorResponse.badRequestDisabled(FeatureFlagConfig.messageIfDisableForAnoncred))
+        )
+  } yield ()
+
   private def createCredentialOfferRecord(
       request: CreateIssueCredentialRecordRequest,
       offerContext: OfferContext
@@ -59,6 +76,7 @@ class IssueControllerImpl(
       credentialFormat <- ZIO.succeed(
         request.credentialFormat.map(CredentialFormat.valueOf).getOrElse(CredentialFormat.JWT)
       )
+      _ <- checkFeatureFlag(credentialFormat)
       outcome <-
         credentialFormat match
           case JWT =>
@@ -185,6 +203,7 @@ class IssueControllerImpl(
       connectionId <- ZIO
         .fromOption(request.connectionId)
         .mapError(_ => ErrorResponse.badRequest(detail = Some("Missing connectionId for credential offer")))
+      _ <- checkFeatureFlag(request.credentialFormat.map(CredentialFormat.valueOf).getOrElse(CredentialFormat.JWT))
       didIdPair <- getPairwiseDIDs(connectionId).provideSomeLayer(ZLayer.succeed(connectionService))
       offerContext = OfferContext(
         pairwiseIssuerDID = didIdPair.myDID,
@@ -202,6 +221,7 @@ class IssueControllerImpl(
   )(implicit rc: RequestContext): ZIO[WalletAccessContext, ErrorResponse, IssueCredentialRecord] = {
     for {
       peerDid <- managedDIDService.createAndStorePeerDID(appConfig.agent.didCommEndpoint.publicEndpointUrl)
+      _ <- checkFeatureFlag(request.credentialFormat.map(CredentialFormat.valueOf).getOrElse(CredentialFormat.JWT))
       offerContext = OfferContext(
         pairwiseIssuerDID = peerDid.did,
         pairwiseHolderDID = None,
