@@ -57,6 +57,7 @@ services:
       KEYCLOAK_UMA_AUTO_UPGRADE_RPT: true # no configurable at the moment
       # Kafka Messaging Service
       DEFAULT_KAFKA_ENABLED: true
+      ENABLE_ANONCRED: true
     depends_on:
       postgres:
         condition: service_healthy
