@@ -136,7 +136,7 @@ $ curl http://localhost:8080/cloud-agent/_system/health
 
 #### Simple docker compose for running the Identus Platform
 
-The Identus Platform is a set of services that work together to provide a complete SSI solution. 
+The Identus Platform is a set of services that work together to provide a complete SSI solution.
 The following services are included in the Identus Platform:
 - Cloud Agent
 - Mediator
