@@ -37,7 +37,7 @@ inThisBuild(
     // scalacOptions += "-Ysafe-init",
     // scalacOptions +=  "-Werror", // <=> "-Xfatal-warnings"
     scalacOptions += "-Dquill.macro.log=false", // disable quill macro logs // TODO https://github.com/zio/zio-protoquill/issues/470,
-    scalacOptions ++= Seq("-Xmax-inlines", "50")
+    scalacOptions ++= Seq("-Xmax-inlines", "50") // increase above 32 (https://github.com/circe/circe/issues/2162)
   )
 )
 
@@ -104,7 +104,8 @@ lazy val D = new {
   val zioConcurrent: ModuleID = "dev.zio" %% "zio-concurrent" % V.zio
   val zioHttp: ModuleID = "dev.zio" %% "zio-http" % V.zioHttp
   val zioKafka: ModuleID = "dev.zio" %% "zio-kafka" % V.zioKafka excludeAll (
-    ExclusionRule("dev.zio", "zio_3"), ExclusionRule("dev.zio", "zio-streams_3")
+    ExclusionRule("dev.zio", "zio_3"),
+    ExclusionRule("dev.zio", "zio-streams_3")
   )
   val zioCatsInterop: ModuleID = "dev.zio" %% "zio-interop-cats" % V.zioCatsInterop
   val zioMetricsConnectorMicrometer: ModuleID = "dev.zio" %% "zio-metrics-connectors-micrometer" % V.zioMetricsConnector
@@ -112,7 +113,10 @@ lazy val D = new {
   val micrometer: ModuleID = "io.micrometer" % "micrometer-registry-prometheus" % V.micrometer
   val micrometerPrometheusRegistry = "io.micrometer" % "micrometer-core" % V.micrometer
   val scalaUri = Seq(
-    "io.lemonlabs" %% "scala-uri" % V.scalaUri exclude ("org.typelevel", "cats-parse_3"), // Exclude cats-parse to avoid deps conflict
+    "io.lemonlabs" %% "scala-uri" % V.scalaUri exclude (
+      "org.typelevel",
+      "cats-parse_3"
+    ), // Exclude cats-parse to avoid deps conflict
     "org.typelevel" % "cats-parse_3" % "1.0.0", // Replace with version 1.0.0
   )
 
@@ -905,7 +909,7 @@ lazy val cloudAgentServer = project
     Docker / maintainer := "atala-coredid@iohk.io",
     Docker / dockerUsername := Some("hyperledger"), // https://github.com/hyperledger
     Docker / dockerRepository := Some("ghcr.io"),
-    dockerExposedPorts := Seq(8080, 8085, 8090),
+    dockerExposedPorts := Seq(8085, 8090),
     // Official docker image for openjdk 21 with curl and bash
     dockerBaseImage := "openjdk:21-jdk",
     buildInfoKeys := Seq[BuildInfoKey](name, version, scalaVersion, sbtVersion),
