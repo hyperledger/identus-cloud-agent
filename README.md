@@ -134,6 +134,15 @@ $ curl http://localhost:8080/cloud-agent/_system/health
 {"version":"1.19.1"}
 ```
 
+#### Simple docker compose for running the Identus Platform
+
+The Identus Platform is a set of services that work together to provide a complete SSI solution. 
+The following services are included in the Identus Platform:
+- Cloud Agent
+- Mediator
+
+The docker compose file and documentation for running the full stack with the simplest configuration (single tenant without authentication) is available [here](https://github.com/hyperledger/identus/blob/main/identus-docker/dockerize-identus.md)
+
 #### Compatibility between Cloud Agent and  PRISM Node
 
 There could be some incompatibilities between the most latest versions of Cloud Agent and  PRISM Node. Please, use the following table to check the compatibility between the versions:

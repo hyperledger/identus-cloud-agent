@@ -96,7 +96,7 @@ object StatusListCredential {
 
       object `type`
           extends Annotation[String](
-            description = "Always equals to constnat value - StatusList2021",
+            description = "Always equals to constant value - StatusList2021",
             example = "StatusList2021"
           )
 
