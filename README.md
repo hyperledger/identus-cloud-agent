@@ -128,7 +128,7 @@ If the Cloud Agent is started successfully, all the running containers should ac
 * `http://localhost:8080/cloud-agent` for the `issuer` instance
 * `http://localhost:8090/cloud-agent` for the `holder` instance
 
-You can check the status of the running containers using the [health endpoint](https://docs.atalaprism.io/agent-api/#tag/System/operation/systemHealth):
+You can check the status of the running containers using the [health endpoint](https://hyperledger.github.io/identus-docs/agent-api/#tag/System/operation/systemHealth):
 ```bash
 $ curl http://localhost:8080/cloud-agent/_system/health
 {"version":"1.19.1"}
@@ -136,7 +136,7 @@ $ curl http://localhost:8080/cloud-agent/_system/health
 
 #### Simple docker compose for running the Identus Platform
 
-The Identus Platform is a set of services that work together to provide a complete SSI solution. 
+The Identus Platform is a set of services that work together to provide a complete SSI solution.
 The following services are included in the Identus Platform:
 - Cloud Agent
 - Mediator
@@ -158,10 +158,10 @@ There could be some incompatibilities between the most latest versions of Cloud 
 
 The following tutorials will help you get started with the Cloud Agent and issue your first credentials:
 
-* [Creating, updating and deactivating Decentralized Identifiers (DIDs)](https://docs.atalaprism.io/tutorials/category/dids/)
-* [Setting up connections between agents using out-of-band (OOB) protocol](https://docs.atalaprism.io/tutorials/connections/connection)
-* [Issuing verifiable credentials (VCs)](https://docs.atalaprism.io/tutorials/credentials/issue)
-* [Presenting VC proofs](https://docs.atalaprism.io/tutorials/credentials/present-proof)
+* [Creating, updating and deactivating Decentralized Identifiers (DIDs)](https://hyperledger.github.io/identus-docs/tutorials/category/dids/)
+* [Setting up connections between agents using out-of-band (OOB) protocol](https://hyperledger.github.io/identus-docs/tutorials/connections/connection)
+* [Issuing verifiable credentials (VCs)](https://hyperledger.github.io/identus-docs/tutorials/credentials/issue)
+* [Presenting VC proofs](https://hyperledger.github.io/identus-docs/tutorials/credentials/present-proof)
 
 ## Contributing
 
