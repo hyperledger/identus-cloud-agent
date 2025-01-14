@@ -1,5 +1,5 @@
 <p align="center">
-  <a href="https://www.hyperledger.org/projects/identus">
+  <a href="https://www.lfdecentralizedtrust.org/projects/identus">
     <img src="docs/images/logos/identus-logo.svg" alt="identus-logo" width="513px" height="99px" />
   </a>
   <br>
@@ -10,7 +10,7 @@
   <a href="https://github.com/hyperledger/identus-cloud-agent/actions/workflows/unit-tests.yml"> <img src="https://github.com/hyperledger/identus-cloud-agent/actions/workflows/unit-tests.yml/badge.svg" alt="Unit tests" /> </a>
   <a href="https://github.com/hyperledger/identus-cloud-agent/actions/workflows/integration-tests.yml"> <img src="https://github.com/hyperledger/identus-cloud-agent/actions/workflows/integration-tests.yml/badge.svg" alt="End-to-end tests" /> </a>
   <a href="https://github.com/hyperledger/identus-cloud-agent/actions/workflows/performance-tests.yml"> <img src="https://github.com/hyperledger/identus-cloud-agent/actions/workflows/performance-tests.yml/badge.svg" alt="Performance tests" /> </a>
-  <a href="https://scala-steward.org">
+  <a href="https://index.scala-lang.org/scala-steward-org/scala-steward">
       <img src="https://img.shields.io/badge/Scala_Steward-helping-blue.svg?style=flat&logo=data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAA4AAAAQCAMAAAARSr4IAAAAVFBMVEUAAACHjojlOy5NWlrKzcYRKjGFjIbp293YycuLa3pYY2LSqql4f3pCUFTgSjNodYRmcXUsPD/NTTbjRS+2jomhgnzNc223cGvZS0HaSD0XLjbaSjElhIr+AAAAAXRSTlMAQObYZgAAAHlJREFUCNdNyosOwyAIhWHAQS1Vt7a77/3fcxxdmv0xwmckutAR1nkm4ggbyEcg/wWmlGLDAA3oL50xi6fk5ffZ3E2E3QfZDCcCN2YtbEWZt+Drc6u6rlqv7Uk0LdKqqr5rk2UCRXOk0vmQKGfc94nOJyQjouF9H/wCc9gECEYfONoAAAAASUVORK5CYII=" alt="Scala Steward badge">
   </a>
 
@@ -58,7 +58,7 @@ All documentation, tutorials and API references for the Identus ecosystem can be
 
 Before starting to use the Cloud Agent, it is important to understand the basic concepts of self-sovereign identity (SSI). The following resources provide a good introduction to SSI:
 
-* [Identus SSI introduction](https://docs.atalaprism.io/docs/category/concepts/)
+* [Identus SSI introduction](https://hyperledger.github.io/identus-docs/docs/category/concepts)
 * [Linux Foundation Course: Getting Started with SSI](https://www.edx.org/learn/computer-programming/the-linux-foundation-getting-started-with-self-sovereign-identity)
 
 ### Architecture
@@ -109,7 +109,7 @@ The Cloud Agent can be configured to use different types of ledger, secret stora
 
 To start playing with Cloud Agent, we recommend using the Dev configuration. Pre-production and production configurations are intended for real-world use cases and require additional more complex configurations of the Distributed Ledger stack setup.
 
-> If you're interested in a hosted version of Cloud Agent, please, contact us via the [Identus site](https://www.hyperledger.org/projects/identus).
+> If you're interested in a hosted version of Cloud Agent, please, contact us via the [Identus site](https://www.lfdecentralizedtrust.org/projects/identus).
 
 #### System requirements
 
@@ -160,8 +160,8 @@ The following tutorials will help you get started with the Cloud Agent and issue
 
 * [Creating, updating and deactivating Decentralized Identifiers (DIDs)](https://hyperledger.github.io/identus-docs/tutorials/category/dids/)
 * [Setting up connections between agents using out-of-band (OOB) protocol](https://hyperledger.github.io/identus-docs/tutorials/connections/connection)
-* [Issuing verifiable credentials (VCs)](https://hyperledger.github.io/identus-docs/tutorials/credentials/issue)
-* [Presenting VC proofs](https://hyperledger.github.io/identus-docs/tutorials/credentials/present-proof)
+* [Issuing verifiable credentials (VCs)](https://hyperledger.github.io/identus-docs/tutorials/credentials/didcomm/issue)
+* [Presenting VC proofs](https://hyperledger.github.io/identus-docs/tutorials/credentials/didcomm/present-proof)
 
 ## Contributing
 
