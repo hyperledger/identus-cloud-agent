@@ -119,6 +119,14 @@ object ErrorResponse {
       detail = detail
     )
 
+  def badRequestDisabled(detail: String) =
+    ErrorResponse(
+      StatusCode.BadRequest.code,
+      `type` = "BadRequest",
+      title = "BadRequest_FeatureDisabled",
+      detail = Some(detail)
+    )
+
   def unprocessableEntity(title: String = "UnprocessableEntity", detail: Option[String] = None) =
     ErrorResponse(
       StatusCode.UnprocessableEntity.code,

@@ -270,12 +270,12 @@ object JwtPresentationPayload {
 }
 
 //FIXME THIS WILL NOT WORK like that
-case class AnomcredVp(
+case class AnoncredVp(
     `@context`: IndexedSeq[String],
     `type`: IndexedSeq[String],
     verifiableCredential: IndexedSeq[VerifiableCredentialPayload]
 )
-case class AnomcredPresentationPayload(
+case class AnoncredPresentationPayload(
     iss: String,
     vp: JwtVp,
     maybeNbf: Option[Instant],
