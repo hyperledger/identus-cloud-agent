@@ -1,6 +1,6 @@
 package common
 
-import org.hyperledger.identus.client.models.CreateIssueCredentialRecordRequest
+import org.hyperledger.identus.client.models.*
 import java.util.UUID
 
 enum class CreateCredentialOfferAPIVersion {
@@ -15,7 +15,7 @@ enum class CreateCredentialOfferAPIVersion {
             validityPeriod: Double?,
         ): CreateIssueCredentialRecordRequest {
             return CreateIssueCredentialRecordRequest(
-                schemaId = schemaUrl?.let { listOf(it) },
+                schemaId = schemaUrl,
                 claims = claims,
                 issuingDID = did,
                 issuingKid = assertionKey,
@@ -27,7 +27,6 @@ enum class CreateCredentialOfferAPIVersion {
         }
     },
 
-    // TODO: it's a copy/paste from the V0, I have to regenerate the Kotlin HTTP client
     V1 {
         override fun buildCredentialOfferRequest(
             credentialType: CredentialType,
@@ -39,14 +38,21 @@ enum class CreateCredentialOfferAPIVersion {
             validityPeriod: Double?,
         ): CreateIssueCredentialRecordRequest {
             return CreateIssueCredentialRecordRequest(
-                schemaId = schemaUrl?.let { listOf(it) },
-                claims = claims,
-                issuingDID = did,
                 issuingKid = assertionKey,
                 connectionId = connectionId,
-                validityPeriod = validityPeriod ?: 3600.0,
                 credentialFormat = credentialType.format,
                 automaticIssuance = false,
+                claims = null,
+                issuingDID = "",
+                jwtVcPropertiesV1 = JwtVCPropertiesV1(
+                    credentialSchema = CredentialSchemaRef(
+                        id = schemaUrl!!,
+                        type = "JsonSchemaValidator2018",
+                    ),
+                    claims = claims,
+                    issuingDID = did,
+                    validityPeriod = validityPeriod ?: 3600.0,
+                ),
             )
         }
     },

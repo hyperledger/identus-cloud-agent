@@ -20,4 +20,5 @@ Feature: Issue JWT credential REST API compatibility
     Examples:
       | createCredentialOfferApiVersion | claims         |
       | V0                              | STUDENT_CLAIMS |
+      | V1                              | STUDENT_CLAIMS |
 
