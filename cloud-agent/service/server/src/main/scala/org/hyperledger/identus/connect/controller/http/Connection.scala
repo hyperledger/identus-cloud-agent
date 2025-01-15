@@ -5,7 +5,6 @@ import org.hyperledger.identus.connect.controller.http.Connection.annotations
 import org.hyperledger.identus.connect.controller.http.Connection.annotations.goalcode
 import org.hyperledger.identus.connect.core.model
 import org.hyperledger.identus.connect.core.model.ConnectionRecord.Role
-import org.hyperledger.identus.shared.models.{FailureInfo, StatusCode}
 import sttp.model.Uri
 import sttp.tapir.{Schema, Validator}
 import sttp.tapir.Schema.annotations.{description, encodedExample, validate}
@@ -207,8 +206,7 @@ object Connection {
     object metaLastFailure
         extends Annotation[ErrorResponse](
           description = "The last failure if any.",
-          example =
-            ErrorResponse.failureToErrorResponseConversion(FailureInfo("Error", StatusCode.NotFound, "Not Found"))
+          example = ErrorResponse.example
         )
 
     object self
