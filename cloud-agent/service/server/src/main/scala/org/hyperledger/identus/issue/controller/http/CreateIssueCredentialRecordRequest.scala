@@ -142,7 +142,7 @@ case class JwtVCPropertiesV1(
 )
 
 object JwtVCPropertiesV1 {
-  import org.hyperledger.identus.issue.controller.http.CreateIssueCredentialRecordRequest.schemaJson
+  import CreateIssueCredentialRecordRequest.schemaJson
 
   given schema: Schema[JwtVCPropertiesV1] = Schema.derived
   given encoder: JsonEncoder[JwtVCPropertiesV1] = DeriveJsonEncoder.gen
@@ -237,9 +237,18 @@ object AnonCredsVCPropertiesV1 {
   }
 }
 
-case class SDJWTVCPropertiesV1(issuingDID: String, credentialSchema: CredentialSchemaRef, claims: zio.json.ast.Json)
+case class SDJWTVCPropertiesV1(
+    issuingDID: String,
+    @description(annotations.issuingKid.description)
+    @encodedExample(annotations.issuingKid.example)
+    issuingKid: Option[KeyId],
+    credentialSchema: CredentialSchemaRef,
+    claims: zio.json.ast.Json
+)
 
 object SDJWTVCPropertiesV1 {
+  import CreateIssueCredentialRecordRequest.schemaJson
+
   given schema: Schema[SDJWTVCPropertiesV1] = Schema.derived
   given encoder: JsonEncoder[SDJWTVCPropertiesV1] = DeriveJsonEncoder.gen
   given decoder: JsonDecoder[SDJWTVCPropertiesV1] = DeriveJsonDecoder.gen

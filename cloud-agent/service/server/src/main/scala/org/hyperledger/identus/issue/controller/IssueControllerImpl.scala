@@ -127,7 +127,7 @@ class IssueControllerImpl(
                 .fromOption(request.sdJwtVcPropertiesV1.map(_.claims).orElse(request.claims))
                 .orElseFail(ErrorResponse.badRequest(detail = Some("Missing request parameter: claims")))
               kid = request.sdJwtVcPropertiesV1
-                .map(_.issuingKid)
+                .flatMap(_.issuingKid)
                 .orElse(request.issuingKid) // TODO: should it be Option[KeyId]?
               record <- credentialService
                 .createSDJWTIssueCredentialRecord(
