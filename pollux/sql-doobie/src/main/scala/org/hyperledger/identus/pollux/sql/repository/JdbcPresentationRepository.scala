@@ -166,6 +166,7 @@ class JdbcPresentationRepository(
         |   anoncred_credentials_to_use,
         |   sd_jwt_claims_to_use_json_schema_id,
         |   sd_jwt_claims_to_disclose,
+        |   sd_jwt_disclosed_claims,
         |   meta_retries,
         |   meta_next_retry,
         |   meta_last_failure,
@@ -187,6 +188,7 @@ class JdbcPresentationRepository(
         |   ${record.anoncredCredentialsToUse},
         |   ${record.sdJwtClaimsToUseJsonSchemaId},
         |   ${record.sdJwtClaimsToDisclose},
+        |   ${record.sdJwtDisclosedClaims},
         |   ${record.metaRetries},
         |   ${record.metaNextRetry},
         |   ${record.metaLastFailure},
@@ -226,6 +228,7 @@ class JdbcPresentationRepository(
         |   anoncred_credentials_to_use,
         |   sd_jwt_claims_to_use_json_schema_id,
         |   sd_jwt_claims_to_disclose,
+        |   sd_jwt_disclosed_claims,
         |   meta_retries,
         |   meta_next_retry,
         |   meta_last_failure,
@@ -278,6 +281,7 @@ class JdbcPresentationRepository(
             |   anoncred_credentials_to_use,
             |   sd_jwt_claims_to_use_json_schema_id,
             |   sd_jwt_claims_to_disclose,
+            |   sd_jwt_disclosed_claims,
             |   meta_retries,
             |   meta_next_retry,
             |   meta_last_failure,
@@ -327,6 +331,7 @@ class JdbcPresentationRepository(
         |   anoncred_credentials_to_use,
         |   sd_jwt_claims_to_use_json_schema_id,
         |   sd_jwt_claims_to_disclose,
+        |   sd_jwt_disclosed_claims,
         |   meta_retries,
         |   meta_next_retry,
         |   meta_last_failure,
@@ -365,6 +370,7 @@ class JdbcPresentationRepository(
         |   anoncred_credentials_to_use,
         |   sd_jwt_claims_to_use_json_schema_id,
         |   sd_jwt_claims_to_disclose,
+        |   sd_jwt_disclosed_claims,
         |   meta_retries,
         |   meta_next_retry,
         |   meta_last_failure,
@@ -401,6 +407,7 @@ class JdbcPresentationRepository(
         |   anoncred_credentials_to_use,
         |   sd_jwt_claims_to_use_json_schema_id,
         |   sd_jwt_claims_to_disclose,
+        |   sd_jwt_disclosed_claims,
         |   meta_retries,
         |   meta_next_retry,
         |   meta_last_failure,
@@ -503,6 +510,28 @@ class JdbcPresentationRepository(
         |   meta_last_failure = null
         | WHERE
         |   id = $recordId
+        """.stripMargin.update
+
+    cxnIO.run
+      .transactWallet(xa)
+      .orDie
+      .ensureOneAffectedRowOrDie
+  }
+
+  override def updateWithSDJWTDisclosedClaims(
+      recordId: DidCommID,
+      sdJwtDisclosedClaims: SdJwtDisclosedClaims
+  ): URIO[WalletAccessContext, Unit] = {
+    val cxnIO = sql"""
+                     | UPDATE public.presentation_records
+                     | SET
+                     |   sd_jwt_disclosed_claims = $sdJwtDisclosedClaims,
+                     |   updated_at = ${Instant.now},
+                     |   meta_retries = $maxRetries,
+                     |   meta_next_retry = ${Instant.now},
+                     |   meta_last_failure = null
+                     | WHERE
+                     |   id = $recordId
         """.stripMargin.update
 
     cxnIO.run

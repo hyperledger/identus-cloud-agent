@@ -36,6 +36,7 @@ object PresentationRepositorySpecSuite {
       anoncredCredentialsToUse = None,
       sdJwtClaimsToUseJsonSchemaId = None,
       sdJwtClaimsToDisclose = None,
+      sdJwtDisclosedClaims = None,
       metaRetries = maxRetries,
       metaNextRetry = Some(Instant.now()),
       metaLastFailure = None

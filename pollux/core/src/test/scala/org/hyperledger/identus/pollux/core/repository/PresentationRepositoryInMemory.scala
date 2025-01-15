@@ -311,6 +311,35 @@ class PresentationRepositoryInMemory(
     result.ensureOneAffectedRowOrDie
   }
 
+  override def updateWithSDJWTDisclosedClaims(
+      recordId: DidCommID,
+      sdJwtDisclosedClaims: SdJwtDisclosedClaims,
+  ): URIO[WalletAccessContext, Unit] = {
+    val result =
+      for {
+        storeRef <- walletStoreRef
+        maybeRecord <- findPresentationRecord(recordId)
+        count <- maybeRecord
+          .map(record =>
+            for {
+              _ <- storeRef.update(r =>
+                r.updated(
+                  recordId,
+                  record.copy(
+                    updatedAt = Some(Instant.now),
+                    sdJwtDisclosedClaims = Some(sdJwtDisclosedClaims),
+                    metaRetries = maxRetries,
+                    metaLastFailure = None,
+                  )
+                )
+              )
+            } yield 1
+          )
+          .getOrElse(ZIO.succeed(0))
+      } yield count
+    result.ensureOneAffectedRowOrDie
+  }
+
   override def updateWithProposePresentation(
       recordId: DidCommID,
       request: ProposePresentation,

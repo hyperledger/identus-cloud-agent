@@ -37,6 +37,7 @@ trait CredentialService {
       goal: Option[String],
       expirationDuration: Option[Duration],
       connectionId: Option[UUID],
+      domain: String
   ): URIO[WalletAccessContext, IssueCredentialRecord]
 
   def createSDJWTIssueCredentialRecord(
@@ -53,6 +54,7 @@ trait CredentialService {
       goal: Option[String],
       expirationDuration: Option[Duration],
       connectionId: Option[UUID],
+      domain: String
   ): URIO[WalletAccessContext, IssueCredentialRecord]
 
   def createAnonCredsIssueCredentialRecord(
@@ -67,7 +69,7 @@ trait CredentialService {
       goalCode: Option[String],
       goal: Option[String],
       expirationDuration: Option[Duration],
-      connectionId: Option[UUID],
+      connectionId: Option[UUID]
   ): URIO[WalletAccessContext, IssueCredentialRecord]
 
   /** Return a list of records as well as a count of all filtered items */
@@ -215,7 +217,7 @@ object CredentialService {
           case Some("application/json") =>
             val jsonBytes = java.util.Base64.getUrlDecoder.decode(attr.value.getBytes(StandardCharsets.UTF_8))
             new String(jsonBytes, StandardCharsets.UTF_8).fromJson[Json] match
-              case Right(value) => ZIO.succeed(Json.Obj().add(attr.name, value))
+              case Right(value) => ZIO.succeed(jsonObject.add(attr.name, value))
               case Left(error)  => ZIO.fail(VCClaimsValueParsingError(error))
 
           case Some(media_type) =>

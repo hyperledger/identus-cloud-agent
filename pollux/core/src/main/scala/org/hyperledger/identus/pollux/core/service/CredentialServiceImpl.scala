@@ -210,6 +210,7 @@ class CredentialServiceImpl(
       goal: Option[String],
       expirationDuration: Option[Duration],
       connectionId: Option[UUID],
+      domain: String
   ): URIO[WalletAccessContext, IssueCredentialRecord] = {
     for {
       _ <- validateClaimsAgainstSchemaIfAny(claims, credentialSchemaRef.map(List(_)))
@@ -221,7 +222,7 @@ class CredentialServiceImpl(
         claims = attributes,
         thid = thid,
         UUID.randomUUID().toString,
-        "domain", // TODO remove the hardcoded domain
+        domain,
         IssueCredentialOfferFormat.JWT
       )
       record <- createIssueCredentialRecord(
@@ -258,6 +259,7 @@ class CredentialServiceImpl(
       goal: Option[String],
       expirationDuration: Option[Duration],
       connectionId: Option[UUID],
+      domain: String
   ): URIO[WalletAccessContext, IssueCredentialRecord] = {
     val maybeSchemaIds = credentialSchemaRef.map(ref => List(ref.id))
     for {
@@ -270,7 +272,7 @@ class CredentialServiceImpl(
         claims = attributes,
         thid = thid,
         UUID.randomUUID().toString,
-        "domain",
+        domain,
         IssueCredentialOfferFormat.SDJWT
       )
       record <- createIssueCredentialRecord(

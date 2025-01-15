@@ -20,8 +20,8 @@ systems.
 Webhook notifications in the CLoud Agent serve as a vital feature, enabling you to receive timely updates on various events
 occurring within the agent. Webhooks allow you to receive HTTP requests containing event details at a specified
 endpoint (webhook URL). These events are specifically related to the execution of
-the [Connect](/tutorials/connections/connection), [Issue](/tutorials/credentials/issue),
-and [Presentation](/tutorials/credentials/present-proof) flows. Webhook notifications will be sent each time there is a
+the [Connect](/tutorials/connections/connection), [Issue](/tutorials/credentials/didcomm/issue),
+and [Presentation](/tutorials/credentials/didcomm/present-proof) flows. Webhook notifications will be sent each time there is a
 state
 change during the execution of these protocols.
 
@@ -156,8 +156,8 @@ generated):
 ### Common Event Types
 
 The Cloud Agent sends webhook notifications for events related to protocol state changes in
-the [Connect](/tutorials/connections/connection), [Issue](/tutorials/credentials/issue),
-[Presentation](/tutorials/credentials/present-proof) flows, and also [DID publication](/tutorials/dids/publish)
+the [Connect](/tutorials/connections/connection), [Issue](/tutorials/credentials/didcomm/issue),
+[Presentation](/tutorials/credentials/didcomm/present-proof) flows, and also [DID publication](/tutorials/dids/publish)
 state changes. These events allow you to track the progress and updates within these flows in real-time.
 
 The `id` field of the common event structure is the unique identifier (UUID) of the event and is randomly generated at
