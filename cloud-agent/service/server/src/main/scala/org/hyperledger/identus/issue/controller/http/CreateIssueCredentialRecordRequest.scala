@@ -37,7 +37,7 @@ final case class CreateIssueCredentialRecordRequest(
     @description(annotations.schemaId.description)
     @encodedExample(annotations.schemaId.example)
     @deprecated("Use anoncredsVcPropertiesV1.schemaId instead", "2.0.0")
-    schemaId: Option[String | List[String]] = None,
+    schemaId: Option[String] = None,
     @description(annotations.credentialDefinitionId.description)
     @encodedExample(annotations.credentialDefinitionId.example)
     @deprecated("Use anoncredsVcPropertiesV1.credentialDefinitionId instead", "2.0.0")
@@ -48,14 +48,14 @@ final case class CreateIssueCredentialRecordRequest(
     @description(annotations.claims.description)
     @encodedExample(annotations.claims.example)
     @deprecated("Use specific properties of the verifiable credentials *.claims instead", "2.0.0")
-    claims: zio.json.ast.Json,
+    claims: Option[zio.json.ast.Json],
     @description(annotations.automaticIssuance.description)
     @encodedExample(annotations.automaticIssuance.example)
     automaticIssuance: Option[Boolean] = None,
     @description(annotations.issuingDID.description)
     @encodedExample(annotations.issuingDID.example)
     @deprecated("Use specific properties of the verifiable credentials *.issuingDID instead", "2.0.0")
-    issuingDID: String,
+    issuingDID: Option[String],
     @description(annotations.issuingKid.description)
     @encodedExample(annotations.issuingKid.example)
     @deprecated("Use specific jwtVcPropertiesV1.issuingKid instead", "2.0.0")
@@ -127,16 +127,23 @@ case class JwtVCPropertiesV1(
     @description(JwtVCPropertiesV1.annotations.issuingDID.description)
     @encodedExample(JwtVCPropertiesV1.annotations.issuingDID.example)
     issuingDID: String,
+    @description(annotations.issuingKid.description)
+    @encodedExample(annotations.issuingKid.example)
+    issuingKid: Option[KeyId],
     @description(JwtVCPropertiesV1.annotations.validityPeriod.description)
     @encodedExample(JwtVCPropertiesV1.annotations.validityPeriod.example)
     validityPeriod: Double,
     @description(JwtVCPropertiesV1.annotations.claims.description)
     @encodedExample(JwtVCPropertiesV1.annotations.claims.example)
     claims: zio.json.ast.Json,
+    @description(JwtVCPropertiesV1.annotations.credentialSchema.description)
+    @encodedExample(JwtVCPropertiesV1.annotations.credentialSchema.example)
     credentialSchema: CredentialSchemaRef
 )
 
 object JwtVCPropertiesV1 {
+  import org.hyperledger.identus.issue.controller.http.CreateIssueCredentialRecordRequest.schemaJson
+
   given schema: Schema[JwtVCPropertiesV1] = Schema.derived
   given encoder: JsonEncoder[JwtVCPropertiesV1] = DeriveJsonEncoder.gen
   given decoder: JsonDecoder[JwtVCPropertiesV1] = DeriveJsonDecoder.gen

@@ -46,14 +46,37 @@ class IssueControllerImpl(
       expirationDuration: Option[Duration]
   )
 
+  private def getIssuingDIDFromRequestJwtProperties(
+      request: CreateIssueCredentialRecordRequest
+  ): IO[ErrorResponse, PrismDID] =
+    ZIO
+      .fromOption(request.jwtVcPropertiesV1.map(_.issuingDID))
+      .orElse(ZIO.fromOption(request.issuingDID))
+      .orElseFail(ErrorResponse.badRequest(detail = Some("Missing request parameter: issuingDID")))
+      .flatMap(extractPrismDIDFromString)
+
+  private def getIssuingDIDFromRequestSDJWTProperties(
+      request: CreateIssueCredentialRecordRequest
+  ): IO[ErrorResponse, PrismDID] =
+    ZIO
+      .fromOption(request.sdJwtVcPropertiesV1.map(_.issuingDID))
+      .orElse(ZIO.fromOption(request.issuingDID))
+      .orElseFail(ErrorResponse.badRequest(detail = Some("Missing request parameter: issuingDID")))
+      .flatMap(extractPrismDIDFromString)
+
+  private def getIssuingDIDFromAnonCredsProperties(
+      request: CreateIssueCredentialRecordRequest
+  ): IO[ErrorResponse, PrismDID] =
+    ZIO
+      .fromOption(request.anoncredsVcPropertiesV1.map(_.issuingDID))
+      .orElse(ZIO.fromOption(request.issuingDID))
+      .orElseFail(ErrorResponse.badRequest(detail = Some("Missing request parameter: issuingDID")))
+      .flatMap(extractPrismDIDFromString)
+
   private def createCredentialOfferRecord(
       request: CreateIssueCredentialRecordRequest,
       offerContext: OfferContext
   ): ZIO[WalletAccessContext, ErrorResponse, IssueCredentialRecord] = {
-
-    def getIssuingDidFromRequest(request: CreateIssueCredentialRecordRequest) = extractPrismDIDFromString(
-      request.issuingDID
-    )
 
     for {
       credentialFormat <- ZIO.succeed(
@@ -63,12 +86,18 @@ class IssueControllerImpl(
         credentialFormat match
           case JWT =>
             for {
-              issuingDID <- getIssuingDidFromRequest(request)
+              issuingDID <- getIssuingDIDFromRequestJwtProperties(request)
               _ <- validatePrismDID(issuingDID, allowUnpublished = true, Role.Issuer)
               credentialSchemaRef <- parseCredentialSchemaRef_VCDM1_1(
                 request.schemaId,
                 request.jwtVcPropertiesV1.map(_.credentialSchema)
               )
+              claims <- ZIO
+                .fromOption(request.jwtVcPropertiesV1.map(_.claims).orElse(request.claims))
+                .orElseFail(ErrorResponse.badRequest(detail = Some("Missing request parameter: claims")))
+              kid = request.jwtVcPropertiesV1
+                .map(_.issuingKid)
+                .orElse(request.issuingKid) // TODO: should it be Option[KeyId]?
               record <- credentialService
                 .createJWTIssueCredentialRecord(
                   pairwiseIssuerDID = offerContext.pairwiseIssuerDID,
@@ -76,7 +105,7 @@ class IssueControllerImpl(
                   kidIssuer = request.issuingKid,
                   thid = DidCommID(),
                   credentialSchemaRef = Some(credentialSchemaRef),
-                  claims = request.claims,
+                  claims = claims,
                   validityPeriod = request.validityPeriod,
                   automaticIssuance = request.automaticIssuance.orElse(Some(true)),
                   issuingDID = issuingDID.asCanonical,
@@ -88,20 +117,26 @@ class IssueControllerImpl(
             } yield record
           case SDJWT =>
             for {
-              issuingDID <- getIssuingDidFromRequest(request)
+              issuingDID <- getIssuingDIDFromRequestSDJWTProperties(request)
               _ <- validatePrismDID(issuingDID, allowUnpublished = true, Role.Issuer)
               credentialSchemaRef <- parseCredentialSchemaRef_VCDM1_1(
                 request.schemaId,
                 request.sdJwtVcPropertiesV1.map(_.credentialSchema)
               )
+              claims <- ZIO
+                .fromOption(request.sdJwtVcPropertiesV1.map(_.claims).orElse(request.claims))
+                .orElseFail(ErrorResponse.badRequest(detail = Some("Missing request parameter: claims")))
+              kid = request.sdJwtVcPropertiesV1
+                .map(_.issuingKid)
+                .orElse(request.issuingKid) // TODO: should it be Option[KeyId]?
               record <- credentialService
                 .createSDJWTIssueCredentialRecord(
                   pairwiseIssuerDID = offerContext.pairwiseIssuerDID,
                   pairwiseHolderDID = offerContext.pairwiseHolderDID,
-                  kidIssuer = request.issuingKid,
+                  kidIssuer = kid,
                   thid = DidCommID(),
                   credentialSchemaRef = Option(credentialSchemaRef),
-                  claims = request.claims,
+                  claims = claims,
                   validityPeriod = request.validityPeriod,
                   automaticIssuance = request.automaticIssuance.orElse(Some(true)),
                   issuingDID = issuingDID.asCanonical,
@@ -113,7 +148,7 @@ class IssueControllerImpl(
             } yield record
           case AnonCreds =>
             for {
-              issuingDID <- getIssuingDidFromRequest(request)
+              issuingDID <- getIssuingDIDFromAnonCredsProperties(request)
               credentialDefinitionGUID <- ZIO
                 .fromOption(request.credentialDefinitionId)
                 .mapError(_ =>
@@ -155,6 +190,9 @@ class IssueControllerImpl(
                     val urlPrefix = if (publicEndpointUrl.endsWith("/")) publicEndpointUrl else publicEndpointUrl + "/"
                     ZIO.succeed(s"$urlPrefix$httpUrlSuffix")
               }
+              claims <- ZIO
+                .fromOption(request.anoncredsVcPropertiesV1.map(_.claims).orElse(request.claims))
+                .orElseFail(ErrorResponse.badRequest(detail = Some("Missing request parameter: claims")))
               record <- credentialService
                 .createAnonCredsIssueCredentialRecord(
                   pairwiseIssuerDID = offerContext.pairwiseIssuerDID,
@@ -162,7 +200,7 @@ class IssueControllerImpl(
                   thid = DidCommID(),
                   credentialDefinitionGUID = credentialDefinitionGUID,
                   credentialDefinitionId = credentialDefinitionId,
-                  claims = request.claims,
+                  claims = claims,
                   validityPeriod = request.validityPeriod,
                   automaticIssuance = request.automaticIssuance.orElse(Some(true)),
                   goalCode = offerContext.goalCode,
