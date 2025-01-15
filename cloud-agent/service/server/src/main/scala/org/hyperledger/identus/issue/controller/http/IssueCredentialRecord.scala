@@ -4,7 +4,6 @@ import org.hyperledger.identus.api.http.{Annotation, ErrorResponse}
 import org.hyperledger.identus.issue.controller.http.IssueCredentialRecord.annotations
 import org.hyperledger.identus.mercury.model.{AttachmentDescriptor, Base64}
 import org.hyperledger.identus.pollux.core.model.IssueCredentialRecord as PolluxIssueCredentialRecord
-import org.hyperledger.identus.shared.models.{FailureInfo, StatusCode}
 import sttp.tapir.{Schema, Validator}
 import sttp.tapir.json.zio.schemaForZioJsonValue
 import sttp.tapir.Schema.annotations.{description, encodedExample, validate}
@@ -195,7 +194,7 @@ object IssueCredentialRecord {
     object createdAt
         extends Annotation[OffsetDateTime](
           description = "The date and time when the issue credential record was created.",
-          example = OffsetDateTime.now()
+          example = OffsetDateTime.parse("2023-01-01T00:00:00Z")
         )
 
     object updatedAt
@@ -299,8 +298,7 @@ object IssueCredentialRecord {
     object metaLastFailure
         extends Annotation[ErrorResponse](
           description = "The last failure if any.",
-          example =
-            ErrorResponse.failureToErrorResponseConversion(FailureInfo("Error", StatusCode.NotFound, "Not Found"))
+          example = ErrorResponse.example
         )
 
   }

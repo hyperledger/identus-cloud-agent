@@ -34,6 +34,14 @@ case class ErrorResponse(
 )
 
 object ErrorResponse {
+  val example = ErrorResponse(
+    404,
+    "NotFound",
+    "Not Found",
+    Some("The requested resource was not found"),
+    INSTANCE_URI_PREFIX + UUID.fromString("f47ac10b-58cc-4372-a567-0e02b2c3d479")
+  )
+
   given encoder: zio.json.JsonEncoder[ErrorResponse] = DeriveJsonEncoder.gen[ErrorResponse]
 
   given decoder: zio.json.JsonDecoder[ErrorResponse] = DeriveJsonDecoder.gen[ErrorResponse]

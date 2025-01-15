@@ -5,7 +5,6 @@ import org.hyperledger.identus.mercury.model.{AttachmentDescriptor, Base64, Json
 import org.hyperledger.identus.mercury.protocol.presentproof.{Presentation, RequestPresentation}
 import org.hyperledger.identus.pollux.core.model.PresentationRecord
 import org.hyperledger.identus.presentproof.controller.http.PresentationStatus.annotations
-import org.hyperledger.identus.shared.models.{FailureInfo, StatusCode}
 import sttp.tapir.{Schema, Validator}
 import sttp.tapir.json.zio.schemaForZioJsonValue
 import sttp.tapir.Schema.annotations.{description, encodedExample, validate}
@@ -196,8 +195,7 @@ object PresentationStatus {
     object metaLastFailure
         extends Annotation[ErrorResponse](
           description = "The last failure if any.",
-          example =
-            ErrorResponse.failureToErrorResponseConversion(FailureInfo("Error", StatusCode.NotFound, "Not Found"))
+          example = ErrorResponse.example
         )
 
     object goalcode
