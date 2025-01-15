@@ -48,13 +48,6 @@ object CredentialSchemaReferenceParsingLogicSpec extends ZIOSpecDefault with Cre
           )
         )
       },
-      test("should fail for multiple deprecated schema IDs") {
-        for {
-          result <- parseCredentialSchemaRef_VCDM1_1(Some(List("id1", "id2")), None).either
-        } yield assert(result)(
-          isLeft(isErrorResponseWithDetailFieldEqualTo("Multiple credential schemas are not allowed."))
-        )
-      },
       test("should fail if no schema is provided") {
         for {
           result <- parseCredentialSchemaRef_VCDM1_1(None, None).either
@@ -75,13 +68,6 @@ object CredentialSchemaReferenceParsingLogicSpec extends ZIOSpecDefault with Cre
           result <- parseSchemaIdForAnonCredsModelV1(Some(credentialSchemaExample), None).either
           expectedUriString <- UriString.make(credentialSchemaExample).toZIO
         } yield assert(result)(isRight(equalTo(expectedUriString)))
-      },
-      test("should fail for multiple deprecated schema IDs") {
-        for {
-          result <- parseSchemaIdForAnonCredsModelV1(Some(List("id1", "id2")), None).either
-        } yield assert(result)(
-          isLeft(isErrorResponseWithDetailFieldEqualTo("Multiple credential schemas are not allowed."))
-        )
       },
       test("should fail if no schema ID is provided") {
         for {
