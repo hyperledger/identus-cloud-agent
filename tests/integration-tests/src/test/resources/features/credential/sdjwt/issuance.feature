@@ -9,7 +9,7 @@ Feature: Issue SD-JWT credential
     And Issuer adds a '<authentication>' key for 'authentication' purpose with '<authenticationName>' name to the custom PRISM DID
     And Issuer creates the custom PRISM DID
     And Issuer publishes DID to ledger
-    And Issuer has published 'ID_SCHEMA' schema
+    And Issuer has a published 'ID_SCHEMA' schema
     When Issuer offers a sd-jwt credential to Holder
     And Holder receives the credential offer
     And Holder accepts credential offer for sd-jwt
