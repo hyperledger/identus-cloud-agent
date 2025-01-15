@@ -241,11 +241,17 @@ object AnonCredsVCPropertiesV1 {
 }
 
 case class SDJWTVCPropertiesV1(
+    @description(annotations.issuingDID.description)
+    @encodedExample(annotations.issuingDID.example)
     issuingDID: String,
     @description(annotations.issuingKid.description)
     @encodedExample(annotations.issuingKid.example)
     issuingKid: Option[KeyId],
+    @description(annotations.credentialSchema.description)
+    @encodedExample(annotations.credentialSchema.example)
     credentialSchema: CredentialSchemaRef,
+    @description(annotations.claims.description)
+    @encodedExample(annotations.claims.example)
     claims: zio.json.ast.Json
 )
 
@@ -273,6 +279,17 @@ object SDJWTVCPropertiesV1 {
           example = zio.json.ast.Json.Obj(
             "firstname" -> zio.json.ast.Json.Str("Alice"),
             "lastname" -> zio.json.ast.Json.Str("Wonderland"),
+          )
+        )
+    object credentialSchema
+        extends Annotation[CredentialSchemaRef](
+          description = """
+            |The properties of the SD-JWT verifiable credential that will be issued complied with VCDM 1.1.
+            |The current implementation of SD-JWT doesn't includ this property in the JWT payload, but the it is used to validate the credential.
+            |""".stripMargin,
+          example = CredentialSchemaRef(
+            "https://agent-host.com/cloud-agent/schema-registry/schemas/d9569cec-c81e-4779-aa86-0d5994d82676",
+            "JsonSchemaValidator2018"
           )
         )
   }
