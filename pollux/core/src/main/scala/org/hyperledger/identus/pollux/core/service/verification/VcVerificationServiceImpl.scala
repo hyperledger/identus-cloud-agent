@@ -1,8 +1,8 @@
 package org.hyperledger.identus.pollux.core.service.verification
 
+import org.hyperledger.identus.pollux.core.model.primitives.UriString
 import org.hyperledger.identus.pollux.core.model.schema.CredentialSchema
 import org.hyperledger.identus.pollux.vc.jwt.{
-  CredentialPayload,
   CredentialSchema as JwtCredentialSchema,
   DidResolver,
   JWT,
@@ -11,6 +11,7 @@ import org.hyperledger.identus.pollux.vc.jwt.{
 }
 import org.hyperledger.identus.shared.http.UriResolver
 import zio.*
+import zio.json.EncoderOps
 
 import java.time.OffsetDateTime
 
@@ -63,12 +64,15 @@ class VcVerificationServiceImpl(didResolver: DidResolver, uriResolver: UriResolv
           case schema: JwtCredentialSchema           => List(schema)
           case schemaList: List[JwtCredentialSchema] => schemaList
         }
+        schemaUris <- ZIO
+          .collectAll(credentialSchemas.map(cs => UriString.make(cs.id).toZIO))
+          .mapError(error => VcVerificationServiceError.UnexpectedError(s"Invalid schema URI: $error"))
         result <-
           ZIO.collectAll(
-            credentialSchemas.map(credentialSchema =>
+            schemaUris.map(schemaUri =>
               CredentialSchema
                 .validSchemaValidator(
-                  credentialSchema.id,
+                  schemaUri,
                   uriResolver
                 )
                 .mapError(error => VcVerificationServiceError.UnexpectedError(s"Schema Validator Failed: $error"))
@@ -110,13 +114,16 @@ class VcVerificationServiceImpl(didResolver: DidResolver, uriResolver: UriResolv
           case schema: JwtCredentialSchema           => List(schema)
           case schemaList: List[JwtCredentialSchema] => schemaList
         }
+        schemaUris <- ZIO
+          .collectAll(credentialSchemas.map(cs => UriString.make(cs.id).toZIO))
+          .mapError(error => VcVerificationServiceError.UnexpectedError(s"Invalid schema URI: $error"))
         result <-
           ZIO.collectAll(
-            credentialSchemas.map(credentialSchema =>
+            schemaUris.map(schemaUri =>
               CredentialSchema
                 .validateJWTCredentialSubject(
-                  credentialSchema.id,
-                  CredentialPayload.Implicits.jwtVcEncoder(decodedJwt.vc).noSpaces,
+                  schemaUri,
+                  decodedJwt.vc.toJson,
                   uriResolver
                 )
                 .mapError(error =>

@@ -2,10 +2,11 @@ package org.hyperledger.identus.issue.controller.http
 
 import org.hyperledger.identus.api.http.Annotation
 import org.hyperledger.identus.issue.controller.http.CreateIssueCredentialRecordRequest.annotations
+import org.hyperledger.identus.pollux.core.model.primitives.UriString
 import org.hyperledger.identus.shared.models.KeyId
 import sttp.tapir.{Schema, Validator}
 import sttp.tapir.json.zio.schemaForZioJsonValue
-import sttp.tapir.Schema.annotations.{description, encodedExample}
+import sttp.tapir.Schema.annotations.{description, encodedExample, validate}
 import zio.json.{DeriveJsonDecoder, DeriveJsonEncoder, JsonDecoder, JsonEncoder}
 
 import java.util.UUID
@@ -31,27 +32,33 @@ import scala.language.implicitConversions
 final case class CreateIssueCredentialRecordRequest(
     @description(annotations.validityPeriod.description)
     @encodedExample(annotations.validityPeriod.example)
+    @deprecated("Use jwtVcPropertiesV1.validityPeriod instead", "2.0.0")
     validityPeriod: Option[Double] = None,
     @description(annotations.schemaId.description)
     @encodedExample(annotations.schemaId.example)
-    schemaId: Option[String | List[String]] = None,
+    @deprecated("Use anoncredsVcPropertiesV1.schemaId instead", "2.0.0")
+    schemaId: Option[String] = None,
     @description(annotations.credentialDefinitionId.description)
     @encodedExample(annotations.credentialDefinitionId.example)
+    @deprecated("Use anoncredsVcPropertiesV1.credentialDefinitionId instead", "2.0.0")
     credentialDefinitionId: Option[UUID],
     @description(annotations.credentialFormat.description)
     @encodedExample(annotations.credentialFormat.example)
     credentialFormat: Option[String],
     @description(annotations.claims.description)
     @encodedExample(annotations.claims.example)
+    @deprecated("Use specific properties of the verifiable credentials *.claims instead", "2.0.0")
     claims: zio.json.ast.Json,
     @description(annotations.automaticIssuance.description)
     @encodedExample(annotations.automaticIssuance.example)
     automaticIssuance: Option[Boolean] = None,
     @description(annotations.issuingDID.description)
     @encodedExample(annotations.issuingDID.example)
+    @deprecated("Use specific properties of the verifiable credentials *.issuingDID instead", "2.0.0")
     issuingDID: String,
     @description(annotations.issuingKid.description)
     @encodedExample(annotations.issuingKid.example)
+    @deprecated("Use specific jwtVcPropertiesV1.issuingKid instead", "2.0.0")
     issuingKid: Option[KeyId],
     @description(annotations.connectionId.description)
     @encodedExample(annotations.connectionId.example)
@@ -62,7 +69,198 @@ final case class CreateIssueCredentialRecordRequest(
     @description(annotations.goal.description)
     @encodedExample(annotations.goal.example)
     goal: Option[String] = None,
+    @description(annotations.domain.description)
+    @encodedExample(annotations.domain.example)
+    domain: Option[String] = None,
+    @description(annotations.jwtVcPropertiesV1.description)
+    jwtVcPropertiesV1: Option[JwtVCPropertiesV1] = None,
+    @description(annotations.anoncredsVcPropertiesV1.description)
+    anoncredsVcPropertiesV1: Option[AnonCredsVCPropertiesV1] = None,
+    @description(annotations.sdJwtVcPropertiesV1.description)
+    sdJwtVcPropertiesV1: Option[SDJWTVCPropertiesV1] = None
 )
+
+case class CredentialSchemaRef(
+    @description(CredentialSchemaRef.annotations.id.description)
+    @encodedExample(CredentialSchemaRef.annotations.id.example)
+    id: String,
+    @description(CredentialSchemaRef.annotations.`type`.description)
+    @encodedExample(CredentialSchemaRef.annotations.`type`.example)
+    `type`: String
+)
+
+object CredentialSchemaRef {
+  given schema: Schema[CredentialSchemaRef] = Schema.derived
+  given encoder: JsonEncoder[CredentialSchemaRef] = DeriveJsonEncoder.gen
+  given decoder: JsonDecoder[CredentialSchemaRef] = DeriveJsonDecoder.gen
+
+  object annotations {
+    object id
+        extends Annotation[String](
+          description = """
+          |The URL or DIDURL pointing to the credential schema that will be used for this offer.
+          |""".stripMargin,
+          example = "https://agent-host.com/cloud-agent/schema-registry/schemas/d9569cec-c81e-4779-aa86-0d5994d82676"
+        )
+    object `type`
+        extends Annotation[String](
+          description = """
+          |The type of the credential schema that will be used for this offer.
+          |""".stripMargin,
+          example = "JsonSchema"
+        )
+  }
+  import org.hyperledger.identus.pollux.core.model.schema as domain
+
+  def toDomain(ref: CredentialSchemaRef): Either[String, domain.CredentialSchemaRef] = {
+    domain.CredentialSchemaRefType.values
+    for {
+      `type` <- ref.`type` match {
+        case "JsonSchema"              => Right(domain.CredentialSchemaRefType.JsonSchema)
+        case "JsonSchemaValidator2018" => Right(domain.CredentialSchemaRefType.JsonSchemaValidator2018)
+        case _                         => Left("Invalid CredentialSchemaRefType")
+      }
+      id <- UriString.make(ref.id).toEither.left.map(nec => nec.mkString(", "))
+    } yield domain.CredentialSchemaRef(`type`, id)
+  }
+
+}
+
+case class JwtVCPropertiesV1(
+    @description(JwtVCPropertiesV1.annotations.issuingDID.description)
+    @encodedExample(JwtVCPropertiesV1.annotations.issuingDID.example)
+    issuingDID: String,
+    @description(JwtVCPropertiesV1.annotations.validityPeriod.description)
+    @encodedExample(JwtVCPropertiesV1.annotations.validityPeriod.example)
+    validityPeriod: Double,
+    @description(JwtVCPropertiesV1.annotations.claims.description)
+    @encodedExample(JwtVCPropertiesV1.annotations.claims.example)
+    claims: zio.json.ast.Json,
+    credentialSchema: CredentialSchemaRef
+)
+
+object JwtVCPropertiesV1 {
+  given schema: Schema[JwtVCPropertiesV1] = Schema.derived
+  given encoder: JsonEncoder[JwtVCPropertiesV1] = DeriveJsonEncoder.gen
+  given decoder: JsonDecoder[JwtVCPropertiesV1] = DeriveJsonDecoder.gen
+
+  object annotations {
+    object validityPeriod
+        extends Annotation[Double](
+          description = "The validity period in seconds of the verifiable credential that will be issued.",
+          example = 3600
+        )
+    object issuingDID
+        extends Annotation[String](
+          description = """
+          |The issuer Prism DID by which the verifiable credential will be issued. DID can be short for or long form.
+          |""".stripMargin,
+          example = "did:prism:3bb0505d13fcb04d28a48234edb27b0d4e6d7e18a81e2c1abab58f3bbc21ce6f"
+        )
+    object claims
+        extends Annotation[zio.json.ast.Json](
+          description = """
+          |The set of claims that will be included in the issued credential.
+          |The JSON object should comply with the schema applicable for this offer (i.e. 'schemaId' or 'credentialDefinitionId').
+          |""".stripMargin,
+          example = zio.json.ast.Json.Obj(
+            "firstname" -> zio.json.ast.Json.Str("Alice"),
+            "lastname" -> zio.json.ast.Json.Str("Wonderland"),
+          )
+        )
+    object credentialSchema
+        extends Annotation[CredentialSchemaRef](
+          description = """
+          |The properties of the JWT verifiable credential that will be issued complied with VCDM 1.1.
+          |""".stripMargin,
+          example = CredentialSchemaRef(
+            "https://agent-host.com/cloud-agent/schema-registry/schemas/d9569cec-c81e-4779-aa86-0d5994d82676",
+            "JsonSchemaValidator2018"
+          )
+        )
+  }
+}
+
+case class AnonCredsVCPropertiesV1(
+    @description(annotations.issuingDID.description)
+    @encodedExample(annotations.issuingDID.example)
+    issuingDID: String,
+    @description(AnonCredsVCPropertiesV1.annotations.schemaId.description)
+    @encodedExample(AnonCredsVCPropertiesV1.annotations.schemaId.example)
+    schemaId: String,
+    @description(AnonCredsVCPropertiesV1.annotations.credentialDefinitionId.description)
+    @encodedExample(AnonCredsVCPropertiesV1.annotations.credentialDefinitionId.example)
+    credentialDefinitionId: String,
+    @description(AnonCredsVCPropertiesV1.annotations.claims.description)
+    @encodedExample(AnonCredsVCPropertiesV1.annotations.claims.example)
+    claims: zio.json.ast.Json
+)
+
+object AnonCredsVCPropertiesV1 {
+  given schema: Schema[AnonCredsVCPropertiesV1] = Schema.derived
+  given encoder: JsonEncoder[AnonCredsVCPropertiesV1] = DeriveJsonEncoder.gen
+  given decoder: JsonDecoder[AnonCredsVCPropertiesV1] = DeriveJsonDecoder.gen
+
+  object annotations {
+    object schemaId
+        extends Annotation[String](
+          description = """
+          |The URL or DIDURL pointing to the AnonCreds schema that will be used for this offer.
+          |When dereferenced, the returned content should be a JSON schema compliant with the '[AnonCreds v1.0 schema](https://hyperledger.github.io/anoncreds-spec/#term:schema)' version of the specification.
+          |""".stripMargin,
+          example =
+            "https://agent-host.com/cloud-agent/schema-registry/schemas/d9569cec-c81e-4779-aa86-0d5994d82676/schema"
+        )
+    object credentialDefinitionId
+        extends Annotation[UUID](
+          description = """
+          |The unique identifier (UUID) of the credential definition that will be used for this offer.
+          |It should be the identifier of a credential definition that exists in the issuer agent's database.
+          |""".stripMargin,
+          example = UUID.fromString("d9569cec-c81e-4779-aa86-0d5994d82676")
+        )
+    object claims
+        extends Annotation[zio.json.ast.Json](
+          description = """
+          |The set of claims that will be included in the issued credential.
+          |The object should comply with the schema applicable for this offer (i.e. 'schemaId' or 'credentialDefinitionId').
+          |""".stripMargin,
+          example = zio.json.ast.Json.Obj.apply(
+            "firstname" -> zio.json.ast.Json.Str("Alice"),
+            "lastname" -> zio.json.ast.Json.Str("Wonderland")
+          )
+        )
+  }
+}
+
+case class SDJWTVCPropertiesV1(issuingDID: String, credentialSchema: CredentialSchemaRef, claims: zio.json.ast.Json)
+
+object SDJWTVCPropertiesV1 {
+  given schema: Schema[SDJWTVCPropertiesV1] = Schema.derived
+  given encoder: JsonEncoder[SDJWTVCPropertiesV1] = DeriveJsonEncoder.gen
+  given decoder: JsonDecoder[SDJWTVCPropertiesV1] = DeriveJsonDecoder.gen
+
+  object annotations {
+    object issuingDID
+        extends Annotation[String](
+          description = """
+          |The issuer Prism DID by which the verifiable credential will be issued.
+          |""".stripMargin,
+          example = "did:prism:3bb0505d13fcb04d28a48234edb27b0d4e6d7e18a81e2c1abab58f3bbc21ce6f"
+        )
+    object claims
+        extends Annotation[zio.json.ast.Json](
+          description = """
+          |The set of claims that will be included in the issued credential.
+          |The JSON object should comply with the schema applicable for this offer.
+          |""".stripMargin,
+          example = zio.json.ast.Json.Obj(
+            "firstname" -> zio.json.ast.Json.Str("Alice"),
+            "lastname" -> zio.json.ast.Json.Str("Wonderland"),
+          )
+        )
+  }
+}
 
 object CreateIssueCredentialRecordRequest {
 
@@ -175,6 +373,39 @@ object CreateIssueCredentialRecordRequest {
           | goal is optional and can be provided when the offer is from invitation for connectionless issuance.
           |""".stripMargin,
           example = Some("To issue a Faber College Graduate credential")
+        )
+
+    object domain
+        extends Annotation[Option[String]](
+          description = """
+            | A string that specifies the intended scope or audience for the offer request. The 'domain' field binds the proof or presentation to a particular context (e.g., application, service, or verifier) to prevent misuse.
+            | It is often used alongside a 'challenge' field to ensure the freshness and uniqueness of the proof. The 'domain' field adds context to validate the origin or purpose of the proof.
+            |""".stripMargin,
+          example = Some("faber-college-jwt-vc")
+        )
+
+    object jwtVcPropertiesV1
+        extends Annotation[Option[JwtVCPropertiesV1]](
+          description = """
+          |The properties of the JWT verifiable credential that will be issued complied with VCDM 1.1.
+          |""".stripMargin,
+          example = None
+        )
+
+    object anoncredsVcPropertiesV1
+        extends Annotation[Option[AnonCredsVCPropertiesV1]](
+          description = """
+        |The properties of the AnonCreds verifiable credential that will be issued complied with AnonCreds 1.0.
+        |""".stripMargin,
+          example = None
+        )
+
+    object sdJwtVcPropertiesV1
+        extends Annotation[Option[SDJWTVCPropertiesV1]](
+          description = """
+        |The properties of the SDJWT verifiable credential that will be issued complied with SD-JWT specification and VCDM 1.1.
+        |""".stripMargin,
+          example = None
         )
   }
 

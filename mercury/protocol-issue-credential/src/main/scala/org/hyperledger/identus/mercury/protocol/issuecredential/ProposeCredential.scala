@@ -1,9 +1,7 @@
 package org.hyperledger.identus.mercury.protocol.issuecredential
 
-import io.circe.*
-import io.circe.generic.semiauto.*
-import io.circe.syntax.*
 import org.hyperledger.identus.mercury.model.{AttachmentDescriptor, DidId, Message, PIURI}
+import zio.json.{DeriveJsonDecoder, DeriveJsonEncoder, EncoderOps, JsonDecoder, JsonEncoder}
 
 /** ALL parameterS are DIDCOMMV2 format and naming conventions and follows the protocol
   * @see
@@ -30,7 +28,7 @@ final case class ProposeCredential(
     `type` = this.`type`,
     from = Some(this.from),
     to = Seq(this.to),
-    body = this.body.asJson.asObject.get, // TODO get
+    body = this.body.toJsonAST.toOption.flatMap(_.asObject).get, // TODO get
     attachments = Some(this.attachments)
   )
 }
@@ -60,8 +58,8 @@ object ProposeCredential {
   }
 
   import AttachmentDescriptor.attachmentDescriptorEncoderV2
-  given Encoder[ProposeCredential] = deriveEncoder[ProposeCredential]
-  given Decoder[ProposeCredential] = deriveDecoder[ProposeCredential]
+  given JsonEncoder[ProposeCredential] = DeriveJsonEncoder.gen
+  given JsonDecoder[ProposeCredential] = DeriveJsonDecoder.gen
 
   /** @param goal_code
     * @param comment
@@ -75,13 +73,13 @@ object ProposeCredential {
   )
 
   object Body {
-    given Encoder[Body] = deriveEncoder[Body]
-    given Decoder[Body] = deriveDecoder[Body]
+    given JsonEncoder[Body] = DeriveJsonEncoder.gen
+    given JsonDecoder[Body] = DeriveJsonDecoder.gen
   }
 
   def readFromMessage(message: Message): Either[String, ProposeCredential] = {
-    message.body.asJson.as[ProposeCredential.Body] match
-      case Left(fail) => Left("Fail to parse ProposeCredential's body: " + fail.getMessage)
+    message.body.as[ProposeCredential.Body] match
+      case Left(err) => Left("Fail to parse ProposeCredential's body: " + err)
       case Right(body) =>
         message.from match
           case None => Left("ProposeCredential MUST have the sender explicit")

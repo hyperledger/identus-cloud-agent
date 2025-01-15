@@ -1,9 +1,7 @@
 package org.hyperledger.identus.mercury.protocol.issuecredential
 
-import io.circe.*
-import io.circe.generic.semiauto.*
-import io.circe.syntax.*
 import org.hyperledger.identus.mercury.model.{AttachmentDescriptor, DidId, Message, PIURI}
+import zio.json.{DeriveJsonDecoder, DeriveJsonEncoder, EncoderOps, JsonDecoder, JsonEncoder}
 
 /** ALL parameterS are DIDCOMMV2 format and naming conventions and follows the protocol
   * @see
@@ -17,7 +15,7 @@ import org.hyperledger.identus.mercury.model.{AttachmentDescriptor, DidId, Messa
   *   needs to be used need replying
   */
 final case class OfferCredential(
-    id: String = java.util.UUID.randomUUID.toString(),
+    id: String = java.util.UUID.randomUUID.toString,
     `type`: PIURI = OfferCredential.`type`,
     body: OfferCredential.Body,
     attachments: Seq[AttachmentDescriptor],
@@ -34,7 +32,7 @@ final case class OfferCredential(
     from = Some(this.from),
     to = to.toSeq,
     thid = this.thid,
-    body = this.body.asJson.asObject.get, // TODO get
+    body = this.body.toJsonAST.toOption.flatMap(_.asObject).get, // TODO get
     attachments = Some(this.attachments),
   )
 }
@@ -42,10 +40,8 @@ final case class OfferCredential(
 object OfferCredential {
 
   import AttachmentDescriptor.attachmentDescriptorEncoderV2
-
-  given Encoder[OfferCredential] = deriveEncoder[OfferCredential]
-
-  given Decoder[OfferCredential] = deriveDecoder[OfferCredential]
+  given JsonEncoder[OfferCredential] = DeriveJsonEncoder.gen
+  given JsonDecoder[OfferCredential] = DeriveJsonDecoder.gen
 
   def `type`: PIURI = "https://didcomm.org/issue-credential/3.0/offer-credential"
 
@@ -77,8 +73,8 @@ object OfferCredential {
   )
 
   object Body {
-    given Encoder[Body] = deriveEncoder[Body]
-    given Decoder[Body] = deriveDecoder[Body]
+    given JsonEncoder[Body] = DeriveJsonEncoder.gen
+    given JsonDecoder[Body] = DeriveJsonDecoder.gen
   }
 
   def makeOfferToProposeCredential(
@@ -106,8 +102,8 @@ object OfferCredential {
     }
 
   def readFromMessage(message: Message): Either[String, OfferCredential] = {
-    message.body.asJson.as[OfferCredential.Body] match
-      case Left(fail) => Left("Fail to parse OfferCredential's body: " + fail.getMessage)
+    message.body.as[OfferCredential.Body] match
+      case Left(err) => Left("Fail to parse OfferCredential's body: " + err)
       case Right(body) =>
         message.from match
           case None => Left("OfferCredential MUST have the sender explicit")

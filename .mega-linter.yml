@@ -28,6 +28,7 @@ DISABLE_LINTERS:
   - PYTHON_MYPY
   - PYTHON_PYRIGHT
   - PYTHON_RUFF
+  - TYPESCRIPT_STANDARD
 
 DISABLE_ERRORS_LINTERS:
   - KOTLIN_KTLINT
@@ -63,5 +64,7 @@ SQL_SQL_LINT_ARGUMENTS: -d postgres --ignore-errors=postgres-invalid-alter-optio
 YAML_YAMLLINT_FILTER_REGEX_EXCLUDE: "infrastructure/charts/agent/*|cloud-agent/service/api/http/*|examples/*"
 YAML_PRETTIER_FILTER_REGEX_EXCLUDE: "infrastructure/charts/agent/*|cloud-agent/service/api/http/*|examples/*"
 YAML_V8R_FILTER_REGEX_EXCLUDE: "infrastructure/charts/agent/*"
-JAVASCRIPT_STANDARD_FILTER_REGEX_EXCLUDE: "tests/performance-tests/agent-performance-tests-k6/src/k6chaijs.js"
+JAVASCRIPT_STANDARD_FILTER_REGEX_EXCLUDE:
+  "tests/performance-tests/agent-performance-tests-k6/src/k6chaijs.js\
+  |tests/performance-tests/agent-performance-tests-k6/src/common/ProofsService.ts|tests/didcomm-tests/docker/initdb.js"
 BASH_SHELLCHECK_FILTER_REGEX_EXCLUDE: "infrastructure/*"

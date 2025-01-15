@@ -269,6 +269,7 @@ class CredentialRepositoryInMemory(
             updatedAt = Some(Instant.now),
             protocolState = protocolState,
             subjectId = Some(subjectId),
+            keyId = keyId,
             metaRetries = maxRetries,
             metaLastFailure = None,
           )

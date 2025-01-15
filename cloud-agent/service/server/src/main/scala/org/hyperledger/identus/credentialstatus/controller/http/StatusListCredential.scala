@@ -96,7 +96,7 @@ object StatusListCredential {
 
       object `type`
           extends Annotation[String](
-            description = "Always equals to constnat value - StatusList2021",
+            description = "Always equals to constant value - StatusList2021",
             example = "StatusList2021"
           )
 
@@ -165,7 +165,7 @@ object StatusListCredential {
   given stringOrCredentialIssuerDecoder: JsonDecoder[String | CredentialIssuer] =
     JsonDecoder[CredentialIssuer]
       .map(issuer => issuer: String | CredentialIssuer)
-      .orElse(JsonDecoder[String].map(schemaId => schemaId: String | CredentialIssuer))
+      .orElse(JsonDecoder[String].map(issuerId => issuerId: String | CredentialIssuer))
 
   given statusListCredentialEncoder: JsonEncoder[StatusListCredential] =
     DeriveJsonEncoder.gen[StatusListCredential]

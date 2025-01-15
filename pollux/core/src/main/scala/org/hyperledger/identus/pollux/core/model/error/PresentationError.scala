@@ -97,6 +97,11 @@ object PresentationError {
         StatusCode.BadRequest,
         s"The Credential format '$vcFormat' is not Unsupported"
       )
+  final case class UnsupportedCredentialFormatBecauseDisabled(detail: String)
+      extends PresentationError(
+        StatusCode.BadRequest,
+        userFacingMessage = detail
+      )
 
   final case class InvalidAnoncredPresentationRequest(error: String)
       extends PresentationError(
@@ -195,6 +200,12 @@ object PresentationError {
   final case class PresentationVerificationError(msg: String)
       extends PresentationError(
         StatusCode.InternalServerError,
+        msg
+      )
+
+  final case class PresentationValidationError(msg: String)
+      extends PresentationError(
+        StatusCode.BadRequest,
         msg
       )
 

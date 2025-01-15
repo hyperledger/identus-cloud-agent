@@ -47,7 +47,7 @@ class VcVerificationSteps {
         holder.remember("issuerDid", "did:prism:issuer")
     }
 
-    @Given("{actor} has a {} problem in the Verifiable Credential")
+    @Given("{actor} has a '{}' problem in the Verifiable Credential")
     fun holderHasProblemInTheVerifiableCredential(holder: Actor, problem: JwtCredentialProblem) {
         val jwt = problem.jwt()
         holder.remember("jwt", jwt)
@@ -64,7 +64,7 @@ class VcVerificationSteps {
         holder.remember("checks", checks)
     }
 
-    @Then("{actor} should see that verification has failed with {} problem")
+    @Then("{actor} should see that verification has failed with '{}' problem")
     fun holderShouldSeeThatVerificationHasFailedWithProblem(holder: Actor, problem: JwtCredentialProblem) {
     }
 

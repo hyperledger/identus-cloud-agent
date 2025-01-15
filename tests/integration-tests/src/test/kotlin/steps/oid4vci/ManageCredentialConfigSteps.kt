@@ -22,7 +22,7 @@ import org.hyperledger.identus.client.models.IssuerMetadata
 import java.util.UUID
 
 class ManageCredentialConfigSteps {
-    @Given("{actor} has {string} credential configuration created from {}")
+    @Given("{actor} has '{}' credential configuration created from '{}'")
     fun issuerHasExistingCredentialConfig(issuer: Actor, configurationId: String, schema: CredentialSchema) {
         ManageIssuerSteps().issuerHasExistingCredentialIssuer(issuer)
         val credentialIssuer = issuer.recall<CredentialIssuer>("oid4vciCredentialIssuer")
@@ -34,7 +34,7 @@ class ManageCredentialConfigSteps {
         }
     }
 
-    @When("{actor} uses {} to create a credential configuration {string}")
+    @When("{actor} uses '{}' to create a credential configuration '{}'")
     fun issuerCreateCredentialConfiguration(issuer: Actor, schema: CredentialSchema, configurationId: String) {
         val credentialIssuer = issuer.recall<CredentialIssuer>("oid4vciCredentialIssuer")
         val schemaGuid = issuer.recall<String>(schema.name)
@@ -52,7 +52,7 @@ class ManageCredentialConfigSteps {
         )
     }
 
-    @When("{actor} deletes {string} credential configuration")
+    @When("{actor} deletes '{}' credential configuration")
     fun issuerDeletesCredentialConfiguration(issuer: Actor, configurationId: String) {
         val credentialIssuer = issuer.recall<CredentialIssuer>("oid4vciCredentialIssuer")
         issuer.attemptsTo(
@@ -61,7 +61,7 @@ class ManageCredentialConfigSteps {
         )
     }
 
-    @When("{actor} deletes a non existent {} credential configuration")
+    @When("{actor} deletes a non existent '{}' credential configuration")
     fun issuerDeletesANonExistentCredentialConfiguration(issuer: Actor, configurationId: String) {
         val credentialIssuer = issuer.recall<CredentialIssuer>("oid4vciCredentialIssuer")
         issuer.attemptsTo(
@@ -75,7 +75,7 @@ class ManageCredentialConfigSteps {
         issuer.remember("credentialConfiguration", credentialConfiguration)
     }
 
-    @When("{actor} uses {} issuer id for credential configuration")
+    @When("{actor} uses '{}' issuer id for credential configuration")
     fun issuerUsesIssuerId(issuer: Actor, issuerId: String) {
         if (issuerId == "existing") {
             val credentialIssuer = issuer.recall<CredentialIssuer>("oid4vciCredentialIssuer")
@@ -129,7 +129,7 @@ class ManageCredentialConfigSteps {
         )
     }
 
-    @Then("{actor} sees the {string} configuration on IssuerMetadata endpoint")
+    @Then("{actor} sees the '{}' configuration on IssuerMetadata endpoint")
     fun issuerSeesCredentialConfiguration(issuer: Actor, configurationId: String) {
         val credentialIssuer = issuer.recall<CredentialIssuer>("oid4vciCredentialIssuer")
         issuer.attemptsTo(
@@ -143,7 +143,7 @@ class ManageCredentialConfigSteps {
         )
     }
 
-    @Then("{actor} cannot see the {string} configuration on IssuerMetadata endpoint")
+    @Then("{actor} cannot see the '{}' configuration on IssuerMetadata endpoint")
     fun issuerCannotSeeCredentialConfiguration(issuer: Actor, configurationId: String) {
         val credentialIssuer = issuer.recall<CredentialIssuer>("oid4vciCredentialIssuer")
         issuer.attemptsTo(

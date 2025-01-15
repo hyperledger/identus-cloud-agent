@@ -16,7 +16,6 @@ on:
 defaults:
   run:
     shell: bash
-    working-directory: "tests/integration-tests"
 
 permissions:
   checks: write
@@ -58,12 +57,10 @@ jobs:
       - name: Build local version of Cloud Agent
         id: build_local_cloud_agent
         env:
-          CLOUD_AGENT_PATH: "../.."
           ENV_FILE: "infrastructure/local/.env"
           GITHUB_ACTOR: hyperledger-bot
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          cd "${CLOUD_AGENT_PATH}" || exit 129
           sbt docker:publishLocal
           echo "agent_version=$(cut -d'=' -f2 version.sbt | tr -d '" ')" >> "${GITHUB_OUTPUT}"
           echo "prism_node_version=$(grep PRISM_NODE_VERSION infrastructure/local/.env | cut -d'=' -f2 | tr -d ' ')" >> "${GITHUB_OUTPUT}"
@@ -74,6 +71,7 @@ jobs:
           java-version: "19"
 
       - name: Run integration tests
+        working-directory: "tests/integration-tests"
         env:
           PRISM_NODE_VERSION: ${{ steps.build_local_cloud_agent.outputs.prism_node_version }}
           AGENT_VERSION: ${{ steps.build_local_cloud_agent.outputs.agent_version }}
@@ -84,6 +82,7 @@ jobs:
           ./gradlew test --tests "IntegrationTestsRunner"
 
       - name: Make report of integration tests
+        working-directory: "tests/integration-tests"
         if: always()
         env:
           PRISM_NODE_VERSION: ${{ steps.build_local_cloud_agent.outputs.prism_node_version }}
@@ -94,6 +93,7 @@ jobs:
           ./gradlew reports
 
       - name: Extract test results
+        working-directory: "tests/integration-tests"
         id: analyze_test_results
         if: github.ref_name == 'main' && always()
         run: |
@@ -161,3 +161,17 @@ jobs:
           SLACK_TITLE: "Identus Cloud Agent Integration Tests: ${{ steps.analyze_test_results.outputs.conclusion }}"
           SLACK_USERNAME: circleci
           SLACK_WEBHOOK: ${{ secrets.E2E_TESTS_SLACK_WEBHOOK }}
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Run didcomm tests
+        working-directory: "tests/didcomm-tests"
+        env:
+          AGENT_VERSION: ${{ steps.build_local_cloud_agent.outputs.agent_version }}
+        run: |
+          ./docker/run.sh "$AGENT_VERSION"
+          npm i
+          npm test
+          ./docker/stop.sh

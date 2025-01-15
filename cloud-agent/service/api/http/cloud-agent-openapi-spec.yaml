@@ -1,7 +1,7 @@
-openapi: 3.0.3
+openapi: 3.1.0
 info:
   title: Identus Cloud Agent API Reference
-  version: 1.39.0
+  version: 1.40.0
   description: |2
 
     The Identus Cloud Agent API facilitates the integration and management of self-sovereign identity capabilities within applications.
@@ -152,6 +152,13 @@ tags:
     These API keys can then be used for authorization to access specific wallets.
 
     For more detailed information related to the agent IAM and its usage, please refer to this [documentation](https://docs.atalaprism.io/docs/atala-prism/prism-cloud-agent/authentication).
+- name: Presentation Exchange
+  description: |2
+
+    The __Presentation Exchange__ endpoints offers a way to manage resources related to [presentation exchange protocol](https://identity.foundation/presentation-exchange/spec/v2.1.1/).
+
+    The verifier can create the resources such as `presentation-definition` that can be publicly referenced
+    in various protocols such as [OpenID for Verificable Presentation](https://openid.net/specs/openid-4-verifiable-presentations-1_0.html).
 servers:
 - url: http://localhost:8085
   description: The local instance of the Cloud Agent
@@ -167,7 +174,7 @@ paths:
       summary: Lookup credential definitions by indexed fields
       description: 'Lookup credential definitions by `author`, `name`, `tag` parameters
         and control the pagination by `offset` and `limit` parameters '
-      operationId: lookupCredentialDefinitionsByQuery
+      operationId: lookupCredentialDefinitionsByQueryHttpUrl
       parameters:
       - name: author
         in: query
@@ -245,11 +252,12 @@ paths:
     post:
       tags:
       - Credential Definition Registry
-      summary: Publish new definition to the definition registry
+      summary: Publish new definition to the definition registry, resolvable by HTTP
+        url
       description: Create the new credential definition record with metadata and internal
         JSON Schema on behalf of Cloud Agent. The credential definition will be signed
         by the keys of Cloud Agent and issued by the DID that corresponds to it.
-      operationId: createCredentialDefinition
+      operationId: createCredentialDefinitionHttpUrl
       requestBody:
         description: JSON object required for the credential definition creation
         content:
@@ -303,13 +311,253 @@ paths:
       security:
       - apiKeyAuth: []
       - jwtAuth: []
+  /credential-definition-registry/definitions/did-url:
+    get:
+      tags:
+      - Credential Definition Registry
+      summary: Lookup credential definitions by indexed fields
+      description: 'Lookup DID url resolvable credential definitions by `author`,
+        `name`, `tag` parameters and control the pagination by `offset` and `limit`
+        parameters '
+      operationId: lookupCredentialDefinitionsByQueryDidUrl
+      parameters:
+      - name: author
+        in: query
+        required: false
+        schema:
+          type: string
+        example: did:prism:4a5b5cf0a513e83b598bbea25cd6196746747f361a73ef77068268bc9bd732ff
+      - name: name
+        in: query
+        required: false
+        schema:
+          type: string
+        example: DrivingLicense
+      - name: version
+        in: query
+        required: false
+        schema:
+          type: string
+        example: 1.0.0
+      - name: tag
+        in: query
+        required: false
+        schema:
+          type: string
+        example: licence
+      - name: offset
+        in: query
+        description: The number of items to skip before returning results. Default
+          is 0 if not specified.
+        required: false
+        schema:
+          type: integer
+          format: int32
+      - name: limit
+        in: query
+        description: The maximum number of items to return. Defaults to 100 if not
+          specified.
+        required: false
+        schema:
+          type: integer
+          format: int32
+      - name: order
+        in: query
+        required: false
+        schema:
+          type: string
+      responses:
+        '200':
+          description: Collection of CredentialDefinitions records.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CredentialDefinitionDidUrlResponsePage'
+        '400':
+          description: Invalid request parameters
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '422':
+          description: Unable to process the request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+      security:
+      - apiKeyAuth: []
+      - jwtAuth: []
+    post:
+      tags:
+      - Credential Definition Registry
+      summary: Publish new definition to the definition registry, resolvable by DID
+        url
+      description: Create the new credential definition record with metadata and internal
+        JSON Schema on behalf of the Cloud Agent. The credential definition will be
+        signed by the keys of Cloud Agent and issued by the DID that corresponds to
+        it.
+      operationId: createCredentialDefinitionDidUrl
+      requestBody:
+        description: JSON object required for the credential definition creation
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CredentialDefinitionInput'
+        required: true
+      responses:
+        '201':
+          description: The new credential definition record is successfully created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CredentialDefinitionResponse'
+        '400':
+          description: Invalid request parameters
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Resource could not be found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '422':
+          description: Unable to process the request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+      security:
+      - apiKeyAuth: []
+      - jwtAuth: []
+  /credential-definition-registry/definitions/{guid}/definition:
+    get:
+      tags:
+      - Credential Definition Registry
+      summary: Fetch the inner definition field of the credential definition from
+        the registry by `guid`
+      description: Fetch the inner definition fields of the credential definition
+        by the unique identifier
+      operationId: getCredentialDefinitionInnerDefinitionByIdHttpUrl
+      parameters:
+      - name: guid
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      responses:
+        '200':
+          description: CredentialDefinition found by `guid`
+          content:
+            application/json:
+              schema: {}
+        '400':
+          description: Invalid request parameters
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Resource could not be found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '422':
+          description: Unable to process the request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /credential-definition-registry/definitions/did-url/{guid}/definition:
+    get:
+      tags:
+      - Credential Definition Registry
+      summary: Fetch the inner definition field of the credential definition from
+        the registry by `guid`, wrapped in an envelope
+      description: Fetch the inner definition fields of the credential definition
+        by the unique identifier, it should have been crated via DID url, otherwise
+        not found error is returned.
+      operationId: getCredentialDefinitionInnerDefinitionByIdDidUrl
+      parameters:
+      - name: guid
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      responses:
+        '200':
+          description: CredentialDefinition found by `guid`
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PrismEnvelopeResponse'
+        '400':
+          description: Invalid request parameters
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Resource could not be found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '422':
+          description: Unable to process the request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
   /credential-definition-registry/definitions/{guid}:
     get:
       tags:
       - Credential Definition Registry
       summary: Fetch the credential definition from the registry by `guid`
       description: Fetch the credential definition by the unique identifier
-      operationId: getCredentialDefinitionById
+      operationId: getCredentialDefinitionByIdHttpUrl
       parameters:
       - name: guid
         in: path
@@ -349,28 +597,30 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
-  /credential-definition-registry/definitions/{guid}/definition:
+  /credential-definition-registry/definitions/did-url/{guid}:
     get:
       tags:
       - Credential Definition Registry
-      summary: Fetch the inner definition field of the credential definition from
-        the registry by `guid`
-      description: Fetch the inner definition fields of the credential definition
-        by the unique identifier
-      operationId: getCredentialDefinitionInnerDefinitionById
+      summary: Fetch the credential definition from the registry by `guid`, wrapped
+        in an envelope
+      description: Fetch the credential definition by the unique identifier, it should
+        have been crated via DID url, otherwise not found error is returned.
+      operationId: getCredentialDefinitionByIdDidUrl
       parameters:
       - name: guid
         in: path
+        description: Globally unique identifier of the credential definition record
         required: true
         schema:
           type: string
           format: uuid
       responses:
         '200':
-          description: CredentialDefinition found by `guid`
+          description: CredentialDefinition found by `guid`, wrapped in an envelope
           content:
             application/json:
-              schema: {}
+              schema:
+                $ref: '#/components/schemas/PrismEnvelopeResponse'
         '400':
           description: Invalid request parameters
           content:
@@ -492,7 +742,7 @@ paths:
     post:
       tags:
       - Schema Registry
-      summary: Publish new schema to the schema registry
+      summary: Publish new schema to the schema registry, http url resolvable
       description: Create the new credential schema record with metadata and internal
         JSON Schema on behalf of Cloud Agent. The credential schema will be signed
         by the keys of Cloud Agent and issued by the DID that corresponds to it.
@@ -550,7 +800,162 @@ paths:
       security:
       - apiKeyAuth: []
       - jwtAuth: []
-  /schema-registry/{author}/{id}:
+  /schema-registry/schemas/did-url:
+    get:
+      tags:
+      - Schema Registry
+      summary: Lookup schemas by indexed fields
+      description: 'Lookup schemas by `author`, `name`, `tags` parameters and control
+        the pagination by `offset` and `limit` parameters '
+      operationId: lookupSchemasByQueryDidUrl
+      parameters:
+      - name: author
+        in: query
+        required: false
+        schema:
+          type: string
+        example: did:prism:4a5b5cf0a513e83b598bbea25cd6196746747f361a73ef77068268bc9bd732ff
+      - name: name
+        in: query
+        required: false
+        schema:
+          type: string
+        example: DrivingLicense
+      - name: version
+        in: query
+        required: false
+        schema:
+          type: string
+        example: 1.0.0
+      - name: tags
+        in: query
+        required: false
+        schema:
+          type: string
+        example: driving
+      - name: offset
+        in: query
+        description: The number of items to skip before returning results. Default
+          is 0 if not specified.
+        required: false
+        schema:
+          type: integer
+          format: int32
+      - name: limit
+        in: query
+        description: The maximum number of items to return. Defaults to 100 if not
+          specified.
+        required: false
+        schema:
+          type: integer
+          format: int32
+      - name: order
+        in: query
+        required: false
+        schema:
+          type: string
+      responses:
+        '200':
+          description: Collection of CredentialSchema records each wrapped in an envelope.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CredentialSchemaDidUrlResponsePage'
+        '400':
+          description: Invalid request parameters
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '422':
+          description: Unable to process the request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+      security:
+      - apiKeyAuth: []
+      - jwtAuth: []
+    post:
+      tags:
+      - Schema Registry
+      summary: Publish new schema to the schema registry, did url resolvable
+      description: Create the new credential schema record with metadata and internal
+        JSON Schema on behalf of Cloud Agent. The credential schema will be signed
+        by the keys of Cloud Agent and issued by the DID that corresponds to it.
+      operationId: createSchemaDidUrl
+      requestBody:
+        description: JSON object required for the credential schema creation
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CredentialSchemaInput'
+        required: true
+      responses:
+        '201':
+          description: The new credential schema record is successfully created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PrismEnvelopeResponse'
+        '400':
+          description: Invalid request parameters
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Resource could not be found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '422':
+          description: Unable to process the request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+      security:
+      - apiKeyAuth: []
+      - jwtAuth: []
+  /schema-registry/schemas/{id}:
     put:
       tags:
       - Schema Registry
@@ -561,13 +966,6 @@ paths:
         to it.
       operationId: updateSchema
       parameters:
-      - name: author
-        in: path
-        description: DID of the identity which authored the credential schema. A piece
-          of Metadata.
-        required: true
-        schema:
-          type: string
       - name: id
         in: path
         description: A locally unique identifier to address the schema. UUID is generated
@@ -629,6 +1027,167 @@ paths:
       security:
       - apiKeyAuth: []
       - jwtAuth: []
+  /schema-registry/schemas/did-url/{id}:
+    put:
+      tags:
+      - Schema Registry
+      summary: Publish the new version of the credential schema to the schema registry
+      description: Publish the new version of the credential schema record with metadata
+        and internal JSON Schema on behalf of Cloud Agent. The credential schema will
+        be signed by the keys of Cloud Agent and issued by the DID that corresponds
+        to it.
+      operationId: updateSchemaDidUrl
+      parameters:
+      - name: id
+        in: path
+        description: A locally unique identifier to address the schema. UUID is generated
+          by the backend.
+        required: true
+        schema:
+          type: string
+          format: uuid
+      requestBody:
+        description: JSON object required for the credential schema update
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CredentialSchemaInput'
+        required: true
+      responses:
+        '200':
+          description: The credential schema record is successfully updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PrismEnvelopeResponse'
+        '400':
+          description: Invalid request parameters
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Resource could not be found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '422':
+          description: Unable to process the request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+      security:
+      - apiKeyAuth: []
+      - jwtAuth: []
+  /schema-registry/schemas/{guid}/schema:
+    get:
+      tags:
+      - Schema Registry
+      summary: Fetch the schema from the registry by `guid`
+      description: Fetch the credential schema by the unique identifier
+      operationId: getRawSchemaById
+      parameters:
+      - name: guid
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      responses:
+        '200':
+          description: Raw JSON response of the CredentialSchema
+          content:
+            application/json:
+              schema: {}
+        '400':
+          description: Invalid request parameters
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Resource could not be found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '422':
+          description: Unable to process the request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /schema-registry/schemas/did-url/{guid}/schema:
+    get:
+      tags:
+      - Schema Registry
+      summary: Fetch the schema from the registry by `guid`
+      description: Fetch the credential schema by the unique identifier
+      operationId: getRawSchemaByIdDidUrl
+      parameters:
+      - name: guid
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      responses:
+        '200':
+          description: Raw JSON response of the CredentialSchema
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PrismEnvelopeResponse'
+        '400':
+          description: Invalid request parameters
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Resource could not be found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '422':
+          description: Unable to process the request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
   /schema-registry/schemas/{guid}:
     get:
       tags:
@@ -675,26 +1234,28 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
-  /schema-registry/schemas/{guid}/schema:
+  /schema-registry/schemas/did-url/{guid}:
     get:
       tags:
       - Schema Registry
       summary: Fetch the schema from the registry by `guid`
       description: Fetch the credential schema by the unique identifier
-      operationId: getRawSchemaById
+      operationId: getSchemaByIdDidUrl
       parameters:
       - name: guid
         in: path
+        description: Globally unique identifier of the credential schema record
         required: true
         schema:
           type: string
           format: uuid
       responses:
         '200':
-          description: Raw JSON response of the CredentialSchema
+          description: CredentialSchema found by `guid`, wrapped in an envelope
           content:
             application/json:
-              schema: {}
+              schema:
+                $ref: '#/components/schemas/PrismEnvelopeResponse'
         '400':
           description: Invalid request parameters
           content:
@@ -1297,9 +1858,9 @@ paths:
                 $ref: '#/components/schemas/DIDResolutionResult'
             application/did+ld+json:
               schema:
-                type: string
                 description: Empty representation
                 example: ''
+                type: string
         '406':
           description: ''
           content:
@@ -1308,9 +1869,9 @@ paths:
                 $ref: '#/components/schemas/DIDResolutionResult'
             application/did+ld+json:
               schema:
-                type: string
                 description: Empty representation
                 example: ''
+                type: string
         '410':
           description: ''
           content:
@@ -1319,9 +1880,9 @@ paths:
                 $ref: '#/components/schemas/DIDResolutionResult'
             application/did+ld+json:
               schema:
-                type: string
                 description: Empty representation
                 example: ''
+                type: string
         '500':
           description: ''
           content:
@@ -1330,9 +1891,9 @@ paths:
                 $ref: '#/components/schemas/DIDResolutionResult'
             application/did+ld+json:
               schema:
-                type: string
                 description: Empty representation
                 example: ''
+                type: string
         '501':
           description: ''
           content:
@@ -1341,9 +1902,9 @@ paths:
                 $ref: '#/components/schemas/DIDResolutionResult'
             application/did+ld+json:
               schema:
-                type: string
                 description: Empty representation
                 example: ''
+                type: string
   /did-registrar/dids:
     get:
       tags:
@@ -2647,6 +3208,176 @@ paths:
                 $ref: '#/components/schemas/ErrorResponse'
         '403':
           description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '422':
+          description: Unable to process the request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+      security:
+      - apiKeyAuth: []
+      - jwtAuth: []
+  /presentation-exchange/presentation-definitions/{id}:
+    get:
+      tags:
+      - Presentation Exchange
+      summary: Get a presentation-definition
+      operationId: getPresentationDefinition
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      responses:
+        '200':
+          description: Presentation Definition retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PresentationDefinition'
+        '400':
+          description: Invalid request parameters
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Resource could not be found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '422':
+          description: Unable to process the request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /presentation-exchange/presentation-definitions:
+    get:
+      tags:
+      - Presentation Exchange
+      summary: List all presentation-definitions
+      description: |-
+        List all `presentation-definitions` in the wallet.
+        Return a paginated items ordered by created timestamp.
+      operationId: listPresentationDefinition
+      parameters:
+      - name: offset
+        in: query
+        description: The number of items to skip before returning results. Default
+          is 0 if not specified.
+        required: false
+        schema:
+          type: integer
+          format: int32
+      - name: limit
+        in: query
+        description: The maximum number of items to return. Defaults to 100 if not
+          specified.
+        required: false
+        schema:
+          type: integer
+          format: int32
+      responses:
+        '200':
+          description: Presentation Definitions retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PresentationDefinitionPage'
+        '400':
+          description: Invalid request parameters
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '422':
+          description: Unable to process the request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+      security:
+      - apiKeyAuth: []
+      - jwtAuth: []
+    post:
+      tags:
+      - Presentation Exchange
+      summary: Create a new presentation-definition
+      description: |-
+        Create a `presentation-definition` object according to the [presentation exchange protocol](https://identity.foundation/presentation-exchange/spec/v2.1.1/).
+        The `POST` endpoint is restricted to the owner of the wallet. The `presentation-definition` object, however can be referenced by publicly by `id` returned in the response.
+      operationId: createPresentationDefinition
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreatePresentationDefinition'
+        required: true
+      responses:
+        '201':
+          description: Presentation Definition created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PresentationDefinition'
+        '400':
+          description: Invalid request parameters
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Resource could not be found
           content:
             application/json:
               schema:
@@ -4151,6 +4882,12 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
+        '409':
+          description: Cannot process due to conflict with current state of the resource
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
         '422':
           description: Unable to process the request
           content:
@@ -4346,50 +5083,55 @@ paths:
 components:
   schemas:
     AcceptConnectionInvitationRequest:
+      title: AcceptConnectionInvitationRequest
+      type: object
       required:
       - invitation
-      type: object
       properties:
         invitation:
-          type: string
           description: The base64-encoded raw out-of-band invitation.
           example: eyJAaWQiOiIzZmE4NWY2NC01NzE3LTQ1NjItYjNmYy0yYzk2M2Y2NmFmYTYiLCJAdHlwZSI6Imh0dHBzOi8vZGlkY29tbS5vcmcvbXktZmFtaWx5LzEuMC9teS1tZXNzYWdlLXR5cGUiLCJkaWQiOiJXZ1d4cXp0ck5vb0c5MlJYdnhTVFd2IiwiaW1hZ2VVcmwiOiJodHRwOi8vMTkyLjE2OC41Ni4xMDEvaW1nL2xvZ28uanBnIiwibGFiZWwiOiJCb2IiLCJyZWNpcGllbnRLZXlzIjpbIkgzQzJBVnZMTXY2Z21NTmFtM3VWQWpacGZrY0pDd0R3blpuNnozd1htcVBWIl0sInJvdXRpbmdLZXlzIjpbIkgzQzJBVnZMTXY2Z21NTmFtM3VWQWpacGZrY0pDd0R3blpuNnozd1htcVBWIl0sInNlcnZpY2VFbmRwb2ludCI6Imh0dHA6Ly8xOTIuMTY4LjU2LjEwMTo4MDIwIn0=
+          type: string
     AcceptCredentialOfferInvitation:
+      title: AcceptCredentialOfferInvitation
+      type: object
       required:
       - invitation
-      type: object
       properties:
         invitation:
-          type: string
           description: The base64-encoded raw invitation.
           example: eyJAaWQiOiIzZmE4NWY2NC01NzE3LTQ1NjItYjNmYy0yYzk2M2Y2NmFmYTYiLCJAdHlwZSI6Imh0dHBzOi8vZGlkY29tbS5vcmcvbXktZmFtaWx5LzEuMC9teS1tZXNzYWdlLXR5cGUiLCJkaWQiOiJXZ1d4cXp0ck5vb0c5MlJYdnhTVFd2IiwiaW1hZ2VVcmwiOiJodHRwOi8vMTkyLjE2OC41Ni4xMDEvaW1nL2xvZ28uanBnIiwibGFiZWwiOiJCb2IiLCJyZWNpcGllbnRLZXlzIjpbIkgzQzJBVnZMTXY2Z21NTmFtM3VWQWpacGZrY0pDd0R3blpuNnozd1htcVBWIl0sInJvdXRpbmdLZXlzIjpbIkgzQzJBVnZMTXY2Z21NTmFtM3VWQWpacGZrY0pDd0R3blpuNnozd1htcVBWIl0sInNlcnZpY2VFbmRwb2ludCI6Imh0dHA6Ly8xOTIuMTY4LjU2LjEwMTo4MDIwIn0=
+          type: string
     AcceptCredentialOfferRequest:
+      title: AcceptCredentialOfferRequest
       type: object
       properties:
         subjectId:
-          type: string
           description: |2
 
             The short-form subject Prism DID to which the JWT verifiable credential will be issued.
             This parameter only applies if the offer is of type 'JWT'.
           example: did:prism:3bb0505d13fcb04d28a48234edb27b0d4e6d7e18a81e2c1abab58f3bbc21ce6f
+          type: string
         keyId:
-          type: string
           description: |2
 
             The short-form subject Prism DID to which the JWT verifiable credential will be issued.
             This parameter only applies if the offer is of type 'JWT'.
           example: did:prism:3bb0505d13fcb04d28a48234edb27b0d4e6d7e18a81e2c1abab58f3bbc21ce6f
+          type: string
     AcceptRequestPresentationInvitation:
+      title: AcceptRequestPresentationInvitation
+      type: object
       required:
       - invitation
-      type: object
       properties:
         invitation:
-          type: string
           description: The base64-encoded raw invitation.
           example: eyJAaWQiOiIzZmE4NWY2NC01NzE3LTQ1NjItYjNmYy0yYzk2M2Y2NmFmYTYiLCJAdHlwZSI6Imh0dHBzOi8vZGlkY29tbS5vcmcvbXktZmFtaWx5LzEuMC9teS1tZXNzYWdlLXR5cGUiLCJkaWQiOiJXZ1d4cXp0ck5vb0c5MlJYdnhTVFd2IiwiaW1hZ2VVcmwiOiJodHRwOi8vMTkyLjE2OC41Ni4xMDEvaW1nL2xvZ28uanBnIiwibGFiZWwiOiJCb2IiLCJyZWNpcGllbnRLZXlzIjpbIkgzQzJBVnZMTXY2Z21NTmFtM3VWQWpacGZrY0pDd0R3blpuNnozd1htcVBWIl0sInJvdXRpbmdLZXlzIjpbIkgzQzJBVnZMTXY2Z21NTmFtM3VWQWpacGZrY0pDd0R3blpuNnozd1htcVBWIl0sInNlcnZpY2VFbmRwb2ludCI6Imh0dHA6Ly8xOTIuMTY4LjU2LjEwMTo4MDIwIn0=
+          type: string
     ActionType:
+      title: ActionType
       type: string
       enum:
       - ADD_KEY
@@ -4399,9 +5141,10 @@ components:
       - REMOVE_SERVICE
       - UPDATE_SERVICE
     AnoncredCredentialProofV1:
+      title: AnoncredCredentialProofV1
+      type: object
       required:
       - credential
-      type: object
       properties:
         credential:
           type: string
@@ -4414,15 +5157,17 @@ components:
           items:
             type: string
     AnoncredCredentialProofsV1:
+      title: AnoncredCredentialProofsV1
+      description: A list of proofs from the Anoncred library, each corresponding
+        to a credential.
       type: object
       properties:
         credentialProofs:
           type: array
           items:
             $ref: '#/components/schemas/AnoncredCredentialProofV1'
-      description: A list of proofs from the Anoncred library, each corresponding
-        to a credential.
     AnoncredNonRevokedIntervalV1:
+      title: AnoncredNonRevokedIntervalV1
       type: object
       properties:
         from:
@@ -4432,13 +5177,19 @@ components:
           type: integer
           format: int32
     AnoncredPresentationRequestV1:
+      title: AnoncredPresentationRequestV1
+      description: Anoncred Presentation Request
+      example: AnoncredPresentationRequestV1(Map(attribute1 -> AnoncredRequestedAttributeV1(Attribute
+        1,List(Map(cred_def_id -> credential_definition_id_of_attribute1)),Some(AnoncredNonRevokedIntervalV1(Some(1635734400),Some(1735734400))))),Map(predicate1
+        -> AnoncredRequestedPredicateV1(Predicate 1,>=,18,List(Map(schema_id -> schema_id_of_predicate1)),Some(AnoncredNonRevokedIntervalV1(Some(1635734400),None)))),Example
+        Presentation Request,1234567890,1.0,None)
+      type: object
       required:
       - requested_attributes
       - requested_predicates
       - name
       - nonce
       - version
-      type: object
       properties:
         requested_attributes:
           $ref: '#/components/schemas/Map_AnoncredRequestedAttributeV1'
@@ -4452,15 +5203,11 @@ components:
           type: string
         non_revoked:
           $ref: '#/components/schemas/AnoncredNonRevokedIntervalV1'
-      description: Anoncred Presentation Request
-      example: AnoncredPresentationRequestV1(Map(attribute1 -> AnoncredRequestedAttributeV1(Attribute
-        1,List(Map(cred_def_id -> credential_definition_id_of_attribute1)),Some(AnoncredNonRevokedIntervalV1(Some(1635734400),Some(1735734400))))),Map(predicate1
-        -> AnoncredRequestedPredicateV1(Predicate 1,>=,18,List(Map(schema_id -> schema_id_of_predicate1)),Some(AnoncredNonRevokedIntervalV1(Some(1635734400),None)))),Example
-        Presentation Request,1234567890,1.0,None)
     AnoncredRequestedAttributeV1:
+      title: AnoncredRequestedAttributeV1
+      type: object
       required:
       - name
-      type: object
       properties:
         name:
           type: string
@@ -4471,11 +5218,12 @@ components:
         non_revoked:
           $ref: '#/components/schemas/AnoncredNonRevokedIntervalV1'
     AnoncredRequestedPredicateV1:
+      title: AnoncredRequestedPredicateV1
+      type: object
       required:
       - name
       - p_type
       - p_value
-      type: object
       properties:
         name:
           type: string
@@ -4491,10 +5239,11 @@ components:
         non_revoked:
           $ref: '#/components/schemas/AnoncredNonRevokedIntervalV1'
     AnoncredsCredentialRequest:
+      title: AnoncredsCredentialRequest
+      type: object
       required:
       - format
       - anoncreds
-      type: object
       properties:
         format:
           $ref: '#/components/schemas/CredentialFormat'
@@ -4509,34 +5258,30 @@ components:
         anoncreds:
           type: string
     ApiKeyAuthenticationRequest:
+      title: ApiKeyAuthenticationRequest
+      type: object
       required:
       - entityId
       - apiKey
-      type: object
       properties:
         entityId:
-          type: string
           description: The `entityId` of the entity to be updated
-          format: uuid
           example: 01234567-0000-0000-0000-000000000000
-        apiKey:
           type: string
+          format: uuid
+        apiKey:
           description: The `apikey` of the entity to be updated
           example: dkflks3DflkFmkllnDfde
-          minLength: 16
+          type: string
           maxLength: 128
-    Arr:
-      type: object
-      properties:
-        elements:
-          type: array
-          items: {}
+          minLength: 16
     AuthorizationServer:
+      title: AuthorizationServer
+      type: object
       required:
       - url
       - clientId
       - clientSecret
-      type: object
       properties:
         url:
           type: string
@@ -4544,14 +5289,8 @@ components:
           type: string
         clientSecret:
           type: string
-    Bool:
-      required:
-      - value
-      type: object
-      properties:
-        value:
-          type: boolean
     ClaimDescriptor:
+      title: ClaimDescriptor
       type: object
       properties:
         mandatory:
@@ -4562,7 +5301,21 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/Localization'
+    ClaimFormat:
+      title: ClaimFormat
+      type: object
+      properties:
+        jwt:
+          $ref: '#/components/schemas/Jwt'
+        jwt_vc:
+          $ref: '#/components/schemas/Jwt'
+        jwt_vp:
+          $ref: '#/components/schemas/Jwt'
+        ldp:
+          $ref: '#/components/schemas/Ldp'
     Connection:
+      title: Connection
+      type: object
       required:
       - connectionId
       - thid
@@ -4573,55 +5326,54 @@ components:
       - metaRetries
       - self
       - kind
-      type: object
       properties:
         connectionId:
-          type: string
           description: The unique identifier of the connection.
-          format: uuid
           example: 0527aea1-d131-3948-a34d-03af39aba8b4
-        thid:
           type: string
+          format: uuid
+        thid:
           description: The unique identifier of the thread this connection record
             belongs to. The value will identical on both sides of the connection (inviter
             and invitee)
           example: 0527aea1-d131-3948-a34d-03af39aba8b4
-        label:
           type: string
+        label:
           description: A human readable alias for the connection.
           example: Peter
-        goalCode:
           type: string
+        goalCode:
           description: A self-attested code the receiver may want to display to the
             user or use in automatically deciding what to do with the out-of-band
             message.
           example: issue-vc
-        goal:
           type: string
+        goal:
           description: A self-attested string that the receiver may want to display
             to the user about the context-specific goal of the out-of-band message.
           example: To issue a Faber College Graduate credential
-        myDid:
           type: string
+        myDid:
           description: The DID representing me as the inviter or invitee in this specific
             connection.
           example: did:peer:12345
-        theirDid:
           type: string
+        theirDid:
           description: The DID representing the other peer as the an inviter or invitee
             in this specific connection.
           example: did:peer:67890
-        role:
           type: string
+        role:
           description: The role played by the Prism agent in the connection flow.
           example: Inviter
+          type: string
           enum:
           - Inviter
           - Invitee
         state:
-          type: string
           description: The current state of the connection protocol execution.
           example: InvitationGenerated
+          type: string
           enum:
           - InvitationGenerated
           - InvitationReceived
@@ -4637,128 +5389,143 @@ components:
         invitation:
           $ref: '#/components/schemas/ConnectionInvitation'
         createdAt:
-          type: string
           description: The date and time the connection record was created.
-          format: date-time
           example: 2022-03-10T12:00Z
-        updatedAt:
           type: string
-          description: The date and time the connection record was last updated.
           format: date-time
+        updatedAt:
+          description: The date and time the connection record was last updated.
           example: 2022-03-10T12:00Z
+          type: string
+          format: date-time
         metaRetries:
-          type: integer
           description: The maximum background processing attempts remaining for this
             record
-          format: int32
           example: 5
+          type: integer
+          format: int32
         metaLastFailure:
           $ref: '#/components/schemas/ErrorResponse'
+          description: The last failure if any.
+          example: ErrorResponse(404,error:Error:FailureInfo,Failure Info,Some(Not
+            Found),error:instance:27727dd0-cd86-4d24-a23a-b9cc4eb4e848)
         self:
-          type: string
           description: The reference to the connection resource.
           example: https://atala-prism-products.io/connections/ABCD-1234
-        kind:
           type: string
+        kind:
           description: The type of object returned. In this case a `Connection`.
           example: Connection
+          type: string
     ConnectionInvitation:
+      title: ConnectionInvitation
+      description: The invitation for this connection
+      type: object
       required:
       - id
       - type
       - from
       - invitationUrl
-      type: object
       properties:
         id:
-          type: string
           description: The unique identifier of the invitation. It should be used
             as parent thread ID (pthid) for the Connection Request message that follows.
-          format: uuid
           example: 0527aea1-d131-3948-a34d-03af39aba8b4
-        type:
           type: string
+          format: uuid
+        type:
           description: The DIDComm Message Type URI (MTURI) the invitation message
             complies with.
           example: https://didcomm.org/out-of-band/2.0/invitation
-        from:
           type: string
+        from:
           description: The DID representing the sender to be used by recipients for
             future interactions.
           example: did:peer:1234457
-        invitationUrl:
           type: string
+        invitationUrl:
           description: The invitation message encoded as a URL. This URL follows the
             Out of [Band 2.0 protocol](https://identity.foundation/didcomm-messaging/spec/v2.0/#out-of-band-messages)
             and can be used to generate a QR code for example.
           example: https://my.domain.com/path?_oob=eyJAaWQiOiIzZmE4NWY2NC01NzE3LTQ1NjItYjNmYy0yYzk2M2Y2NmFmYTYiLCJAdHlwZSI6Imh0dHBzOi8vZGlkY29tbS5vcmcvbXktZmFtaWx5LzEuMC9teS1tZXNzYWdlLXR5cGUiLCJkaWQiOiJXZ1d4cXp0ck5vb0c5MlJYdnhTVFd2IiwiaW1hZ2VVcmwiOiJodHRwOi8vMTkyLjE2OC41Ni4xMDEvaW1nL2xvZ28uanBnIiwibGFiZWwiOiJCb2IiLCJyZWNpcGllbnRLZXlzIjpbIkgzQzJBVnZMTXY2Z21NTmFtM3VWQWpacGZrY0pDd0R3blpuNnozd1htcVBWIl0sInJvdXRpbmdLZXlzIjpbIkgzQzJBVnZMTXY2Z21NTmFtM3VWQWpacGZrY0pDd0R3blpuNnozd1htcVBWIl0sInNlcnZpY2VFbmRwb2ludCI6Imh0dHA6Ly8xOTIuMTY4LjU2LjEwMTo4MDIwIn0=
-      description: The invitation for this connection
+          type: string
     ConnectionsPage:
+      title: ConnectionsPage
+      type: object
       required:
       - kind
       - self
       - pageOf
-      type: object
       properties:
         contents:
-          type: array
-          items:
-            $ref: '#/components/schemas/Connection'
           description: "\nArray of resources (Connection)\nA sequence of Connection\
             \ resources representing the list of connections that the paginated response\
             \ contains.\n          "
           example: []
+          type: array
+          items:
+            $ref: '#/components/schemas/Connection'
         kind:
-          type: string
           description: A string that identifies the type of resource being returned
             in the response.
           example: ConnectionsPage
-        self:
           type: string
+        self:
           description: The URL that uniquely identifies the resource being returned
             in the response.
           example: /cloud-agent/connections?offset=10&limit=10
-        pageOf:
           type: string
+        pageOf:
           description: A string field indicating the type of resource that the contents
             field contains.
           example: ''
-        next:
           type: string
+        next:
           description: An optional string field containing the URL of the next page
             of results. If the API response does not contain any more pages, this
             field should be set to None.
           example: /cloud-agent/connections?offset=20&limit=10
-        previous:
           type: string
+        previous:
           description: An optional string field containing the URL of the previous
             page of results. If the API response is the first page of results, this
             field should be set to None.
           example: /cloud-agent/connections?offset=0&limit=10
+          type: string
+    Constraints:
+      title: Constraints
+      type: object
+      properties:
+        fields:
+          type: array
+          items:
+            $ref: '#/components/schemas/Field'
     CreateConnectionRequest:
+      title: CreateConnectionRequest
       type: object
       properties:
         label:
-          type: string
           description: A human readable alias for the connection.
           example: Peter
-        goalCode:
           type: string
+        goalCode:
           description: A self-attested code the receiver may want to display to the
             user or use in automatically deciding what to do with the out-of-band
             message.
           example: issue-vc
-        goal:
           type: string
+        goal:
           description: A self-attested string that the receiver may want to display
             to the user about the context-specific goal of the out-of-band message.
           example: To issue a Faber College Graduate credential
+          type: string
     CreateCredentialConfigurationRequest:
+      title: CreateCredentialConfigurationRequest
+      type: object
       required:
       - configurationId
       - format
       - schemaId
-      type: object
       properties:
         configurationId:
           type: string
@@ -4767,9 +5534,10 @@ components:
         schemaId:
           type: string
     CreateCredentialIssuerRequest:
+      title: CreateCredentialIssuerRequest
+      type: object
       required:
       - authorizationServer
-      type: object
       properties:
         id:
           type: string
@@ -4777,61 +5545,68 @@ components:
         authorizationServer:
           $ref: '#/components/schemas/AuthorizationServer'
     CreateEntityRequest:
+      title: CreateEntityRequest
+      type: object
       required:
       - name
-      type: object
       properties:
         id:
-          type: string
           description: The new `id` of the entity to be created. If this field is
             not provided, the server will generate a new UUID for the entity
-          format: uuid
           example: 00000000-0000-0000-0000-000000000000
-        name:
           type: string
+          format: uuid
+        name:
           description: The new `name` of the entity to be created. If this field is
             not provided, the server will generate a random name for the entity
           example: John Doe
-          minLength: 1
-          maxLength: 128
-        walletId:
           type: string
+          maxLength: 128
+          minLength: 1
+        walletId:
           description: The new `walletId` of the entity to be created. If this field
             is not provided, the server will set the default `walletId`
-          format: uuid
           example: 00000000-0000-0000-0000-000000000000
+          type: string
+          format: uuid
     CreateIssueCredentialRecordRequest:
+      title: CreateIssueCredentialRecordRequest
+      type: object
       required:
       - claims
-      type: object
+      - issuingDID
       properties:
         validityPeriod:
-          type: number
           description: The validity period in seconds of the verifiable credential
             that will be issued.
-          format: double
           example: 3600.0
+          type: number
+          format: double
         schemaId:
-          type: string
           description: |2
 
             The URL pointing to the JSON schema that will be used for this offer (should be 'http' or 'https').
             When dereferenced, the returned content should be a JSON schema compliant with the '[Draft 2020-12](https://json-schema.org/draft/2020-12/release-notes)' version of the specification.
             Note that this parameter only applies when the offer is of type 'JWT'.
           example: https://agent-host.com/cloud-agent/schema-registry/schemas/d9569cec-c81e-4779-aa86-0d5994d82676/schema
+          oneOf:
+          - type: array
+            items:
+              type: string
+          - type: string
         credentialDefinitionId:
-          type: string
           description: |2
 
             The unique identifier (UUID) of the credential definition that will be used for this offer.
             It should be the identifier of a credential definition that exists in the issuer agent's database.
             Note that this parameter only applies when the offer is of type 'AnonCreds'.
-          format: uuid
           example: d9569cec-c81e-4779-aa86-0d5994d82676
-        credentialFormat:
           type: string
+          format: uuid
+        credentialFormat:
           description: The credential format for this offer (defaults to 'JWT')
           example: JWT
+          type: string
         claims:
           description: |2
 
@@ -4841,21 +5616,27 @@ components:
             firstname: Alice
             lastname: Wonderland
         automaticIssuance:
-          type: boolean
           description: |2
 
             Specifies whether or not the credential should be automatically generated and issued when receiving the `CredentialRequest` from the holder.
             If set to `false`, a manual approval by the issuer via another API call will be required for the VC to be issued.
           example: true
+          type: boolean
         issuingDID:
-          type: string
           description: |2
 
-            The short-form issuer Prism DID by which the JWT verifiable credential will be issued.
-            Note that this parameter only applies when the offer is type 'JWT'.
+            The issuer Prism DID by which the verifiable credential will be issued. DID can be short for or long form.
           example: did:prism:3bb0505d13fcb04d28a48234edb27b0d4e6d7e18a81e2c1abab58f3bbc21ce6f
-        connectionId:
           type: string
+        issuingKid:
+          description: |2
+
+            Specified the key ID (kid) of the DID, it will be used to sign credential.
+            User should specify just the partial identifier of the key. The full id of the kid MUST be "<issuingDID>#<kid>"
+            Note the cryto algorithm used with depend type of the key.
+          example: kid1
+          type: string
+        connectionId:
           description: |2
 
             The unique identifier of a DIDComm connection that already exists between the this issuer agent and the holder cloud or edeg agent.
@@ -4863,39 +5644,43 @@ components:
             This connection will be used to execute the issue credential protocol.
             Note: connectionId is only required when the offer is from existing connection.
             connectionId is not required when the offer is from invitation for connectionless issuance.
-          format: uuid
           example: d9569cec-c81e-4779-aa86-0d5994d82676
-        goalCode:
           type: string
+          format: uuid
+        goalCode:
           description: |2
 
              A self-attested code the receiver may want to display to the user or use in automatically deciding what to do with the out-of-band message.
              goalcode is optional and can be provided when the offer is from invitation for connectionless issuance.
           example: issue-vc
-        goal:
           type: string
+        goal:
           description: |2
 
              A self-attested string that the receiver may want to display to the user about the context-specific goal of the out-of-band message.
              goal is optional and can be provided when the offer is from invitation for connectionless issuance.
           example: To issue a Faber College Graduate credential
+          type: string
     CreateManagedDIDResponse:
+      title: CreateManagedDIDResponse
+      type: object
       required:
       - longFormDid
-      type: object
       properties:
         longFormDid:
-          type: string
           description: A long-form DID for the created DID
           example: did:prism:4a5b5cf0a513e83b598bbea25cd6196746747f361a73ef77068268bc9bd732ff:Cr4BCrsBElsKBmF1dGgtMRAEQk8KCXNlY3AyNTZrMRIg0opTuxu-zt6aRbT1tPniG4eu4CYsQPM3rrLzvzNiNgwaIIFTnyT2N4U7qCQ78qtWC3-p0el6Hvv8qxG5uuEw-WgMElwKB21hc3RlcjAQAUJPCglzZWNwMjU2azESIKhBU0eCOO6Vinz_8vhtFSAhYYqrkEXC8PHGxkuIUev8GiAydFHLXb7c22A1Uj_PR21NZp6BCDQqNq2xd244txRgsQ
+          type: string
     CreateManagedDidRequest:
+      title: CreateManagedDidRequest
+      type: object
       required:
       - documentTemplate
-      type: object
       properties:
         documentTemplate:
           $ref: '#/components/schemas/CreateManagedDidRequestDocumentTemplate'
     CreateManagedDidRequestDocumentTemplate:
+      title: CreateManagedDidRequestDocumentTemplate
       type: object
       properties:
         publicKeys:
@@ -4909,60 +5694,78 @@ components:
         contexts:
           type: array
           items:
-            type: string
             description: The JSON-LD context describing the JSON document
             example: https://didcomm.org/messaging/contexts/v2
-    CreateWalletRequest:
-      required:
-      - name
+            type: string
+    CreatePresentationDefinition:
+      title: CreatePresentationDefinition
       type: object
       properties:
-        seed:
+        input_descriptors:
+          type: array
+          items:
+            $ref: '#/components/schemas/InputDescriptor'
+        name:
           type: string
+        purpose:
+          type: string
+        format:
+          $ref: '#/components/schemas/ClaimFormat'
+    CreateWalletRequest:
+      title: CreateWalletRequest
+      type: object
+      required:
+      - name
+      properties:
+        seed:
           description: A BIP32 seed encoded in hexadecimal string. It is expected
             to represent 64-bytes binary seed (128 hex characters).
           example: c9994785ce6d548134020f610b76102ca1075d3bb672a75ec8c9a27a7b8607e3b9b384e43b77bb08f8d5159651ae38b98573f7ecc79f2d7e1f1cc371ce60cf8a
-        name:
           type: string
+        name:
           description: A name of the wallet
           example: my-wallet-1
-          minLength: 1
-          maxLength: 128
-        id:
           type: string
+          maxLength: 128
+          minLength: 1
+        id:
           description: The unique `id` of the wallet. Randomly generated if not specified.
-          format: uuid
           example: 00000000-0000-0000-0000-000000000000
+          type: string
+          format: uuid
     CreateWalletUmaPermissionRequest:
+      title: CreateWalletUmaPermissionRequest
+      type: object
       required:
       - subject
-      type: object
       properties:
         subject:
-          type: string
           description: The subject ID that should be granted the permission to the
             wallet. This can be found in the `sub` claim of a JWT token.
-          format: uuid
           example: 00000000-0000-0000-0000-000000000000
+          type: string
+          format: uuid
     CreateWebhookNotification:
+      title: CreateWebhookNotification
+      type: object
       required:
       - url
-      type: object
       properties:
         url:
-          type: string
           description: A URL of webhook for event notification
           example: http://example.com
+          type: string
         customHeaders:
           $ref: '#/components/schemas/Map_String'
     CredentialConfiguration:
+      title: CredentialConfiguration
+      type: object
       required:
       - configurationId
       - format
       - scope
       - schemaId
       - createdAt
-      type: object
       properties:
         configurationId:
           type: string
@@ -4976,6 +5779,7 @@ components:
           type: string
           format: date-time
     CredentialDefinition:
+      title: CredentialDefinition
       type: object
       properties:
         '@context':
@@ -4988,7 +5792,50 @@ components:
             type: string
         credentialSubject:
           $ref: '#/components/schemas/Map_ClaimDescriptor'
+    CredentialDefinitionDidUrlResponsePage:
+      title: CredentialDefinitionDidUrlResponsePage
+      type: object
+      required:
+      - kind
+      - self
+      - pageOf
+      properties:
+        contents:
+          description: A sequence of CredentialDefinitionResponse objects representing
+            the list of credential definitions that the API response contains
+          example: []
+          type: array
+          items:
+            $ref: '#/components/schemas/PrismEnvelopeResponse'
+        kind:
+          description: A string field indicating the type of the API response. In
+            this case, it will always be set to `CredentialDefinitionPage`
+          example: CredentialDefinitionPage
+          type: string
+        self:
+          description: A string field containing the URL of the current API endpoint
+          example: /cloud-agent/credential-definition-registry/definitions?skip=10&limit=10
+          type: string
+        pageOf:
+          description: A string field indicating the type of resource that the contents
+            field contains
+          example: /cloud-agent/credential-definition-registry/definitions
+          type: string
+        next:
+          description: An optional string field containing the URL of the next page
+            of results. If the API response does not contain any more pages, this
+            field should be set to None.
+          example: /cloud-agent/credential-definition-registry/definitions?skip=20&limit=10
+          type: string
+        previous:
+          description: An optional string field containing the URL of the previous
+            page of results. If the API response is the first page of results, this
+            field should be set to None.
+          example: /cloud-agent/credential-definition-registry/definitions?skip=0&limit=10
+          type: string
     CredentialDefinitionInput:
+      title: CredentialDefinitionInput
+      type: object
       required:
       - name
       - version
@@ -4997,53 +5844,54 @@ components:
       - schemaId
       - signatureType
       - supportRevocation
-      type: object
       properties:
         name:
-          type: string
           description: A human-readable name for the credential definition. A piece
             of Metadata.
           example: DrivingLicense
+          type: string
           minLength: 1
         description:
-          type: string
           description: A human-readable description of the credential definition
           example: Simple credential definition for the driving licence verifiable
             credential.
+          type: string
           minLength: 1
         version:
-          type: string
           description: Denotes the revision of a given Credential Definition. It should
             follow semantic version convention to describe the impact of the credential
             definition evolution.
           example: 1.0.0
+          type: string
           pattern: ^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)(?:-((?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*)(?:\.(?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*))*))?(?:\+([0-9a-zA-Z-]+(?:\.[0-9a-zA-Z-]+)*))?$
         tag:
-          type: string
           description: Token that allow to lookup and filter the credential definition
             records.
           example: licence
-        author:
           type: string
+        author:
           description: DID of the identity which authored the credential definition.
             A piece of Metadata.
           example: did:prism:4a5b5cf0a513e83b598bbea25cd6196746747f361a73ef77068268bc9bd732ff
+          type: string
           pattern: ^did:(?<method>[a-z0-9]+(:[a-z0-9]+)*)\:(?<idstring>[^#?]*)$
         schemaId:
-          type: string
           description: The unique identifier of the schema used for this credential
             definition.
           example: https://agent-host.com/cloud-agent/schema-registry/schemas/d9569cec-c81e-4779-aa86-0d5994d82676
-        signatureType:
           type: string
+        signatureType:
           description: Signature type used in the CredentialDefinition.
           example: CL
+          type: string
         supportRevocation:
-          type: boolean
           description: Boolean flag indicating whether revocation is supported for
             this CredentialDefinition.
           example: false
+          type: boolean
     CredentialDefinitionResponse:
+      title: CredentialDefinitionResponse
+      type: object
       required:
       - guid
       - id
@@ -5060,62 +5908,61 @@ components:
       - supportRevocation
       - kind
       - self
-      type: object
       properties:
         guid:
-          type: string
           description: 'Globally unique id of the credential definition.It''s composed
             from the bytes of the string that contain the `author`, `name`, and `version`
             values.The string format looks like the resource identifier: `author`/`id`?version=`version`'
-          format: uuid
           example: 0527aea1-d131-3948-a34d-03af39aba8b4
-        id:
           type: string
+          format: uuid
+        id:
           description: A locally unique identifier to address the credential definition.
             UUID is generated by the backend.
           example: 0527aea1-d131-3948-a34d-03af39aba8b5
-        longId:
           type: string
+        longId:
           description: Resource id of the credential definition. Contains the `author`'s
             DID, `id` and `version` fields.
           example: did:prism:4a5b5cf0a513e83b598bbea25cd6196746747f361a73ef77068268bc9bd732ff/0527aea1-d131-3948-a34d-03af39aba8b4?version=1.0.0
-        name:
           type: string
+        name:
           description: A human-readable name for the credential definition. A piece
             of Metadata.
           example: DrivingLicense
-        version:
           type: string
+        version:
           description: Denotes the revision of a given Credential Definition. It should
             follow semantic version convention to describe the impact of the credential
             definition evolution.
           example: 1.0.0
-        tag:
           type: string
+        tag:
           description: Token that allow to lookup and filter the credential definition
             records.
           example: licence
-        description:
           type: string
+        description:
           description: A human-readable description of the credential definition
           example: Simple credential definition for the driving licence verifiable
             credential.
-        author:
           type: string
+        author:
           description: DID of the identity which authored the credential definition.
             A piece of Metadata.
           example: did:prism:4a5b5cf0a513e83b598bbea25cd6196746747f361a73ef77068268bc9bd732ff
-        authored:
           type: string
+        authored:
           description: '[RFC3339](https://www.rfc-editor.org/rfc/rfc3339) date on
             which the credential definition was created. A piece of Metadata.'
-          format: date-time
           example: 2022-03-10T12:00Z
-        schemaId:
           type: string
+          format: date-time
+        schemaId:
           description: The unique identifier of the schema used for this credential
             definition.
           example: https://agent-host.com/cloud-agent/schema-registry/schemas/d9569cec-c81e-4779-aa86-0d5994d82676
+          type: string
         definition:
           description: Definition object that represents the actual definition of
             the credential.
@@ -5131,67 +5978,69 @@ components:
           description: A proof that validates the correctness of the key within the
             context of the credential definition.
         signatureType:
-          type: string
           description: Signature type used in the CredentialDefinition.
           example: CL
+          type: string
         supportRevocation:
-          type: boolean
           description: Boolean flag indicating whether revocation is supported for
             this CredentialDefinition.
           example: false
+          type: boolean
         proof:
           $ref: '#/components/schemas/Proof'
         kind:
-          type: string
           description: A string that identifies the type of resource being returned
             in the response.
           example: CredentialDefinition
-        self:
           type: string
+        self:
           description: The URL that uniquely identifies the resource being returned
             in the response.
           example: /cloud-agent/credential-definition-registry/schemas/0527aea1-d131-3948-a34d-03af39aba8b4
+          type: string
     CredentialDefinitionResponsePage:
+      title: CredentialDefinitionResponsePage
+      type: object
       required:
       - kind
       - self
       - pageOf
-      type: object
       properties:
         contents:
-          type: array
-          items:
-            $ref: '#/components/schemas/CredentialDefinitionResponse'
           description: A sequence of CredentialSchemaResponse objects representing
             the list of credential schemas that the API response contains
           example: []
+          type: array
+          items:
+            $ref: '#/components/schemas/CredentialDefinitionResponse'
         kind:
-          type: string
           description: A string field indicating the type of the API response. In
             this case, it will always be set to `CredentialSchemaPage`
           example: CredentialSchemaPage
-        self:
           type: string
+        self:
           description: A string field containing the URL of the current API endpoint
           example: /cloud-agent/schema-registry/schemas?skip=10&limit=10
-        pageOf:
           type: string
+        pageOf:
           description: A string field indicating the type of resource that the contents
             field contains
           example: /cloud-agent/schema-registry/schemas
-        next:
           type: string
+        next:
           description: An optional string field containing the URL of the next page
             of results. If the API response does not contain any more pages, this
             field should be set to None.
           example: /cloud-agent/schema-registry/schemas?skip=20&limit=10
-        previous:
           type: string
+        previous:
           description: An optional string field containing the URL of the previous
             page of results. If the API response is the first page of results, this
             field should be set to None.
           example: /cloud-agent/schema-registry/schemas?skip=0&limit=10
+          type: string
     CredentialErrorCode:
+      title: CredentialErrorCode
       type: string
       enum:
       - insufficient_scope
@@ -5203,9 +6052,10 @@ components:
       - unsupported_credential_format
       - unsupported_credential_type
     CredentialErrorResponse:
+      title: CredentialErrorResponse
+      type: object
       required:
       - error
-      type: object
       properties:
         error:
           $ref: '#/components/schemas/CredentialErrorCode'
@@ -5217,23 +6067,30 @@ components:
           type: integer
           format: int64
     CredentialFormat:
+      title: CredentialFormat
       type: string
       enum:
       - anoncreds
       - jwt_vc_json
       - vc+sd-jwt
+      const: jwt_vc_json
     CredentialIssuer:
+      title: CredentialIssuer
+      type: object
       required:
       - id
-      type: object
+      - type
       properties:
         id:
           type: string
+        type:
+          type: string
     CredentialIssuer1:
+      title: CredentialIssuer
+      type: object
       required:
       - id
       - authorizationServerUrl
-      type: object
       properties:
         id:
           type: string
@@ -5241,11 +6098,12 @@ components:
         authorizationServerUrl:
           type: string
     CredentialIssuerPage:
+      title: CredentialIssuerPage
+      type: object
       required:
       - self
       - kind
       - pageOf
-      type: object
       properties:
         self:
           type: string
@@ -5262,11 +6120,12 @@ components:
           items:
             $ref: '#/components/schemas/CredentialIssuer1'
     CredentialOfferRequest:
+      title: CredentialOfferRequest
+      type: object
       required:
       - credentialConfigurationId
       - issuingDID
       - claims
-      type: object
       properties:
         credentialConfigurationId:
           type: string
@@ -5274,13 +6133,15 @@ components:
           type: string
         claims: {}
     CredentialOfferResponse:
+      title: CredentialOfferResponse
+      type: object
       required:
       - credentialOffer
-      type: object
       properties:
         credentialOffer:
           type: string
     CredentialRequest:
+      title: CredentialRequest
       oneOf:
       - $ref: '#/components/schemas/AnoncredsCredentialRequest'
       - $ref: '#/components/schemas/JwtCredentialRequest'
@@ -5290,15 +6151,17 @@ components:
           anoncreds: '#/components/schemas/AnoncredsCredentialRequest'
           jwt_vc_json: '#/components/schemas/JwtCredentialRequest'
     CredentialResponse:
+      title: CredentialResponse
       oneOf:
       - $ref: '#/components/schemas/DeferredCredentialResponse'
       - $ref: '#/components/schemas/ImmediateCredentialResponse'
     CredentialResponseEncryption:
+      title: CredentialResponseEncryption
+      type: object
       required:
       - jwk
       - alg
       - enc
-      type: object
       properties:
         jwk:
           type: string
@@ -5306,38 +6169,80 @@ components:
           type: string
         enc:
           type: string
+    CredentialSchemaDidUrlResponsePage:
+      title: CredentialSchemaDidUrlResponsePage
+      type: object
+      required:
+      - kind
+      - self
+      - pageOf
+      properties:
+        contents:
+          description: A sequence of PrismEnvelopeResponse objects representing the
+            list of credential schemas wrapped in an envelope
+          example: []
+          type: array
+          items:
+            $ref: '#/components/schemas/PrismEnvelopeResponse'
+        kind:
+          description: A string field indicating the type of the API response. In
+            this case, it will always be set to `CredentialSchemaPage`
+          example: CredentialSchemaPage
+          type: string
+        self:
+          description: A string field containing the URL of the current API endpoint
+          example: /cloud-agent/schema-registry/schemas/did-url?skip=10&limit=10
+          type: string
+        pageOf:
+          description: A string field indicating the type of resource that the contents
+            field contains
+          example: /cloud-agent/schema-registry/schemas/did-url
+          type: string
+        next:
+          description: An optional string field containing the URL of the next page
+            of results. If the API response does not contain any more pages, this
+            field should be set to None.
+          example: /cloud-agent/schema-registry/schemas/did-url?skip=20&limit=10
+          type: string
+        previous:
+          description: An optional string field containing the URL of the previous
+            page of results. If the API response is the first page of results, this
+            field should be set to None.
+          example: /cloud-agent/schema-registry/schemas/did-url?skip=0&limit=10
+          type: string
     CredentialSchemaInput:
+      title: CredentialSchemaInput
+      type: object
       required:
       - name
       - version
       - type
       - schema
       - author
-      type: object
       properties:
         name:
-          type: string
           description: A human-readable name for the credential schema. A piece of
             Metadata.
           example: DrivingLicense
+          type: string
           minLength: 1
         version:
-          type: string
           description: Denotes the revision of a given Credential Schema. It should
             follow semantic version convention to describe the impact of the schema
             evolution.
           example: 1.0.0
+          type: string
           pattern: ^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)(?:-((?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*)(?:\.(?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*))*))?(?:\+([0-9a-zA-Z-]+(?:\.[0-9a-zA-Z-]+)*))?$
         description:
-          type: string
           description: A human-readable description of the credential schema
           example: Simple credential schema for the driving licence verifiable credential.
+          type: string
           minLength: 1
         type:
-          type: string
           description: This field resolves to a JSON schema with details about the
             schema metadata that applies to the schema. A piece of Metadata.
           example: https://w3c-ccg.github.io/vc-json-schemas/schema/2.0/schema.json
+          type: string
         schema:
           description: Valid JSON Schema where the Credential Schema data fields are
             defined. A piece of Metadata
@@ -5369,22 +6274,24 @@ components:
             - drivingClass
             additionalProperties: false
         tags:
-          type: array
-          items:
-            type: string
           description: Tokens that allow to lookup and filter the credential schema
             records.
           example:
           - driving
           - licence
           - id
+          type: array
+          items:
+            type: string
         author:
-          type: string
           description: DID of the identity which authored the credential schema. A
             piece of Metadata.
           example: did:prism:4a5b5cf0a513e83b598bbea25cd6196746747f361a73ef77068268bc9bd732ff
+          type: string
           pattern: ^did:(?<method>[a-z0-9]+(:[a-z0-9]+)*)\:(?<idstring>[^#?]*)$
     CredentialSchemaResponse:
+      title: CredentialSchemaResponse
+      type: object
       required:
       - guid
       - id
@@ -5395,57 +6302,57 @@ components:
       - schema
       - author
       - authored
+      - resolutionMethod
       - kind
       - self
-      type: object
       properties:
         guid:
-          type: string
           description: 'Globally unique id of the credential schema.It''s composed
             from the bytes of the string that contain the `author`, `name`, and `version`
             values.The string format looks like the resource identifier: `author`/`id`?version=`version`'
-          format: uuid
           example: 0527aea1-d131-3948-a34d-03af39aba8b4
-        id:
           type: string
+          format: uuid
+        id:
           description: A locally unique identifier to address the schema. UUID is
             generated by the backend.
           example: 0527aea1-d131-3948-a34d-03af39aba8b5
-        longId:
           type: string
+        longId:
           description: Resource id of the credential schema. Contains the `author`'s
             DID, `id` and `version` fields.
           example: did:prism:4a5b5cf0a513e83b598bbea25cd6196746747f361a73ef77068268bc9bd732ff/0527aea1-d131-3948-a34d-03af39aba8b4?version=1.0.0
-        name:
           type: string
+        name:
           description: A human-readable name for the credential schema. A piece of
             Metadata.
           example: DrivingLicense
-        version:
           type: string
+        version:
           description: Denotes the revision of a given Credential Schema. It should
             follow semantic version convention to describe the impact of the schema
             evolution.
           example: 1.0.0
+          type: string
         tags:
-          type: array
-          items:
-            type: string
           description: Tokens that allow to lookup and filter the credential schema
             records.
           example:
           - driving
           - licence
           - id
+          type: array
+          items:
+            type: string
         description:
-          type: string
           description: A human-readable description of the credential schema
           example: Simple credential schema for the driving licence verifiable credential.
-        type:
           type: string
+        type:
           description: This field resolves to a JSON schema with details about the
             schema metadata that applies to the schema. A piece of Metadata.
           example: https://w3c-ccg.github.io/vc-json-schemas/schema/2.0/schema.json
+          type: string
         schema:
           description: Valid JSON Schema where the Credential Schema data fields are
             defined. A piece of Metadata
@@ -5477,126 +6384,134 @@ components:
             - drivingClass
             additionalProperties: false
         author:
-          type: string
           description: DID of the identity which authored the credential schema. A
             piece of Metadata.
           example: did:prism:4a5b5cf0a513e83b598bbea25cd6196746747f361a73ef77068268bc9bd732ff
-        authored:
           type: string
+        authored:
           description: '[RFC3339](https://www.rfc-editor.org/rfc/rfc3339) date on
             which the credential schema was created. A piece of Metadata.'
-          format: date-time
           example: 2022-03-10T12:00Z
+          type: string
+          format: date-time
         proof:
           $ref: '#/components/schemas/Proof1'
+        resolutionMethod:
+          $ref: '#/components/schemas/ResourceResolutionMethod'
         kind:
-          type: string
           description: A string that identifies the type of resource being returned
             in the response.
           example: CredentialSchema
-        self:
           type: string
+        self:
           description: The URL that uniquely identifies the resource being returned
             in the response.
           example: /cloud-agent/schema-registry/schemas/0527aea1-d131-3948-a34d-03af39aba8b4
+          type: string
     CredentialSchemaResponsePage:
+      title: CredentialSchemaResponsePage
+      type: object
       required:
       - kind
       - self
       - pageOf
-      type: object
       properties:
         contents:
-          type: array
-          items:
-            $ref: '#/components/schemas/CredentialSchemaResponse'
           description: A sequence of CredentialSchemaResponse objects representing
             the list of credential schemas that the API response contains
           example: []
+          type: array
+          items:
+            $ref: '#/components/schemas/CredentialSchemaResponse'
         kind:
-          type: string
           description: A string field indicating the type of the API response. In
             this case, it will always be set to `CredentialSchemaPage`
           example: CredentialSchemaPage
-        self:
           type: string
+        self:
           description: A string field containing the URL of the current API endpoint
           example: /cloud-agent/schema-registry/schemas?skip=10&limit=10
-        pageOf:
           type: string
+        pageOf:
           description: A string field indicating the type of resource that the contents
             field contains
           example: /cloud-agent/schema-registry/schemas
-        next:
           type: string
+        next:
           description: An optional string field containing the URL of the next page
             of results. If the API response does not contain any more pages, this
             field should be set to None.
           example: /cloud-agent/schema-registry/schemas?skip=20&limit=10
-        previous:
           type: string
+        previous:
           description: An optional string field containing the URL of the previous
             page of results. If the API response is the first page of results, this
             field should be set to None.
           example: /cloud-agent/schema-registry/schemas?skip=0&limit=10
+          type: string
     CredentialSubject:
+      title: CredentialSubject
+      description: Object containing claims specific to status list credential
+      type: object
       required:
       - type
       - statusPurpose
       - encodedList
-      type: object
       properties:
         type:
-          type: string
           description: Always equals to constnat value - StatusList2021
           example: StatusList2021
+          type: string
         statusPurpose:
           $ref: '#/components/schemas/StatusPurpose'
         encodedList:
-          type: string
           description: base64 url encoded bitstring of credential statuses
           example: H4sIAAAAAAAA_-3BMQEAAADCoPVPbQwfoAAAAAAAAAAAAAAAAAAAAIC3AYbSVKsAQAAA
-      description: Object containing claims specific to status list credential
+          type: string
     Curve:
-      type: string
+      title: Curve
       description: The curve name of the verification material in the DID Document.
         Defaults to `secp256k1` if not specified.
       example: Ed25519
+      type: string
       enum:
       - Ed25519
       - X25519
       - secp256k1
     CwtProof:
+      title: CwtProof
+      type: object
       required:
       - proof_type
       - cwt
-      type: object
       properties:
         proof_type:
           $ref: '#/components/schemas/ProofType'
         cwt:
           type: string
     DIDDocument:
+      title: DIDDocument
+      description: A W3C compliant Prism DID document representation.
+      type: object
       required:
       - id
-      type: object
       properties:
         '@context':
           type: array
           items:
-            type: string
             description: The JSON-LD context describing the JSON document
             example: https://didcomm.org/messaging/contexts/v2
+            type: string
         id:
-          type: string
           description: |-
             [DID subject](https://www.w3.org/TR/did-core/#did-subject).
             The value must match the DID that was given to the resolver.
           example: did:prism:4a5b5cf0a513e83b598bbea25cd6196746747f361a73ef77068268bc9bd732ff
-        controller:
           type: string
+        controller:
           description: '[DID controller](https://www.w3.org/TR/did-core/#did-controller)'
           example: did:prism:4a5b5cf0a513e83b598bbea25cd6196746747f361a73ef77068268bc9bd732ff
+          type: string
         verificationMethod:
           type: array
           items:
@@ -5625,77 +6540,80 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/Service'
-      description: A W3C compliant Prism DID document representation.
     DIDDocumentMetadata:
+      title: DIDDocumentMetadata
+      description: '[DID document metadata](https://www.w3.org/TR/did-core/#did-document-metadata)'
       type: object
       properties:
         deactivated:
-          type: boolean
           description: If a DID has been deactivated, DID document metadata MUST include
             this property with the boolean value true. If a DID has not been deactivated,
             this property is OPTIONAL, but if included, MUST have the boolean value
             false.
           example: false
+          type: boolean
         canonicalId:
-          type: string
           description: |2
 
             A DID in canonical form.
             If a DID is in long form and has been published, DID document metadata MUST contain a `canonicalId`` property with the short form DID as its value.
             If a DID in short form or has not been published, DID document metadata MUST NOT contain a `canonicalId` property.
           example: did:prism:4a5b5cf0a513e83b598bbea25cd6196746747f361a73ef77068268bc9bd732ff
-        versionId:
           type: string
+        versionId:
           description: |2
 
             DID document metadata MUST contain a versionId property with the hash of the AtalaOperation contained in the latest valid SignedAtalaOperation that created the DID or changed the DID's internal state.
           example: 4a5b5cf0a513e83b598bbea25cd6196746747f361a73ef77068268bc9bd732ff
-        created:
           type: string
+        created:
           description: The timestamp of the Cardano block that contained the first
             valid SignedAtalaOperation with a CreateDIDOperation that created the
             DID.
           example: '2023-02-04T13:52:10Z'
-        updated:
           type: string
+        updated:
           description: The timestamp of the Cardano block that contained the latest
             valid SignedAtalaOperation that changed the DID's internal state.
           example: '2023-02-04T13:52:10Z'
-      description: '[DID document metadata](https://www.w3.org/TR/did-core/#did-document-metadata)'
+          type: string
     DIDOperationResponse:
+      title: DIDOperationResponse
+      type: object
       required:
       - scheduledOperation
-      type: object
       properties:
         scheduledOperation:
           $ref: '#/components/schemas/DidOperationSubmission'
     DIDResolutionMetadata:
+      title: DIDResolutionMetadata
+      description: '[DID resolution metadata](https://www.w3.org/TR/did-core/#did-resolution-metadata)'
       type: object
       properties:
         error:
-          type: string
           description: Resolution error constant according to [DID spec registries](https://www.w3.org/TR/did-spec-registries/#error)
           example: invalidDid
-        errorMessage:
           type: string
+        errorMessage:
           description: Resolution error message
           example: The initialState does not match the suffix
-        contentType:
           type: string
+        contentType:
           description: The media type of the returned DID document
           example: application/did+ld+json
-      description: '[DID resolution metadata](https://www.w3.org/TR/did-core/#did-resolution-metadata)'
+          type: string
     DIDResolutionResult:
+      title: DIDResolutionResult
+      type: object
       required:
       - '@context'
       - didDocumentMetadata
       - didResolutionMetadata
-      type: object
       properties:
         '@context':
-          type: string
           description: The JSON-LD context describing the JSON document
           example: https://didcomm.org/messaging/contexts/v2
+          type: string
         didDocument:
           $ref: '#/components/schemas/DIDDocument'
         didDocumentMetadata:
@@ -5703,22 +6621,25 @@ components:
         didResolutionMetadata:
           $ref: '#/components/schemas/DIDResolutionMetadata'
     DateTimeParameter:
+      title: DateTimeParameter
+      type: object
       required:
       - dateTime
       - parameterType
-      type: object
       properties:
         dateTime:
-          type: string
           description: The date and time to use for verification.
-          format: date-time
           example: '2022-03-10T12:00:00Z'
+          type: string
+          format: date-time
         parameterType:
           type: string
+          const: DateTimeParameter
     DeferredCredentialResponse:
+      title: DeferredCredentialResponse
+      type: object
       required:
       - transaction_id
-      type: object
       properties:
         transaction_id:
           type: string
@@ -5728,32 +6649,37 @@ components:
           type: integer
           format: int32
     DidOperationSubmission:
+      title: DidOperationSubmission
+      type: object
       required:
       - id
       - didRef
-      type: object
       properties:
         id:
-          type: string
           description: A scheduled operation ID
           example: 98e6a4db10e58fcc011dd8def5ce99fd8b52af39e61e5fb436dc28259139818b
-        didRef:
           type: string
+        didRef:
           description: A DID affected by the scheduled operation
           example: did:prism:4a5b5cf0a513e83b598bbea25cd6196746747f361a73ef77068268bc9bd732ff
+          type: string
     DidParameter:
+      title: DidParameter
+      type: object
       required:
       - did
       - parameterType
-      type: object
       properties:
         did:
-          type: string
           description: The DID (Decentralized Identifier) to use for verification.
           example: did:prism:issuer
+          type: string
         parameterType:
           type: string
+          const: DidParameter
     EntityResponse:
+      title: EntityResponse
+      type: object
       required:
       - kind
       - self
@@ -5762,51 +6688,48 @@ components:
       - walletId
       - createdAt
       - updatedAt
-      type: object
       properties:
         kind:
-          type: string
           description: The `kind` of the entity.
           example: Entity
-        self:
           type: string
+        self:
           description: The `self` link of the entity.
           example: http://localhost:8080/cloud-agent/iam/entities/00000000-0000-0000-0000-000000000000
+          type: string
         id:
-          type: string
           description: The unique `id` of the entity
-          format: uuid
           example: 00000000-0000-0000-0000-000000000000
-        name:
           type: string
+          format: uuid
+        name:
           description: The `name` of the entity.
           example: John Doe
+          type: string
         walletId:
-          type: string
           description: The `walletId` owned by the entity.
-          format: uuid
           example: 00000000-0000-0000-0000-000000000000
+          type: string
+          format: uuid
         createdAt:
-          type: string
           description: The `createdAt` timestamp of the entity.
-          format: date-time
           example: '2023-01-01T00:00:00Z'
-        updatedAt:
           type: string
-          description: The `updatedAt` timestamp of the entity.
           format: date-time
+        updatedAt:
+          description: The `updatedAt` timestamp of the entity.
           example: '2023-01-01T00:00:00Z'
+          type: string
+          format: date-time
     EntityResponsePage:
+      title: EntityResponsePage
+      type: object
       required:
       - kind
       - self
       - pageOf
-      type: object
       properties:
         contents:
-          type: array
-          items:
-            $ref: '#/components/schemas/EntityResponse'
           description: A sequence of CredentialSchemaResponse objects representing
             the list of credential schemas that the API response contains
           example:
@@ -5817,81 +6740,105 @@ components:
             walletId: 00000000-0000-0000-0000-000000000000
             createdAt: '2023-01-01T00:00:00Z'
             updatedAt: '2023-01-01T00:00:00Z'
+          type: array
+          items:
+            $ref: '#/components/schemas/EntityResponse'
         kind:
-          type: string
           description: A string field indicating the type of the API response. In
             this case, it will always be set to `CredentialSchemaPage`
           example: CredentialSchemaPage
-        self:
           type: string
+        self:
           description: A string field containing the URL of the current API endpoint
           example: /cloud-agent/schema-registry/schemas?skip=10&limit=10
-        pageOf:
           type: string
+        pageOf:
           description: A string field indicating the type of resource that the contents
             field contains
           example: /cloud-agent/schema-registry/schemas
-        next:
           type: string
+        next:
           description: An optional string field containing the URL of the next page
             of results. If the API response does not contain any more pages, this
             field should be set to None.
           example: /cloud-agent/schema-registry/schemas?skip=20&limit=10
-        previous:
           type: string
+        previous:
           description: An optional string field containing the URL of the previous
             page of results. If the API response is the first page of results, this
             field should be set to None.
           example: /cloud-agent/schema-registry/schemas?skip=0&limit=10
+          type: string
     ErrorResponse:
+      title: ErrorResponse
+      type: object
       required:
       - status
       - type
       - title
       - instance
-      type: object
       properties:
         status:
-          type: integer
           description: The HTTP status code for this occurrence of the problem.
-          format: int32
           example: 200
+          type: integer
+          format: int32
         type:
-          type: string
           description: A URI reference that identifies the problem type.
           example: https://example.org/doc/#model-MalformedEmail/
-        title:
           type: string
+        title:
           description: A short, human-readable summary of the problem type. It does
             not change from occurrence to occurrence of the problem.
           example: Malformed email
-        detail:
           type: string
+        detail:
           description: A human-readable explanation specific to this occurrence of
             the problem.
           example: The received '{}à!è@!.b}' email does not conform to the email format
-        instance:
           type: string
+        instance:
           description: A URI reference that identifies the specific occurrence of
             the problem. It may or may not yield further information if dereferenced.
           example: The received '{}à!è@!.b}' email does not conform to the email format
+          type: string
     ExtendedErrorResponse:
+      title: ExtendedErrorResponse
       oneOf:
       - $ref: '#/components/schemas/CredentialErrorResponse'
       - $ref: '#/components/schemas/ErrorResponse'
-    HealthInfo:
-      required:
-      - version
+    Field:
+      title: Field
       type: object
       properties:
-        version:
+        id:
           type: string
+        path:
+          type: array
+          items:
+            type: string
+        name:
+          type: string
+        purpose:
+          type: string
+        filter: {}
+        optional:
+          type: boolean
+    HealthInfo:
+      title: HealthInfo
+      type: object
+      required:
+      - version
+      properties:
+        version:
           description: The semantic version number of the running service
           example: 1.1.0
+          type: string
     ImmediateCredentialResponse:
+      title: ImmediateCredentialResponse
+      type: object
       required:
       - credential
-      type: object
       properties:
         credential:
           type: string
@@ -5900,38 +6847,58 @@ components:
         c_nonce_expires_in:
           type: integer
           format: int32
+    InputDescriptor:
+      title: InputDescriptor
+      type: object
+      required:
+      - id
+      - constraints
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        purpose:
+          type: string
+        format:
+          $ref: '#/components/schemas/ClaimFormat'
+        constraints:
+          $ref: '#/components/schemas/Constraints'
     IssueCredentialOfferInvitation:
+      title: IssueCredentialOfferInvitation
+      description: The invitation for this Offer Credential
+      type: object
       required:
       - id
       - type
       - from
       - invitationUrl
-      type: object
       properties:
         id:
-          type: string
           description: The unique identifier of the invitation. It should be used
             as parent thread ID (pthid) for the Connection Request message that follows.
-          format: uuid
           example: 0527aea1-d131-3948-a34d-03af39aba8b4
-        type:
           type: string
+          format: uuid
+        type:
           description: The DIDComm Message Type URI (MTURI) the invitation message
             complies with.
           example: https://didcomm.org/out-of-band/2.0/invitation
-        from:
           type: string
+        from:
           description: The DID representing the sender to be used by recipients for
             future interactions.
           example: did:peer:1234457
-        invitationUrl:
           type: string
+        invitationUrl:
           description: The invitation message encoded as a URL. This URL follows the
             Out of [Band 2.0 protocol](https://identity.foundation/didcomm-messaging/spec/v2.0/#out-of-band-messages)
             and can be used to generate a QR code for example.
           example: https://my.domain.com/path?_oob=eyJpZCI6ImY5NmUzNjk5LTU5MWMtNGFlNy1iNWU2LTZlZmU2ZDI2MjU1YiIsInR5cGUiOiJodHRwczovL2RpZGNvbW0ub3JnL291dC1vZi1iYW5kLzIuMC9pbnZpdGF0aW9uIiwiZnJvbSI6ImRpZDpwZWVyOjIuRXo2TFNmc0tNZTh2U1NXa1lkWkNwbjRZVmlQRVJmZEdBaGRMQUdIZ3gyTEdKd2ZtQS5WejZNa3B3MWtTYWJCTXprQTN2NTl0UUZuaDNGdGtLeTZ4TGhMeGQ5UzZCQW9hQmcyLlNleUowSWpvaVpHMGlMQ0p6SWpwN0luVnlhU0k2SW1oMGRIQTZMeTh4T1RJdU1UWTRMakV1TXpjNk9EQTRNQzlrYVdSamIyMXRJaXdpY2lJNlcxMHNJbUVpT2xzaVpHbGtZMjl0YlM5Mk1pSmRmWDAiLCJib2R5Ijp7ImdvYWxfY29kZSI6Imlzc3VlLXZjIiwiZ29hbCI6IlRvIGlzc3VlIGEgRmFiZXIgQ29sbGVnZSBHcmFkdWF0ZSBjcmVkZW50aWFsIiwiYWNjZXB0IjpbImRpZGNvbW0vdjIiXX0sImF0dGFjaG1lbnRzIjpbeyJpZCI6IjcwY2RjOTBjLTlhOTktNGNkYS04N2ZlLTRmNGIyNTk1MTEyYSIsIm1lZGlhX3R5cGUiOiJhcHBsaWNhdGlvbi9qc29uIiwiZGF0YSI6eyJqc29uIjp7ImlkIjoiNjU1ZTlhMmMtNDhlZC00NTliLWIzZGEtNmIzNjg2NjU1NTY0IiwidHlwZSI6Imh0dHBzOi8vZGlkY29tbS5vcmcvaXNzdWUtY3JlZGVudGlhbC8zLjAvb2ZmZXItY3JlZGVudGlhbCIsImJvZHkiOnsiZ29hbF9jb2RlIjoiT2ZmZXIgQ3JlZGVudGlhbCIsImNyZWRlbnRpYWxfcHJldmlldyI6eyJ0eXBlIjoiaHR0cHM6Ly9kaWRjb21tLm9yZy9pc3N1ZS1jcmVkZW50aWFsLzMuMC9jcmVkZW50aWFsLWNyZWRlbnRpYWwiLCJib2R5Ijp7ImF0dHJpYnV0ZXMiOlt7Im5hbWUiOiJmYW1pbHlOYW1lIiwidmFsdWUiOiJXb25kZXJsYW5kIn0seyJuYW1lIjoiZ2l2ZW5OYW1lIiwidmFsdWUiOiJBbGljZSJ9LHsibmFtZSI6ImRyaXZpbmdDbGFzcyIsInZhbHVlIjoiTXc9PSIsIm1lZGlhX3R5cGUiOiJhcHBsaWNhdGlvbi9qc29uIn0seyJuYW1lIjoiZGF0ZU9mSXNzdWFuY2UiLCJ2YWx1ZSI6IjIwMjAtMTEtMTNUMjA6MjA6MzkrMDA6MDAifSx7Im5hbWUiOiJlbWFpbEFkZHJlc3MiLCJ2YWx1ZSI6ImFsaWNlQHdvbmRlcmxhbmQuY29tIn0seyJuYW1lIjoiZHJpdmluZ0xpY2Vuc2VJRCIsInZhbHVlIjoiMTIzNDUifV19fX0sImF0dGFjaG1lbnRzIjpbeyJpZCI6Ijg0MDQ2NzhiLTlhMzYtNDk4OS1hZjFkLTBmNDQ1MzQ3ZTBlMyIsIm1lZGlhX3R5cGUiOiJhcHBsaWNhdGlvbi9qc29uIiwiZGF0YSI6eyJqc29uIjp7Im9wdGlvbnMiOnsiY2hhbGxlbmdlIjoiYWQwZjQzYWQtODUzOC00MWQ0LTljYjgtMjA5NjdiYzY4NWJjIiwiZG9tYWluIjoiZG9tYWluIn0sInByZXNlbnRhdGlvbl9kZWZpbml0aW9uIjp7ImlkIjoiNzQ4ZWZhNTgtMmJjZS00NDBkLTkyMWYtMjUyMGE4NDQ2NjYzIiwiaW5wdXRfZGVzY3JpcHRvcnMiOltdLCJmb3JtYXQiOnsiand0Ijp7ImFsZyI6WyJFUzI1NksiXSwicHJvb2ZfdHlwZSI6W119fX19fSwiZm9ybWF0IjoicHJpc20vand0In1dLCJ0aGlkIjoiZjk2ZTM2OTktNTkxYy00YWU3LWI1ZTYtNmVmZTZkMjYyNTViIiwiZnJvbSI6ImRpZDpwZWVyOjIuRXo2TFNmc0tNZTh2U1NXa1lkWkNwbjRZVmlQRVJmZEdBaGRMQUdIZ3gyTEdKd2ZtQS5WejZNa3B3MWtTYWJCTXprQTN2NTl0UUZuaDNGdGtLeTZ4TGhMeGQ5UzZCQW9hQmcyLlNleUowSWpvaVpHMGlMQ0p6SWpwN0luVnlhU0k2SW1oMGRIQTZMeTh4T1RJdU1UWTRMakV1TXpjNk9EQTRNQzlrYVdSamIyMXRJaXdpY2lJNlcxMHNJbUVpT2xzaVpHbGtZMjl0YlM5Mk1pSmRmWDAifX19XSwiY3JlYXRlZF90aW1lIjoxNzI0ODUxMTM5LCJleHBpcmVzX3RpbWUiOjE3MjQ4NTE0Mzl9=
-      description: The invitation for this Offer Credential
+          type: string
     IssueCredentialRecord:
+      title: IssueCredentialRecord
+      type: object
       required:
       - recordId
       - thid
@@ -5941,45 +6908,44 @@ components:
       - role
       - protocolState
       - metaRetries
-      type: object
       properties:
         recordId:
-          type: string
           description: |2
 
             The unique identifier of the issue credential record.
             This identifier is internal to the agent and not shared between issuer and holder.
           example: 80d612dc-0ded-4ac9-90b4-1b8eabb04545
-        thid:
           type: string
+        thid:
           description: |2
 
             The unique identifier of the 'thread' identifying the specific issuance flow execution as a whole.
             This same unique 'thid' value is included in every message exchanged during the flow execution.
             It is shared between the issuer and the holder agents and its value identical on both sides.
           example: 0527aea1-d131-3948-a34d-03af39aba8b4
-        credentialFormat:
           type: string
+        credentialFormat:
           description: The credential format for this offer.
           example: JWT
+          type: string
           enum:
           - JWT
           - AnonCreds
         subjectId:
-          type: string
           description: |2
 
             The short-form subject Prism DID to which the JWT verifiable credential will be or has been issued.
             This parameter only applies if the offer is of type 'JWT' and will only exist in the cloud agent of the holder (it will be empty on the issuer side).
           example: did:prism:3bb0505d13fcb04d28a48234edb27b0d4e6d7e18a81e2c1abab58f3bbc21ce6f
+          type: string
         validityPeriod:
-          type: number
           description: |2
 
             The validity period in seconds of the verifiable credential that will be issued.
             This parameter will only exist in the cloud agent of the issuer (it will be empty on the holder side).
-          format: double
           example: 3600.0
+          type: number
+          format: double
         claims:
           description: |2
 
@@ -5988,34 +6954,34 @@ components:
             firstname: Alice
             lastname: Wonderland
         automaticIssuance:
-          type: boolean
           description: |2
 
             Specifies whether or not the credential is automatically generated and issued when receiving the `CredentialRequest` from the holder.
             If set to `false`, a manual approval by the issuer via another API call will be required for the VC to be issued.
             This parameter will only exist in the cloud agent of the issuer (it will be empty on the holder side).
           example: true
+          type: boolean
         createdAt:
-          type: string
           description: The date and time when the issue credential record was created.
-          format: date-time
-          example: '2024-09-11T13:22:27.796180424Z'
-        updatedAt:
+          example: '2024-11-05T11:32:21.497676581Z'
           type: string
+          format: date-time
+        updatedAt:
           description: The date and time when the issue credential record was last
             updated.
+          type: string
           format: date-time
         role:
-          type: string
           description: The role played by the agent in the credential issuance flow.
           example: Issuer
+          type: string
           enum:
           - Issuer
           - Holder
         protocolState:
-          type: string
           description: The current state of the issue credential protocol execution.
           example: CredentialSent
+          type: string
           enum:
           - OfferPending
           - OfferSent
@@ -6034,91 +7000,96 @@ components:
           - InvitationExpired
           - InvitationGenerated
         credential:
-          type: string
           description: The base64-encoded credential that was issued by the issuer
             agent, in 'JWT' or 'AnonCreds' format depending on the offer type.
           example: eyJzY2hlbWFfaWQiOiJodHRwOi8vaG9zdC5kb2NrZXIuaW50ZXJuYWw6ODA4MC9wcmlzbS1hZ2VudC9zY2hlbWEtcmVnaXN0cnkvc2NoZW1hcy8zOTZmZDE2OC02YmVmLTMyNDItYTJiNy1hNTZlYWM1MDc2OWMvc2NoZW1hIiwiY3JlZF9kZWZfaWQiOiJodHRwOi8vMTkyLjE2OC4wLjE0OjgwODAvcHJpc20tYWdlbnQvY3JlZGVudGlhbC1kZWZpbml0aW9uLXJlZ2lzdHJ5L2RlZmluaXRpb25zLzNhZmQxZWJkLWIzN2ItMzRiNC1iMWQ2LWYwMDQ5ZmU5ZmQ1Mi9kZWZpbml0aW9uIiwicmV2X3JlZ19pZCI6bnVsbCwidmFsdWVzIjp7ImdpdmVuTmFtZSI6eyJyYXciOiJBbGljZSIsImVuY29kZWQiOiIyNzAzNDY0MDAyNDExNzMzMTAzMzA2MzEyODA0NDAwNDMxODIxODQ4NjgxNjkzMTUyMDg4NjQwNTUzNTY1OTkzNDQxNzQzODc4MTUwNyJ9LCJlbWFpbEFkZHJlc3MiOnsicmF3IjoiYWxpY2VAd29uZGVybGFuZC5jb20iLCJlbmNvZGVkIjoiNzUxMDcwNDYzNDAxNjU2NzcwMTE5NDIwNzU2NDQwMDkwNjY1NDE2NjExNDg4MjI1ODkwMzM2Nzk4NjEyMDkxODY0OTI3Njg2Njk5MjQifSwiZmFtaWx5TmFtZSI6eyJyYXciOiJXb25kZXJsYW5kIiwiZW5jb2RlZCI6IjE2NzkwODQ5MzEyMzc0Nzk0NzM2ODEzMzc3NTY3MjUzODUxMzczNjA3OTcwNDczMzc3NzAxNDc3MjY5MTk0MDE5NTU3NjU0NTYyMDM1In0sImRhdGVPZklzc3VhbmNlIjp7InJhdyI6IjIwMjAtMTEtMTNUMjA6MjA6MzkrMDA6MDAiLCJlbmNvZGVkIjoiNTM4Njg1NTk1MzE3NDg0NjcwOTc1MjA4NTkwNTMwODE4MzU3NDc0MzU2MTE2MDY4NDIwNDExNDc1ODIwMDQ4NzQzNDgwNDYxNjQ2ODUifSwiZHJpdmluZ0xpY2Vuc2VJRCI6eyJyYXciOiIxMjM0NSIsImVuY29kZWQiOiIxMjM0NSJ9LCJkcml2aW5nQ2xhc3MiOnsicmF3IjoiMyIsImVuY29kZWQiOiIzIn19LCJzaWduYXR1cmUiOnsicF9jcmVkZW50aWFsIjp7Im1fMiI6IjMzNjg4ODUzNTU3NTg2MDI3MDg3OTY5ODAzMjgzMzcyNzE4Nzc5MDAzNDAzMDgwODMzMjQzNDIxMTU3MDA5NzE4MDUzMTMyNDIwODAwIiwiYSI6IjEwMjUxMTg2OTU5MTg2NDc2NDcwNzU0MTQ0MDg5NDE3MjI4OTM1Mjk0ODgxNDExMTc5ODYwNzgxODIxODY2OTcyODIyMzg1MTQ1OTcwNDA4Mzk2Mjg5OTM2NzgzNTUxMDk4NDA2MjE2MjcwNjgyNDM1ODg3NjY0OTI0MzQwMDg3NTY4MDMyNzMyMzYwMDc5MTI2ODk2MDU3NDA3MTYyMjI0NDgwODM2NTgzNjY2MzQ1MzA5NzQ0NDE5NjA0ODg5ODA1NDU3Mjc4NDE0MjgyMjA4NzIzMDIwNDQzNzk0MjM0NzU1NTgwNjA1MTE1NjU3NTQ4NjE1MTgwNTU1ODEzMjA0MzQyNjkzNjYyODQzNzY4MjQ2NDM1NjU4MjQ5MDYyMjUxMzYwNzE2MzEyNzM4MjAyMTU2NTEwNzM2NDY1ODk2NjIyNDY4MDk3OTY0OTk0NTA1NDUwMjczMzQ2Mzk4MzY4NzcxNDM3MzAzNTI2NjE0NTk4NTU4Mjg0MTAxNzk0NjYwOTAxNDMwOTI4MzY1MTk3MzA2MDIxMzQ5OTQ3MDI2MzIzMzEwOTE3MjgzODM0ODY2NzI1MzgyMDg4NDIzNDU1NzE0MDY3MTk1NDEzMDA4MzAxNTQ2MTA1NzY4NTAxNzMxNjEwMjk3MDY5ODUyNjAxMTgxMTM3OTg2NjM2MDU2MjI4MTE4NzUzMTM1NjMxMDIwNzA0MzYxODQxNTg0MjA0NzIwMDU1NjY0ODIxMTczOTA3MzYyMTQzNTQyNjk1NTExMTMxNzU3NTE0OTUxMDY2ODQ2MzIyMDAyNzYxMzg4MzIwNjkyNSIsImUiOiIyNTkzNDQ3MjMwNTUwNjIwNTk5MDcwMjU0OTE0ODA2OTc1NzE5MzgyNzc4ODk1MTUxNTIzMDYyNDk3Mjg1ODMxMDU2NjU4MDA3MTMzMDY3NTkxNDk5ODE2OTA1NTkxOTM5ODcxNDMwMTIzNjc5MTMyMDYyOTkzMjM4OTk2OTY5NDIyMTMyMzU5NTY3NDI5Mjk4MTYwMTkzMjA4MDYyNzM5NTc5MDExNDE1Njk0NDAwMjUyMTkiLCJ2IjoiMTAwODYwMTE5NjExNDQ0MjUxODg1ODcyNzA0OTEyNDQwMTQzNTA0MDEwMDQ3NzE3MzYxNzgxMjIwOTQ0OTA3OTE3ODM0NTE3NjQyOTk5MDgxMjEzMDcyNTI4NzU5NTczMzIyNDM1NjU5NzY4OTI2NzA4MjE0NTI5Njg0Njg5NTc5MjAwNzY4MDkxMTM0OTM0MzYxNDUyNzM5ODUwMjEyODc1MDUwMzg5NjkzOTMxMjEzMDg2MTUyOTM4NzA2ODc4MzQyNjIxNjQ1MTc2NDY5NTU0NDMyNTY2MDk0MDY5NjU2ODkzNDg1NjQyNDI2MTc0MjA5MjY3OTI1MDEzODkxMTU2MzAzMzY0MzUwMzgwNTUwMzQ4OTk3MDI1Nzc3NDc5NDg3ODI0NDkzNzg4MDYwNTg1NzMxMTY2NDM5OTE1MTc3ODUyNTYwNjczMjkwODA2Mjk5ODEyOTY1NjMwNDc2OTc0NzExNDY4MDE1MzY4NzM2NTc3MDEzNDE2NjE3ODc0MTc3ODgwNjMzNTc1OTAwMzQyODM5MDUxNjc4NjExNDMxMTk5Mzk3NTIzMDE5Njc0NTA3MjM0NDAzNzcyMTcxMDM3Nzg3NzUyNTMwMjIyODYyNDg5OTMzMzczMzY1MjIwNTc4MDIzNDY2NjkyMDQ4MTA0NTE0NjczMzMwMzMwNzQ1OTEyMjUzNzQ0MDQwMjI1NTM4NjMxNDk2MjY4NDM0MDk5Njk3Nzk1NTY5MDA3MTExMjQzMTg4MTc3MzUyNjE5MTUxNzk1NjEzNTAwNjg5MzUwMzQyNTk3NjA1ODY2MjUyOTYwMjQ3ODg4OTE2NDIwNDcyMDEzNDYzMTA5NTA5MjMxNDcwNjc4MDc5MDI2Mzc3MzY4NDEwNTIyODg3NDExOTIyMzE4Njk5NzA4MjkxNzI4NTg3ODgzNjExODMyMjU4MTE5MzI2ODQ5NjkxODI1MDI2MzU2NDQ1OTM1NjYxOTkyODEyNjIwNDY4MzAxMjEwMzMwNTA1NjEwMjYyNTU5MDk5NDgwNzcxMjA0NDU0ODg0MDI5ODA3MDcwOTM4NDU5OTgxNDM1NjQyNTkzNTQyODc0ODAifSwicl9jcmVkZW50aWFsIjpudWxsfSwic2lnbmF0dXJlX2NvcnJlY3RuZXNzX3Byb29mIjp7InNlIjoiMjMwNDc5NjEzNTA0MDI5NTI3NTk3NzM3MTY4NjY0OTQ5MzQwNzk1NTg1ODM5NTQ4OTI2MTEwMjQ2NzU0NzA3OTgyNjc2MDEyMjIyMTYyNzQyNTQ2Nzg4NDI3MDA4MDQ5NzIyNDMwNDgyODAyOTYyNTgxNDE2ODI2MjEzMTgwMTE4MTA4MTA1Nzg1NjA4OTg5NjEyNTU0ODMwOTE5MjU4MTI0NDgyMzUwNTQ2MTkxOTQ5NTU5ODM2NTk4NzcxMTE0MzI1NjA5MTI4MjUxMTc1MDM4NDMxNDA2NzM2NTc1MDkwMzk5ODk0MDQzMjc3MTg5MTM3MzE1NTM5NTQ2MTE3Mjk2NTM1OTMyOTQ3NDk3NTU0Mjg0NDc1NjkxNDE1NDEzMzIzNjE2OTYyNTk1NDAzMTkxMjQ4ODY2NDE1MjI0NDY2MTU2OTgyODg4OTkyNTAxNjc1NTcwNjI0MzQ2MzMyMTE0NjMzMDQ1NzUxNDg3NzU3ODM3MDA5Mzc3ODMwNTI1MTU5MjUwNjMwMjcxNjY3NDQxMDI3MTM5MjE3Nzc5ODU5MDExMjUxOTc1OTczNjY0NTc4MjMxOTk1Mzc3OTE4Mjg4MTkyNjIyMDM5NDEzMDM0ODg5MjM3Mzg2NzU4Mzg3NTcwNTMxNDc1OTQxMDU2MTg3NzUzOTEyNDA0NzkwNzQ5NzgzMTM0OTk3MDgzODk3NjE5MTczMTg3MDg1MzE1MjQ3NTM4NjU2OTcwOTE0NzI2MzM1ODA1ODY5OTk3NzI3OTc5NTUwMjIzNjkzMDA2MjcwNjIzNTc3NjM2NTIyNjIyNTY0MTE4NTMiLCJjIjoiOTM2NzQ1MDczNzcxNzQ3MjE3OTg3OTY2OTYzMDQxNzUzMTE4NDk0NDE4NDQ0NzQ1MDI3NzAyMjI3Nzk0NzU1ODQ2Mjg3ODMzMzU4NTAifSwicmV2X3JlZyI6bnVsbCwid2l0bmVzcyI6bnVsbH0=
-        issuingDID:
           type: string
+        issuingDID:
           description: |2
 
             The short-form issuer Prism DID by which the JWT verifiable credential will be or has been issued.
             Note that this parameter only applies when the offer is type 'JWT'.
           example: did:prism:3bb0505d13fcb04d28a48234edb27b0d4e6d7e18a81e2c1abab58f3bbc21ce6f
-        goalCode:
           type: string
+        goalCode:
           description: A self-attested code the receiver may want to display to the
             user or use in automatically deciding what to do with the out-of-band
             message.
           example: issue-vc
-        goal:
           type: string
+        goal:
           description: A self-attested string that the receiver may want to display
             to the user about the context-specific goal of the out-of-band message.
           example: To issue a Faber College Graduate credential
-        myDid:
           type: string
+        myDid:
           description: The DID representing me as the inviter or invitee in this specific
             connection.
           example: did:peer:12345
+          type: string
         invitation:
           $ref: '#/components/schemas/IssueCredentialOfferInvitation'
         metaRetries:
-          type: integer
           description: The maximum background processing attempts remaining for this
             record.
-          format: int32
           example: 5
+          type: integer
+          format: int32
         metaLastFailure:
           $ref: '#/components/schemas/ErrorResponse'
+          description: The last failure if any.
+          example: ErrorResponse(404,error:Error:FailureInfo,Failure Info,Some(Not
+            Found),error:instance:087a52c7-4c06-48ba-870a-8f5b3b4e003f)
     IssueCredentialRecordPage:
+      title: IssueCredentialRecordPage
+      type: object
       required:
       - kind
       - self
       - pageOf
-      type: object
       properties:
         contents:
-          type: array
-          items:
-            $ref: '#/components/schemas/IssueCredentialRecord'
           description: |2
 
             An sequence of IssueCredentialRecord resources representing the list of credential records that the paginated response contains.
           example: []
+          type: array
+          items:
+            $ref: '#/components/schemas/IssueCredentialRecord'
         kind:
-          type: string
           description: A string that identifies the type of resource being returned
             in the response.
           example: Collection
-        self:
           type: string
+        self:
           description: The URL that uniquely identifies the resource being returned
             in the response.
           example: /cloud-agent/issue-credentials/records?offset=10&limit=10
-        pageOf:
           type: string
+        pageOf:
           description: A string field indicating the type of resource that the contents
             field contains.
           example: /cloud-agent/issue-credentials/records
-        next:
           type: string
+        next:
           description: An optional string field containing the URL of the next page
             of results. If the API response does not contain any more pages, this
             field should be set to None.
           example: /cloud-agent/issue-credentials/records?offset=20&limit=10
-        previous:
           type: string
+        previous:
           description: An optional string field containing the URL of the previous
             page of results. If the API response is the first page of results, this
             field should be set to None.
           example: /cloud-agent/issue-credentials/records?offset=0&limit=10
+          type: string
     IssuerMetadata:
+      title: IssuerMetadata
+      type: object
       required:
       - credential_issuer
       - credential_endpoint
       - credential_configurations_supported
-      type: object
       properties:
         credential_issuer:
           type: string
@@ -6130,21 +7101,19 @@ components:
           type: string
         credential_configurations_supported:
           $ref: '#/components/schemas/Map_SupportedCredentialConfiguration'
-    Json:
-      description: The service endpoint. Can contain multiple possible values as described
-        in the [Create DID operation](https://github.com/input-output-hk/prism-did-method-spec/blob/main/w3c-spec/PRISM-method.md#create-did)
-      example: https://example.com
-      oneOf:
-      - $ref: '#/components/schemas/Arr'
-      - $ref: '#/components/schemas/Bool'
-      - $ref: '#/components/schemas/Null'
-      - $ref: '#/components/schemas/Num'
-      - $ref: '#/components/schemas/Obj'
-      - $ref: '#/components/schemas/Str'
+    Jwt:
+      title: Jwt
+      type: object
+      properties:
+        alg:
+          type: array
+          items:
+            type: string
     JwtCredentialRequest:
+      title: JwtCredentialRequest
+      type: object
       required:
       - format
-      type: object
       properties:
         format:
           $ref: '#/components/schemas/CredentialFormat'
@@ -6157,77 +7126,91 @@ components:
         credential_definition:
           $ref: '#/components/schemas/CredentialDefinition'
     JwtProof:
+      title: JwtProof
+      type: object
       required:
       - proof_type
       - jwt
-      type: object
       properties:
         proof_type:
           $ref: '#/components/schemas/ProofType'
         jwt:
           type: string
+    Ldp:
+      title: Ldp
+      type: object
+      properties:
+        proof_type:
+          type: array
+          items:
+            type: string
     LdpProof:
+      title: LdpProof
+      type: object
       required:
       - proof_type
       - vp
-      type: object
       properties:
         proof_type:
           $ref: '#/components/schemas/ProofType'
         vp:
           type: string
     Localization:
+      title: Localization
+      type: object
       required:
       - name
       - locale
-      type: object
       properties:
         name:
           type: string
         locale:
           type: string
     ManagedDID:
+      title: ManagedDID
+      type: object
       required:
       - did
       - status
-      type: object
       properties:
         did:
-          type: string
           description: A managed DID
           example: did:prism:4a5b5cf0a513e83b598bbea25cd6196746747f361a73ef77068268bc9bd732ff
-        longFormDid:
           type: string
+        longFormDid:
           description: A long-form DID. Mandatory when status is not `PUBLISHED` and
             optional when status is `PUBLISHED`
           example: did:prism:4a5b5cf0a513e83b598bbea25cd6196746747f361a73ef77068268bc9bd732ff:Cr4BCrsBElsKBmF1dGgtMRAEQk8KCXNlY3AyNTZrMRIg0opTuxu-zt6aRbT1tPniG4eu4CYsQPM3rrLzvzNiNgwaIIFTnyT2N4U7qCQ78qtWC3-p0el6Hvv8qxG5uuEw-WgMElwKB21hc3RlcjAQAUJPCglzZWNwMjU2azESIKhBU0eCOO6Vinz_8vhtFSAhYYqrkEXC8PHGxkuIUev8GiAydFHLXb7c22A1Uj_PR21NZp6BCDQqNq2xd244txRgsQ
-        status:
           type: string
+        status:
           description: |-
             A status indicating a publication state of a DID in the wallet (e.g. `PUBLICATION_PENDING`, `PUBLISHED`).
             Does not represent DID a lifecyle (e.g. `deactivated`, `recovered`, `updated`).
           example: CREATED
+          type: string
     ManagedDIDKeyTemplate:
+      title: ManagedDIDKeyTemplate
+      description: A key-pair template to add to DID document.
+      type: object
       required:
       - id
       - purpose
-      type: object
       properties:
         id:
-          type: string
           description: Identifier of a verification material in the DID Document
           example: key-1
+          type: string
         purpose:
           $ref: '#/components/schemas/Purpose'
         curve:
           $ref: '#/components/schemas/Curve'
-      description: A key-pair template to add to DID document.
     ManagedDIDPage:
+      title: ManagedDIDPage
+      type: object
       required:
       - self
       - kind
       - pageOf
-      type: object
       properties:
         self:
           type: string
@@ -6244,111 +7227,122 @@ components:
           items:
             $ref: '#/components/schemas/ManagedDID'
     Map_AnoncredRequestedAttributeV1:
+      title: Map_AnoncredRequestedAttributeV1
       type: object
       additionalProperties:
         $ref: '#/components/schemas/AnoncredRequestedAttributeV1'
     Map_AnoncredRequestedPredicateV1:
+      title: Map_AnoncredRequestedPredicateV1
       type: object
       additionalProperties:
         $ref: '#/components/schemas/AnoncredRequestedPredicateV1'
     Map_ClaimDescriptor:
+      title: Map_ClaimDescriptor
       type: object
       additionalProperties:
         $ref: '#/components/schemas/ClaimDescriptor'
     Map_String:
+      title: Map_String
       type: object
       additionalProperties:
         type: string
     Map_SupportedCredentialConfiguration:
+      title: Map_SupportedCredentialConfiguration
       type: object
       additionalProperties:
         $ref: '#/components/schemas/SupportedCredentialConfiguration'
     NonceRequest:
+      title: NonceRequest
+      type: object
       required:
       - issuerState
-      type: object
       properties:
         issuerState:
           type: string
     NonceResponse:
+      title: NonceResponse
+      type: object
       required:
       - nonce
       - nonceExpiresIn
-      type: object
       properties:
         nonce:
           type: string
         nonceExpiresIn:
           type: integer
           format: int64
-    'Null':
-      type: object
-    Num:
-      required:
-      - value
-      type: object
-      properties:
-        value:
-          type: number
     OOBPresentationInvitation:
+      title: OOBPresentationInvitation
+      description: The invitation for this Request Presentation
+      type: object
       required:
       - id
       - type
       - from
       - invitationUrl
-      type: object
       properties:
         id:
-          type: string
           description: The unique identifier of the invitation. It should be used
             as parent thread ID (pthid) for the Connection Request message that follows.
-          format: uuid
           example: 0527aea1-d131-3948-a34d-03af39aba8b4
-        type:
           type: string
+          format: uuid
+        type:
           description: The DIDComm Message Type URI (MTURI) the invitation message
             complies with.
           example: https://didcomm.org/out-of-band/2.0/invitation
-        from:
           type: string
+        from:
           description: The DID representing the sender to be used by recipients for
             future interactions.
           example: did:peer:1234457
-        invitationUrl:
           type: string
+        invitationUrl:
           description: The invitation message encoded as a URL. This URL follows the
             Out of [Band 2.0 protocol](https://identity.foundation/didcomm-messaging/spec/v2.0/#out-of-band-messages)
             and can be used to generate a QR code for example.
           example: https://my.domain.com/path?_oob=eyJpZCI6IjViMjUwMjIzLWExNDItNDRmYi1hOWJkLWU1MjBlNGI0ZjQzMiIsInR5cGUiOiJodHRwczovL2RpZGNvbW0ub3JnL291dC1vZi1iYW5kLzIuMC9pbnZpdGF0aW9uIiwiZnJvbSI6ImRpZDpwZWVyOjIuRXo2TFNkV0hWQ1BFOHc0NWZETjM4aUh0ZFJ6WGkyTFNqQmRSUjRGTmNOUm12VkNKcy5WejZNa2Z2aUI5S1F1OGlnNVZpeG1HZHM3dmdMNmoyUXNOUGFybkZaanBNQ0E5aHpQLlNleUowSWpvaVpHMGlMQ0p6SWpwN0luVnlhU0k2SW1oMGRIQTZMeTh4T1RJdU1UWTRMakV1TXpjNk9EQTNNQzlrYVdSamIyMXRJaXdpY2lJNlcxMHNJbUVpT2xzaVpHbGtZMjl0YlM5Mk1pSmRmWDAiLCJib2R5Ijp7ImdvYWxfY29kZSI6InByZXNlbnQtdnAiLCJnb2FsIjoiUmVxdWVzdCBwcm9vZiBvZiB2YWNjaW5hdGlvbiBpbmZvcm1hdGlvbiIsImFjY2VwdCI6W119LCJhdHRhY2htZW50cyI6W3siaWQiOiIyYTZmOGM4NS05ZGE3LTRkMjQtOGRhNS0wYzliZDY5ZTBiMDEiLCJtZWRpYV90eXBlIjoiYXBwbGljYXRpb24vanNvbiIsImRhdGEiOnsianNvbiI6eyJpZCI6IjI1NTI5MTBiLWI0NmMtNDM3Yy1hNDdhLTlmODQ5OWI5ZTg0ZiIsInR5cGUiOiJodHRwczovL2RpZGNvbW0uYXRhbGFwcmlzbS5pby9wcmVzZW50LXByb29mLzMuMC9yZXF1ZXN0LXByZXNlbnRhdGlvbiIsImJvZHkiOnsiZ29hbF9jb2RlIjoiUmVxdWVzdCBQcm9vZiBQcmVzZW50YXRpb24iLCJ3aWxsX2NvbmZpcm0iOmZhbHNlLCJwcm9vZl90eXBlcyI6W119LCJhdHRhY2htZW50cyI6W3siaWQiOiJiYWJiNTJmMS05NDUyLTQzOGYtYjk3MC0yZDJjOTFmZTAyNGYiLCJtZWRpYV90eXBlIjoiYXBwbGljYXRpb24vanNvbiIsImRhdGEiOnsianNvbiI6eyJvcHRpb25zIjp7ImNoYWxsZW5nZSI6IjExYzkxNDkzLTAxYjMtNGM0ZC1hYzM2LWIzMzZiYWI1YmRkZiIsImRvbWFpbiI6Imh0dHBzOi8vcHJpc20tdmVyaWZpZXIuY29tIn0sInByZXNlbnRhdGlvbl9kZWZpbml0aW9uIjp7ImlkIjoiMGNmMzQ2ZDItYWY1Ny00Y2E1LTg2Y2EtYTA1NTE1NjZlYzZmIiwiaW5wdXRfZGVzY3JpcHRvcnMiOltdfX19LCJmb3JtYXQiOiJwcmlzbS9qd3QifV0sInRoaWQiOiI1YjI1MDIyMy1hMTQyLTQ0ZmItYTliZC1lNTIwZTRiNGY0MzIiLCJmcm9tIjoiZGlkOnBlZXI6Mi5FejZMU2RXSFZDUEU4dzQ1ZkROMzhpSHRkUnpYaTJMU2pCZFJSNEZOY05SbXZWQ0pzLlZ6Nk1rZnZpQjlLUXU4aWc1Vml4bUdkczd2Z0w2ajJRc05QYXJuRlpqcE1DQTloelAuU2V5SjBJam9pWkcwaUxDSnpJanA3SW5WeWFTSTZJbWgwZEhBNkx5OHhPVEl1TVRZNExqRXVNemM2T0RBM01DOWthV1JqYjIxdElpd2ljaUk2VzEwc0ltRWlPbHNpWkdsa1kyOXRiUzkyTWlKZGZYMCJ9fX1dLCJjcmVhdGVkX3RpbWUiOjE3MjQzMzkxNDQsImV4cGlyZXNfdGltZSI6MTcyNDMzOTQ0NH0=
-      description: The invitation for this Request Presentation
+          type: string
     Obj:
+      title: Obj
+      description: |2
+
+        The set of claims to be disclosed from the  issued credential.
+        The JSON object should comply with the schema applicable for this offer (i.e. 'schemaId' or 'credentialDefinitionId').
+      example:
+        firstname: Alice
+        lastname: Wonderland
       type: object
     Options:
+      title: Options
+      description: The options to use when creating the proof presentation request
+        (e.g., domain, challenge).
+      type: object
       required:
       - challenge
       - domain
-      type: object
       properties:
         challenge:
-          type: string
           description: The challenge should be a randomly generated string.
           example: 11c91493-01b3-4c4d-ac36-b336bab5bddf
-        domain:
           type: string
+        domain:
           description: The domain value can be any string or URI.
           example: https://example-verifier.com
-      description: The options to use when creating the proof presentation request
-        (e.g., domain, challenge).
+          type: string
     ParameterizableVcVerification:
+      title: ParameterizableVcVerification
+      type: object
       required:
       - verification
-      type: object
       properties:
         verification:
           $ref: '#/components/schemas/VcVerification'
+          description: The type of verification to perform.
         parameter:
           $ref: '#/components/schemas/VcVerificationParameter'
     PatchAuthorizationServer:
+      title: PatchAuthorizationServer
       type: object
       properties:
         url:
@@ -6358,50 +7352,105 @@ components:
         clientSecret:
           type: string
     PatchContextAction:
+      title: PatchContextAction
       type: object
       properties:
         contexts:
           type: array
           items:
-            type: string
             description: The JSON-LD context describing the JSON document
             example: https://didcomm.org/messaging/contexts/v2
+            type: string
     PatchCredentialIssuerRequest:
+      title: PatchCredentialIssuerRequest
       type: object
       properties:
         authorizationServer:
           $ref: '#/components/schemas/PatchAuthorizationServer'
+    PresentCredentialRequestFormat:
+      title: PresentCredentialRequestFormat
+      description: The presentation format to display in Didcomm messages (default
+        to 'prism/jwt', vc+sd-jwt or anoncreds/proof-request@v1.0)
+      example: prism/jwt
+      type: string
+      enum:
+      - Anoncred
+      - JWT
+      - SDJWT
+    PresentationDefinition:
+      title: PresentationDefinition
+      description: '*Presentation Definition* object according to the [PresentationExchange
+        spec](https://identity.foundation/presentation-exchange/spec/v2.1.1/#presentation-definition)'
+      type: object
+      required:
+      - id
+      properties:
+        id:
+          type: string
+        input_descriptors:
+          type: array
+          items:
+            $ref: '#/components/schemas/InputDescriptor'
+        name:
+          type: string
+        purpose:
+          type: string
+        format:
+          $ref: '#/components/schemas/ClaimFormat'
+    PresentationDefinitionPage:
+      title: PresentationDefinitionPage
+      type: object
+      required:
+      - self
+      - kind
+      - pageOf
+      properties:
+        self:
+          type: string
+        kind:
+          type: string
+        pageOf:
+          type: string
+        next:
+          type: string
+        previous:
+          type: string
+        contents:
+          type: array
+          items:
+            $ref: '#/components/schemas/PresentationDefinition'
     PresentationStatus:
+      title: PresentationStatus
+      type: object
       required:
       - presentationId
       - thid
       - role
       - status
       - metaRetries
-      type: object
       properties:
         presentationId:
-          type: string
           description: The unique identifier of the presentation record.
           example: 3c6d9fa5-d277-431e-a6cb-d3956e47e610
-        thid:
           type: string
+        thid:
           description: The unique identifier of the thread this presentation record
             belongs to. The value will identical on both sides of the presentation
             flow (verifier and prover)
           example: 0527aea1-d131-3948-a34d-03af39aba8b4
-        role:
           type: string
+        role:
           description: The role played by the Prism agent in the proof presentation
             flow.
           example: Verifier
+          type: string
           enum:
           - Verifier
           - Prover
         status:
-          type: string
           description: The current state of the proof presentation record.
           example: RequestPending
+          type: string
           enum:
           - RequestPending
           - RequestSent
@@ -6421,66 +7470,67 @@ components:
           - InvitationGenerated
           - InvitationReceived
         proofs:
-          type: array
-          items:
-            $ref: '#/components/schemas/ProofRequestAux'
           description: The type of proofs requested in the context of this proof presentation
             request (e.g., VC schema, trusted issuers, etc.)
           example: []
-        data:
           type: array
           items:
-            type: string
+            $ref: '#/components/schemas/ProofRequestAux'
+        data:
           description: The list of proofs presented by the prover to the verifier.
           example: []
-        requestData:
           type: array
           items:
             type: string
+        requestData:
           description: The list of request presented by the verifier to the prover.
           example: []
+          type: array
+          items:
+            type: string
         connectionId:
-          type: string
           description: The unique identifier of an established connection between
             the verifier and the prover.
           example: bc528dc8-69f1-4c5a-a508-5f8019047900
-        goalCode:
           type: string
+        goalCode:
           description: A self-attested code the receiver may want to display to the
             user or use in automatically deciding what to do with the out-of-band
             message.
           example: present-vp
-        goal:
           type: string
+        goal:
           description: A self-attested string that the receiver may want to display
             to the user about the context-specific goal of the out-of-band message.
           example: To verify a Peter College Graduate credential
-        myDid:
           type: string
+        myDid:
           description: The DID representing me as the inviter or invitee in this specific
             connection.
           example: did:peer:12345
+          type: string
         invitation:
           $ref: '#/components/schemas/OOBPresentationInvitation'
         metaRetries:
-          type: integer
           description: The maximum background processing attempts remaining for this
             record
-          format: int32
           example: 5
+          type: integer
+          format: int32
         metaLastFailure:
           $ref: '#/components/schemas/ErrorResponse'
+          description: The last failure if any.
+          example: ErrorResponse(404,error:Error:FailureInfo,Failure Info,Some(Not
+            Found),error:instance:68e60a0f-8e08-4264-96c8-9e6f2dd59202)
     PresentationStatusPage:
+      title: PresentationStatusPage
+      type: object
       required:
       - self
       - kind
       - pageOf
-      type: object
       properties:
         contents:
-          type: array
-          items:
-            $ref: '#/components/schemas/PresentationStatus'
           description: A sequence of Presentation objects.
           example:
           - presentationId: 938bfc23-f78d-4734-9bf3-6dccf300856f
@@ -6532,79 +7582,50 @@ components:
               from: did:peer:veriferPeerDID1234567890
               invitationUrl: http://localhost:8000/present-proof/invitation?_oob=eyJpZCI6ImU2M2JkNzQ1LWZjYzYtNGQ0My05NjgzLTY4MjUyOTNlYTgxNiIsInR5cGUiOiJodHRwczovL2RpZGNvbW0ub3JnL291dC1vZi1iYW5kLzIuMC9pbnZpdGF0aW9uIiwiZnJvbSI6ImRpZDpwZWVyOjIuRXo2TFNoOWFSQmRFQlV6WkFRSzN5VnFBRnRYS0pVMVZ1cUZlMVd1U1ZRcnRvRGROZi5WejZNa3NCWmZkc3U4UmFxWjNmdjlBdkJ0elVGd1VyaW5td0xRODFNVjVoc29td2JZLlNleUowSWpvaVpHMGlMQ0p6SWpwN0luVnlhU0k2SW1oMGRIQTZMeTh4T1RJdU1UWTRMakV1TVRrNU9qZ3dOekF2Wkdsa1kyOXRiU0lzSW5JaU9sdGRMQ0poSWpwYkltUnBaR052YlcwdmRqSWlYWDE5IiwiYm9keSI6eyJnb2FsX2NvZGUiOiJwcmVzZW50LXZwIiwiZ29hbCI6IlJlcXVlc3QgcHJvb2Ygb2YgdmFjY2luYXRpb24gaW5mb3JtYXRpb24iLCJhY2NlcHQiOltdfSwiYXR0YWNobWVudHMiOlt7ImlkIjoiZTE5ZjNkNmMtY2U2Ni00Y2EwLWI1ZWUtZDBiY2ZhOGI1MTc3IiwibWVkaWFfdHlwZSI6ImFwcGxpY2F0aW9uL2pzb24iLCJkYXRhIjp7Impzb24iOnsiaWQiOiIxYjMwYzRjZi05MmVjLTQwOTMtYWFlOC1hZDk3NmIzODljY2MiLCJ0eXBlIjoiaHR0cHM6Ly9kaWRjb21tLmF0YWxhcHJpc20uaW8vcHJlc2VudC1wcm9vZi8zLjAvcmVxdWVzdC1wcmVzZW50YXRpb24iLCJib2R5Ijp7ImdvYWxfY29kZSI6IlJlcXVlc3QgUHJvb2YgUHJlc2VudGF0aW9uIiwid2lsbF9jb25maXJtIjpmYWxzZSwicHJvb2ZfdHlwZXMiOltdfSwiYXR0YWNobWVudHMiOlt7ImlkIjoiNDBiZjcyNzUtMDNkNS00MjI1LWFlYjAtMzhhZDYyODhhMThkIiwibWVkaWFfdHlwZSI6ImFwcGxpY2F0aW9uL2pzb24iLCJkYXRhIjp7Impzb24iOnsib3B0aW9ucyI6eyJjaGFsbGVuZ2UiOiIxMWM5MTQ5My0wMWIzLTRjNGQtYWMzNi1iMzM2YmFiNWJkZGYiLCJkb21haW4iOiJodHRwczovL3ByaXNtLXZlcmlmaWVyLmNvbSJ9LCJwcmVzZW50YXRpb25fZGVmaW5pdGlvbiI6eyJpZCI6IjkyODkyMjJmLWY3ZmItNDk4Yi1iMmE0LTNlODdiNzdiMzk5ZiIsImlucHV0X2Rlc2NyaXB0b3JzIjpbXX19fSwiZm9ybWF0IjoicHJpc20vand0In1dLCJ0aGlkIjoiZTYzYmQ3NDUtZmNjNi00ZDQzLTk2ODMtNjgyNTI5M2VhODE2IiwiZnJvbSI6ImRpZDpwZWVyOjIuRXo2TFNoOWFSQmRFQlV6WkFRSzN5VnFBRnRYS0pVMVZ1cUZlMVd1U1ZRcnRvRGROZi5WejZNa3NCWmZkc3U4UmFxWjNmdjlBdkJ0elVGd1VyaW5td0xRODFNVjVoc29td2JZLlNleUowSWpvaVpHMGlMQ0p6SWpwN0luVnlhU0k2SW1oMGRIQTZMeTh4T1RJdU1UWTRMakV1TVRrNU9qZ3dOekF2Wkdsa1kyOXRiU0lzSW5JaU9sdGRMQ0poSWpwYkltUnBaR052YlcwdmRqSWlYWDE5In19fV19
             metaRetries: 5
+          type: array
+          items:
+            $ref: '#/components/schemas/PresentationStatus'
         self:
-          type: string
           description: The reference to the presentation collection itself.
           example: /present-proof/presentations
-        kind:
           type: string
+        kind:
           description: The type of object returned. In this case a `Collection`.
           example: Collection
-        pageOf:
           type: string
+        pageOf:
           description: Page number within the context of paginated response.
           example: 1
-        next:
           type: string
+        next:
           description: An optional string field containing the URL of the next page
             of results. If the API response does not contain any more pages, this
             field should be set to None.
           example: /present-proof/presentations?offset=20&limit=10
-        previous:
           type: string
+        previous:
           description: An optional string field containing the URL of the previous
             page of results. If the API response is the first page of results, this
             field should be set to None.
           example: /present-proof/presentations?offset=0&limit=10
-    Proof:
-      required:
-      - type
-      - created
-      - verificationMethod
-      - proofPurpose
-      - proofValue
-      - jws
+          type: string
+    PrismEnvelopeResponse:
+      title: PrismEnvelopeResponse
       type: object
+      required:
+      - resource
+      - url
       properties:
-        type:
+        resource:
+          description: JCS normalized and base64url encoded json of the resource
+          example: ''
           type: string
-          description: The type of cryptographic signature algorithm used to generate
-            the proof.
-          example: Ed25519Signature2018
-        created:
+        url:
+          description: JCS normalized and base64url encoded json of the resource
+          example: did:prism:462c4811bf61d7de25b3baf86c5d2f0609b4debe53792d297bf612269bf8593a?resourceService=agent-base-url&resourcePath=credential-definition-registry/definitions/did-url/ef3e4135-8fcf-3ce7-b5bb-df37defc13f6?resourceHash=4074bb1a8e0ea45437ad86763cd7e12de3fe8349ef19113df773b0d65c8a9c46
           type: string
-          description: The date and time at which the proof was created, in UTC format.
-            This field is used to ensure that the proof was generated before or at
-            the same time as the credential definition itself.
-          format: date-time
-          example: 2022-03-10T12:00Z
-        verificationMethod:
-          type: string
-          description: The verification method used to generate the proof. This is
-            usually a DID and key ID combination that can be used to look up the public
-            key needed to verify the proof.
-          example: did:prism:4a5b5cf0a513e83b598bbea25cd6196746747f361a73ef77068268bc9bd732ff#key-1
-        proofPurpose:
-          type: string
-          description: 'The purpose of the proof (for example: `assertionMethod`).
-            This indicates that the proof is being used to assert that the issuer
-            really issued this credential definition instance.'
-          example: assertionMethod
-        proofValue:
-          type: string
-          description: The cryptographic signature value that was generated using
-            the private key associated with the verification method, and which can
-            be used to verify the proof.
-          example: FiPfjknHikKmZ...
-        jws:
-          type: string
-          description: The JSON Web Signature (JWS) that contains the proof information.
-          example: eyJhbGciOiJFZERTQSIsImI2NCI6ZmFsc2UsImNyaXQiOlsiYjY0Il0sImt0eSI6Ik...
-        domain:
-          type: string
-          description: It specifies the domain context within which the credential
-            definition and proof are being used
-          example: prims.atala.com
+    Proof:
+      title: Proof
       description: A digital signature over the Credential Definition for the sake
         of asserting authorship. A piece of Metadata.
       example:
@@ -6615,7 +7636,7 @@ components:
         proofValue: FiPfjknHikKmZ...
         jws: eyJhbGciOiJFZERTQSIsImI2NCI6ZmFsc2UsImNyaXQiOlsiYjY0Il0sImt0eSI6Ik...
         domain: prims.atala.com
-    Proof1:
+      type: object
       required:
       - type
       - created
@@ -6623,47 +7644,48 @@ components:
       - proofPurpose
       - proofValue
       - jws
-      type: object
       properties:
         type:
-          type: string
           description: The type of cryptographic signature algorithm used to generate
             the proof.
           example: Ed25519Signature2018
-        created:
           type: string
+        created:
           description: The date and time at which the proof was created, in UTC format.
             This field is used to ensure that the proof was generated before or at
-            the same time as the credential schema itself.
-          format: date-time
+            the same time as the credential definition itself.
           example: 2022-03-10T12:00Z
-        verificationMethod:
           type: string
+          format: date-time
+        verificationMethod:
           description: The verification method used to generate the proof. This is
             usually a DID and key ID combination that can be used to look up the public
             key needed to verify the proof.
           example: did:prism:4a5b5cf0a513e83b598bbea25cd6196746747f361a73ef77068268bc9bd732ff#key-1
-        proofPurpose:
           type: string
+        proofPurpose:
           description: 'The purpose of the proof (for example: `assertionMethod`).
             This indicates that the proof is being used to assert that the issuer
-            really issued this credential schema instance.'
+            really issued this credential definition instance.'
           example: assertionMethod
-        proofValue:
           type: string
+        proofValue:
           description: The cryptographic signature value that was generated using
             the private key associated with the verification method, and which can
             be used to verify the proof.
           example: FiPfjknHikKmZ...
-        jws:
           type: string
+        jws:
           description: The JSON Web Signature (JWS) that contains the proof information.
           example: eyJhbGciOiJFZERTQSIsImI2NCI6ZmFsc2UsImNyaXQiOlsiYjY0Il0sImt0eSI6Ik...
-        domain:
           type: string
+        domain:
           description: It specifies the domain context within which the credential
-            schema and proof are being used
+            definition and proof are being used
           example: prims.atala.com
+          type: string
+    Proof1:
+      title: Proof
       description: A digital signature over the Credential Schema for the sake of
         asserting authorship. A piece of Metadata.
       example:
@@ -6674,7 +7696,56 @@ components:
         proofValue: FiPfjknHikKmZ...
         jws: eyJhbGciOiJFZERTQSIsImI2NCI6ZmFsc2UsImNyaXQiOlsiYjY0Il0sImt0eSI6Ik...
         domain: prims.atala.com
+      type: object
+      required:
+      - type
+      - created
+      - verificationMethod
+      - proofPurpose
+      - proofValue
+      - jws
+      properties:
+        type:
+          description: The type of cryptographic signature algorithm used to generate
+            the proof.
+          example: Ed25519Signature2018
+          type: string
+        created:
+          description: The date and time at which the proof was created, in UTC format.
+            This field is used to ensure that the proof was generated before or at
+            the same time as the credential schema itself.
+          example: 2022-03-10T12:00Z
+          type: string
+          format: date-time
+        verificationMethod:
+          description: The verification method used to generate the proof. This is
+            usually a DID and key ID combination that can be used to look up the public
+            key needed to verify the proof.
+          example: did:prism:4a5b5cf0a513e83b598bbea25cd6196746747f361a73ef77068268bc9bd732ff#key-1
+          type: string
+        proofPurpose:
+          description: 'The purpose of the proof (for example: `assertionMethod`).
+            This indicates that the proof is being used to assert that the issuer
+            really issued this credential schema instance.'
+          example: assertionMethod
+          type: string
+        proofValue:
+          description: The cryptographic signature value that was generated using
+            the private key associated with the verification method, and which can
+            be used to verify the proof.
+          example: FiPfjknHikKmZ...
+          type: string
+        jws:
+          description: The JSON Web Signature (JWS) that contains the proof information.
+          example: eyJhbGciOiJFZERTQSIsImI2NCI6ZmFsc2UsImNyaXQiOlsiYjY0Il0sImt0eSI6Ik...
+          type: string
+        domain:
+          description: It specifies the domain context within which the credential
+            schema and proof are being used
+          example: prims.atala.com
+          type: string
     Proof2:
+      title: Proof
       oneOf:
       - $ref: '#/components/schemas/CwtProof'
       - $ref: '#/components/schemas/JwtProof'
@@ -6686,31 +7757,35 @@ components:
           jwt: '#/components/schemas/JwtProof'
           ldp_vp: '#/components/schemas/LdpProof'
     ProofRequestAux:
+      title: ProofRequestAux
+      type: object
       required:
       - schemaId
-      type: object
       properties:
         schemaId:
-          type: string
           description: The unique identifier of a schema the VC should comply with.
           example: https://schema.org/Person
+          type: string
         trustIssuers:
-          type: array
-          items:
-            type: string
           description: One or more issuers that are trusted by the verifier emitting
             the proof presentation request.
           example:
           - did:web:atalaprism.io/users/testUser
           - did.prism:123
           - did:prism:...
+          type: array
+          items:
+            type: string
     ProofType:
+      title: ProofType
       type: string
       enum:
       - cwt
       - jwt
       - ldp_vp
+      const: jwt
     ProofTypeConfiguration:
+      title: ProofTypeConfiguration
       type: object
       properties:
         proof_signing_alg_values_supported:
@@ -6718,9 +7793,10 @@ components:
           items:
             type: string
     PublicKeyJwk:
+      title: PublicKeyJwk
+      type: object
       required:
       - kty
-      type: object
       properties:
         crv:
           type: string
@@ -6731,9 +7807,10 @@ components:
         kty:
           type: string
     Purpose:
-      type: string
+      title: Purpose
       description: Purpose of the verification material in the DID Document
       example: authentication
+      type: string
       enum:
       - assertionMethod
       - authentication
@@ -6741,60 +7818,62 @@ components:
       - capabilityInvocation
       - keyAgreement
     RemoveEntryById:
+      title: RemoveEntryById
+      type: object
       required:
       - id
-      type: object
       properties:
         id:
           type: string
     RequestPresentationAction:
+      title: RequestPresentationAction
+      type: object
       required:
       - action
-      type: object
       properties:
         action:
-          type: string
           description: The action to perform on the proof presentation record.
           example: request-accept
+          type: string
           enum:
           - request-accept
           - request-reject
           - presentation-accept
           - presentation-reject
         proofId:
-          type: array
-          items:
-            type: string
           description: The unique identifier of the issue credential record - and
             hence VC - to use as the prover accepts the presentation request. Only
             applicable on the prover side when the action is `request-accept`.
+          type: array
+          items:
+            type: string
         anoncredPresentationRequest:
           $ref: '#/components/schemas/AnoncredCredentialProofsV1'
         claims:
           $ref: '#/components/schemas/Obj'
         credentialFormat:
-          type: string
           description: The credential format (default to 'JWT')
           example: JWT
+          type: string
     RequestPresentationInput:
+      title: RequestPresentationInput
       type: object
       properties:
         goalCode:
-          type: string
           description: |2
 
              A self-attested code the receiver may want to display to the user or use in automatically deciding what to do with the out-of-band message.
              goalcode is optional and can be provided when the presentation request is from invitation for connectionless verification.
           example: present-vp
-        goal:
           type: string
+        goal:
           description: |2
 
              A self-attested string that the receiver may want to display to the user about the context-specific goal of the out-of-band message.
              goal is optional and can be provided when the presentation request is from invitation for connectionless verification.
           example: Request proof of vaccine
-        connectionId:
           type: string
+        connectionId:
           description: |2
 
             The unique identifier of a DIDComm connection that already exists between the this verifier agent and the prover cloud or edeg agent.
@@ -6802,41 +7881,53 @@ components:
             This connection will be used to execute the present proof protocol.
             Note: connectionId is only required when the presentation request is from existing connection.
             connectionId is not required when the presentation request is from invitation for connectionless issuance.
-          format: uuid
           example: d9569cec-c81e-4779-aa86-0d5994d82676
+          type: string
+          format: uuid
         options:
           $ref: '#/components/schemas/Options'
         proofs:
-          type: array
-          items:
-            $ref: '#/components/schemas/ProofRequestAux'
           description: The type of proofs requested in the context of this proof presentation
             request (e.g., VC schema, trusted issuers, etc.)
           example: []
+          type: array
+          items:
+            $ref: '#/components/schemas/ProofRequestAux'
         anoncredPresentationRequest:
           $ref: '#/components/schemas/AnoncredPresentationRequestV1'
+        presentationFormat:
+          $ref: '#/components/schemas/PresentCredentialRequestFormat'
         claims:
           $ref: '#/components/schemas/Obj'
         credentialFormat:
-          type: string
           description: The credential format (default to 'JWT')
           example: JWT
-    Revocation:
-      type: object
+          type: string
+    ResourceResolutionMethod:
+      title: ResourceResolutionMethod
+      description: The method used to resolve the schema. It can be either HTTP or
+        DID.
+      example: http
+      type: string
+      enum:
+      - did
+      - http
     Service:
+      title: Service
+      description: A service that should appear in the DID document. https://www.w3.org/TR/did-core/#services
+      type: object
       required:
       - id
       - type
       - serviceEndpoint
-      type: object
       properties:
         id:
-          type: string
           description: |-
             The id of the service.
             Requires a URI fragment when use in create / update DID.
             Returns the full ID (with DID prefix) when resolving DID
           example: service-1
+          type: string
         type:
           description: Service type. Can contain multiple possible values as described
             in the [Create DID operation](https://github.com/input-output-hk/prism-did-method-spec/blob/main/w3c-spec/PRISM-method.md#create-did)
@@ -6848,33 +7939,37 @@ components:
               type: string
           - type: string
         serviceEndpoint:
-          $ref: '#/components/schemas/Json'
-      description: A service that should appear in the DID document. https://www.w3.org/TR/did-core/#services
+          description: The service endpoint. Can contain multiple possible values
+            as described in the [Create DID operation](https://github.com/input-output-hk/prism-did-method-spec/blob/main/w3c-spec/PRISM-method.md#create-did)
+          example: https://example.com
     StatusListCredential:
+      title: StatusListCredential
+      type: object
       required:
       - issuer
       - id
       - issuanceDate
       - credentialSubject
       - proof
-      type: object
       properties:
         '@context':
-          type: array
-          items:
-            type: string
           description: List of JSON-LD contexts
           example:
           - https://www.w3.org/2018/credentials/v1
           - https://w3id.org/vc/status-list/2021/v1
-        type:
           type: array
+          uniqueItems: true
           items:
             type: string
+        type:
           description: List of credential types
           example:
           - VerifiableCredential
           - StatusList2021Credential
+          type: array
+          uniqueItems: true
+          items:
+            type: string
         issuer:
           description: DID of the issuer of status list credential
           example: did:prism:462c4811bf61d7de25b3baf86c5d2f0609b4debe53792d297bf612269bf8593a
@@ -6882,14 +7977,14 @@ components:
           - $ref: '#/components/schemas/CredentialIssuer'
           - type: string
         id:
-          type: string
           description: Unique identifier of status list credential
           example: http://issuer-agent.com/credential-status/060a2bec-6d6f-4c1f-9414-d3c9dbd3ccc9
-        issuanceDate:
           type: string
+        issuanceDate:
           description: Issuance timestamp of status list credential
+          example: '2024-11-05T11:32:21.556400758Z'
+          type: string
           format: date-time
-          example: '2024-09-11T13:22:27.866328096Z'
         credentialSubject:
           $ref: '#/components/schemas/CredentialSubject'
         proof:
@@ -6904,32 +7999,29 @@ components:
             proofValue: zAN1rKq8npnByRqPRxhjHEkivhN8AhA8V6MqDJga1zcCUEvPDUoqJB5Rj6ZJHTCnBZ98VXTEVd1rprX2wvP1MAaTEi7Pm241qm
             cryptoSuite: eddsa-jcs-2022
     StatusPurpose:
+      title: StatusPurpose
       description: type of status list credential, either revocation or suspension
       example: Revocation
-      oneOf:
-      - $ref: '#/components/schemas/Revocation'
-      - $ref: '#/components/schemas/Suspension'
-    Str:
-      required:
-      - value
-      type: object
-      properties:
-        value:
-          type: string
+      type: string
+      enum:
+      - Revocation
+      - Suspension
     SupportProofType:
+      title: SupportProofType
+      type: object
       required:
       - jwt
-      type: object
       properties:
         jwt:
           $ref: '#/components/schemas/ProofTypeConfiguration'
     SupportedCredentialConfiguration:
+      title: SupportedCredentialConfiguration
+      type: object
       required:
       - format
       - scope
       - credential_definition
       - proof_types_supported
-      type: object
       properties:
         format:
           $ref: '#/components/schemas/CredentialFormat'
@@ -6947,30 +8039,31 @@ components:
             type: string
         proof_types_supported:
           $ref: '#/components/schemas/SupportProofType'
-    Suspension:
-      type: object
     UpdateEntityNameRequest:
+      title: UpdateEntityNameRequest
+      type: object
       required:
       - name
-      type: object
       properties:
         name:
-          type: string
           description: New name of the entity
           example: John Doe
-          minLength: 1
+          type: string
           maxLength: 128
+          minLength: 1
     UpdateEntityWalletIdRequest:
+      title: UpdateEntityWalletIdRequest
+      type: object
       required:
       - walletId
-      type: object
       properties:
         walletId:
-          type: string
           description: The walletId owned by the entity
-          format: uuid
           example: 00000000-0000-0000-0000-000000000000
+          type: string
+          format: uuid
     UpdateManagedDIDRequest:
+      title: UpdateManagedDIDRequest
       type: object
       properties:
         actions:
@@ -6978,9 +8071,14 @@ components:
           items:
             $ref: '#/components/schemas/UpdateManagedDIDRequestAction'
     UpdateManagedDIDRequestAction:
+      title: UpdateManagedDIDRequestAction
+      description: |-
+        A list of actions to perform on DID document.
+        The field `addKey`, `removeKey`, `addService`, `removeService`, `updateService`, `patchContext` must corresponds to
+        the `actionType` specified. For example, `addKey` must be present when `actionType` is `ADD_KEY`.
+      type: object
       required:
       - actionType
-      type: object
       properties:
         actionType:
           $ref: '#/components/schemas/ActionType'
@@ -6996,19 +8094,18 @@ components:
           $ref: '#/components/schemas/UpdateManagedDIDServiceAction'
         patchContext:
           $ref: '#/components/schemas/PatchContextAction'
-      description: |-
-        A list of actions to perform on DID document.
-        The field `addKey`, `removeKey`, `addService`, `removeService`, `updateService`, `patchContext` must corresponds to
-        the `actionType` specified. For example, `addKey` must be present when `actionType` is `ADD_KEY`.
     UpdateManagedDIDServiceAction:
+      title: UpdateManagedDIDServiceAction
+      description: A patch to existing Service. 'type' and 'serviceEndpoint' cannot
+        both be empty.
+      type: object
       required:
       - id
-      type: object
       properties:
         id:
-          type: string
           description: The id of the service to update
           example: service-1
+          type: string
         type:
           description: The type of the service
           example: LinkedDomains
@@ -7017,13 +8114,10 @@ components:
             items:
               type: string
           - type: string
-        serviceEndpoint:
-          $ref: '#/components/schemas/Json'
-      description: A patch to existing Service. 'type' and 'serviceEndpoint' cannot
-        both be empty.
+        serviceEndpoint: {}
     VcVerification:
+      title: VcVerification
       type: string
-      description: The type of verification to perform.
       enum:
       - AlgorithmVerification
       - AudienceCheck
@@ -7038,6 +8132,7 @@ components:
       - SignatureVerification
       - SubjectVerification
     VcVerificationParameter:
+      title: VcVerificationParameter
       description: Optional parameter for the verification.
       oneOf:
       - $ref: '#/components/schemas/DateTimeParameter'
@@ -7048,18 +8143,16 @@ components:
           DateTimeParameter: '#/components/schemas/DateTimeParameter'
           DidParameter: '#/components/schemas/DidParameter'
     VcVerificationRequest:
+      title: VcVerificationRequest
+      type: object
       required:
       - credential
-      type: object
       properties:
         credential:
-          type: string
           description: Encoded Verifiable Credential to verify
           example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwiaWF0IjoxNTE2MjM5MDIyfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c
+          type: string
         verifications:
-          type: array
-          items:
-            $ref: '#/components/schemas/ParameterizableVcVerification'
           description: The list of verifications to perform on the credential. If
             the list is empty, all available verifications will be performed.
           example:
@@ -7083,19 +8176,20 @@ components:
           - verification: AlgorithmVerification
           - verification: SchemaCheck
           - verification: SemanticCheckOfClaims
-    VcVerificationResponse:
-      required:
-      - credential
-      type: object
-      properties:
-        credential:
-          type: string
-          description: Encoded Verifiable Credential that was verified.
-          example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwiaWF0IjoxNTE2MjM5MDIyfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c
-        result:
           type: array
           items:
-            $ref: '#/components/schemas/VcVerificationResult'
+            $ref: '#/components/schemas/ParameterizableVcVerification'
+    VcVerificationResponse:
+      title: VcVerificationResponse
+      type: object
+      required:
+      - credential
+      properties:
+        credential:
+          description: Encoded Verifiable Credential that was verified.
+          example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwiaWF0IjoxNTE2MjM5MDIyfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c
+          type: string
+        result:
           description: The list of verification results for each verification performed
             on the credential.
           example:
@@ -7123,84 +8217,89 @@ components:
             success: true
           - verification: SemanticCheckOfClaims
             success: true
+          type: array
+          items:
+            $ref: '#/components/schemas/VcVerificationResult'
     VcVerificationResult:
+      title: VcVerificationResult
+      type: object
       required:
       - verification
       - success
-      type: object
       properties:
         verification:
           $ref: '#/components/schemas/VcVerification'
+          description: The type of verification that was performed.
         success:
-          type: boolean
           description: Indicates whether the verification was successful.
+          type: boolean
     VerificationMethod:
+      title: VerificationMethod
+      description: A cryptographic public key expressed in the DID document. https://www.w3.org/TR/did-core/#verification-methods
+      type: object
       required:
       - id
       - type
       - controller
       - publicKeyJwk
-      type: object
       properties:
         id:
-          type: string
           description: The identifier for the verification method.
           example: did:prism:4a5b5cf0a513e83b598bbea25cd6196746747f361a73ef77068268bc9bd732ff#key-1
-        type:
           type: string
+        type:
           description: The type of the verification method.
           example: JsonWebKey2020
-        controller:
           type: string
+        controller:
           description: The DID that controls the verification method.
           example: did:prism:4a5b5cf0a513e83b598bbea25cd6196746747f361a73ef77068268bc9bd732ff
+          type: string
         publicKeyJwk:
           $ref: '#/components/schemas/PublicKeyJwk'
-      description: A cryptographic public key expressed in the DID document. https://www.w3.org/TR/did-core/#verification-methods
     VerificationPolicyConstraint:
+      title: VerificationPolicyConstraint
+      type: object
       required:
       - schemaId
-      type: object
       properties:
         schemaId:
-          type: string
           description: The schema ID of the credential that is being verified.
           example: https://example.com/driving-license-1.0
+          type: string
           minLength: 1
         trustedIssuers:
-          type: array
-          items:
-            type: string
           description: A list of DIDs of the trusted issuers.
           example:
           - did:example:123456789abcdefghi
+          type: array
+          items:
+            type: string
     VerificationPolicyInput:
+      title: VerificationPolicyInput
+      type: object
       required:
       - name
       - description
-      type: object
       properties:
         id:
-          type: string
           description: A unique identifier to address the verification policy instance.
             UUID is generated by the backend.
-          format: uuid
           example: 0527aea1-d131-3948-a34d-03af39aba8b5
-        name:
           type: string
+          format: uuid
+        name:
           description: A human-readable name for the verification policy. The `name`
             cannot be empty.
           example: Trusted Issuers Verification Policy
+          type: string
           minLength: 1
         description:
-          type: string
           description: A human-readable description of the verification policy.
           example: Verification policy that checks if the credential was issued by
             a trusted issuer.
+          type: string
         constraints:
-          type: array
-          items:
-            $ref: '#/components/schemas/VerificationPolicyConstraint'
           description: The object that describes the constraints of the verification
             policy. Each constraint is a tuple of the `schemaId` and a set of DIDs
             of the trusted issuers.
@@ -7208,7 +8307,12 @@ components:
           - schemaId: https://example.com/driving-license-1.0
             trustedIssuers:
             - did:example:123456789abcdefghi
+          type: array
+          items:
+            $ref: '#/components/schemas/VerificationPolicyConstraint'
     VerificationPolicyResponse:
+      title: VerificationPolicyResponse
+      type: object
       required:
       - self
       - kind
@@ -7218,57 +8322,53 @@ components:
       - description
       - createdAt
       - updatedAt
-      type: object
       properties:
         self:
-          type: string
           description: The URL that uniquely identifies the resource being returned
             in the response.
           example: /cloud-agent/verification/policies/0527aea1-d131-3948-a34d-03af39aba8b4
-        kind:
           type: string
+        kind:
           description: A string that identifies the type of resource being returned
             in the response.
           example: VerificationPolicy
-        id:
           type: string
+        id:
           description: A unique identifier to address the verification policy instance.
             UUID is generated by the backend.
-          format: uuid
           example: 0527aea1-d131-3948-a34d-03af39aba8b5
+          type: string
+          format: uuid
         nonce:
-          type: integer
           description: A number that is changed every time the verification policy
             is updated.
-          format: int32
           example: 1234
+          type: integer
+          format: int32
         name:
-          type: string
           description: A human-readable name for the verification policy. The `name`
             cannot be empty.
           example: Trusted Issuers Verification Policy
+          type: string
           minLength: 1
         description:
-          type: string
           description: A human-readable description of the verification policy.
           example: Verification policy that checks if the credential was issued by
             a trusted issuer.
-        createdAt:
           type: string
+        createdAt:
           description: '[RFC3339](https://www.rfc-editor.org/rfc/rfc3339) date on
             which the verification policy was created.'
-          format: date-time
           example: 2022-03-10T12:00Z
-        updatedAt:
           type: string
+          format: date-time
+        updatedAt:
           description: '[RFC3339](https://www.rfc-editor.org/rfc/rfc3339) date on
             which the verification policy was updated.'
-          format: date-time
           example: 2022-03-10T12:00Z
+          type: string
+          format: date-time
         constraints:
-          type: array
-          items:
-            $ref: '#/components/schemas/VerificationPolicyConstraint'
           description: The object that describes the constraints of the verification
             policy. Each constraint is a tuple of the `schemaId` and a set of DIDs
             of the trusted issuers.
@@ -7276,44 +8376,45 @@ components:
           - schemaId: https://example.com/driving-license-1.0
             trustedIssuers:
             - did:example:123456789abcdefghi
+          type: array
+          items:
+            $ref: '#/components/schemas/VerificationPolicyConstraint'
     VerificationPolicyResponsePage:
+      title: VerificationPolicyResponsePage
+      type: object
       required:
       - self
       - kind
       - pageOf
-      type: object
       properties:
         self:
-          type: string
           description: The URL that uniquely identifies the resource being returned
             in the response.
           example: /cloud-agent/verification/policies?name=Trusted&offset=0&limit=10
-        kind:
           type: string
+        kind:
           description: A string that identifies the type of resource being returned
             in the response.
           example: VerificationPolicyPage
-        pageOf:
           type: string
+        pageOf:
           description: A string field indicating the type of resource that the contents
             field contains
           example: /cloud-agent/verification/policies
-        next:
           type: string
+        next:
           description: An optional string field containing the URL of the next page
             of results. If the API response does not contain any more pages, this
             field should be set to None.
           example: /cloud-agent/verification/policies?skip=20&limit=10
-        previous:
           type: string
+        previous:
           description: An optional string field containing the URL of the previous
             page of results. If the API response is the first page of results, this
             field should be set to None.
           example: /cloud-agent/verification/policies?skip=0&limit=10
+          type: string
         contents:
-          type: array
-          items:
-            $ref: '#/components/schemas/VerificationPolicyResponse'
           description: A sequence of VerificationPolicyResponse objects representing
             the list of verification policies that the paginated response contains
           example:
@@ -7330,39 +8431,44 @@ components:
             - schemaId: https://example.com/driving-license-1.0
               trustedIssuers:
               - did:example:123456789abcdefghi
+          type: array
+          items:
+            $ref: '#/components/schemas/VerificationPolicyResponse'
     WalletDetail:
+      title: WalletDetail
+      type: object
       required:
       - id
       - name
       - createdAt
       - updatedAt
-      type: object
       properties:
         id:
-          type: string
           description: A wallet ID
-          format: uuid
           example: 00000000-0000-0000-0000-000000000000
-        name:
           type: string
+          format: uuid
+        name:
           description: The name of the wallet
           example: my-wallet-1
+          type: string
         createdAt:
-          type: string
           description: The `createdAt` timestamp of the wallet.
-          format: date-time
           example: '2023-01-01T00:00:00Z'
-        updatedAt:
           type: string
-          description: The `updateddAt` timestamp of the wallet.
           format: date-time
+        updatedAt:
+          description: The `updateddAt` timestamp of the wallet.
           example: '2023-01-01T00:00:00Z'
+          type: string
+          format: date-time
     WalletDetailPage:
+      title: WalletDetailPage
+      type: object
       required:
       - self
       - kind
       - pageOf
-      type: object
       properties:
         self:
           type: string
@@ -7379,35 +8485,37 @@ components:
           items:
             $ref: '#/components/schemas/WalletDetail'
     WebhookNotification:
+      title: WebhookNotification
+      type: object
       required:
       - id
       - url
       - customHeaders
       - createdAt
-      type: object
       properties:
         id:
-          type: string
           description: ID of webhook notification resource
-          format: uuid
           example: 00000000-0000-0000-0000-000000000000
-        url:
           type: string
+          format: uuid
+        url:
           description: A URL of webhook for event notification
           example: http://example.com
+          type: string
         customHeaders:
           $ref: '#/components/schemas/Map_String'
         createdAt:
-          type: string
           description: A time which the webhook notification resource was created.
-          format: date-time
           example: '1970-01-01T00:00:00Z'
+          type: string
+          format: date-time
     WebhookNotificationPage:
+      title: WebhookNotificationPage
+      type: object
       required:
       - self
       - kind
       - pageOf
-      type: object
       properties:
         self:
           type: string

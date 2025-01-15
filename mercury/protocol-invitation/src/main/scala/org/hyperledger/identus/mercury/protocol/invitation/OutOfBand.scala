@@ -1,8 +1,7 @@
 package org.hyperledger.identus.mercury.protocol.invitation
 
-import io.circe.*
-import io.circe.parser.*
 import org.hyperledger.identus.mercury.protocol.invitation.v2.*
+import zio.json.DecoderOps
 
 import java.net.{URI, URL}
 import java.util as ju
@@ -18,10 +17,10 @@ object OutOfBand {
     String(decoder.decode(e))
   }
 
-  def parseInvitation(url: String): Either[io.circe.Error | RuntimeException, Invitation] =
+  def parseInvitation(url: String): Either[String | RuntimeException, Invitation] =
     parseLink(url) match {
-      case Some(e) => parse(e).flatMap(_.as[Invitation])
-      case None    => Left(new RuntimeException("Expeting a url!"))
+      case Some(e) => e.fromJson[Invitation]
+      case None    => Left(new RuntimeException("Expecting a url!"))
     }
 
 }

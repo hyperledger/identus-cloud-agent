@@ -1,11 +1,10 @@
 package org.hyperledger.identus.mercury.protocol.presentproof
 
-import io.circe.parser.*
-import io.circe.syntax.*
-import io.circe.Json
 import munit.*
 import org.hyperledger.identus.mercury.model.{AttachmentDescriptor, DidId, LinkData}
 import org.hyperledger.identus.mercury.model.AttachmentDescriptor.attachmentDescriptorEncoderV2
+import zio.json.{DecoderOps, EncoderOps}
+import zio.json.ast.Json
 
 class ProposePresentationSpec extends ZSuite {
 
@@ -14,9 +13,9 @@ class ProposePresentationSpec extends ZSuite {
     val body = ProposePresentation.Body(goal_code = Some("Propose Presentation"))
     val attachmentDescriptor =
       AttachmentDescriptor("1", Some("application/json"), LinkData(links = Seq("http://test"), hash = "1234"))
-    val attachmentDescriptorJson = attachmentDescriptor.asJson.deepDropNullValues.noSpaces
+    val attachmentDescriptorJson = attachmentDescriptor.toJson
 
-    val expectedProposalJson = parse(s"""{
+    val expectedProposalJson = s"""{
          |    "id": "061bf917-2cbe-460b-8d12-b1a9609505c2",
          |    "type": "https://didcomm.atalaprism.io/present-proof/3.0/propose-presentation",
          |    "body": {
@@ -26,7 +25,7 @@ class ProposePresentationSpec extends ZSuite {
          |    "attachments":[$attachmentDescriptorJson],
          |    "to" : "did:prism:test123",
          |    "from" : "did:prism:test123"
-         |}""".stripMargin).getOrElse(Json.Null)
+         |}""".stripMargin.fromJson[Json]
 
     val proposePresentation = ProposePresentation(
       id = "061bf917-2cbe-460b-8d12-b1a9609505c2",
@@ -36,7 +35,7 @@ class ProposePresentationSpec extends ZSuite {
       from = DidId("did:prism:test123"),
     )
 
-    val result = proposePresentation.asJson.deepDropNullValues
+    val result = proposePresentation.toJsonAST
     assertEquals(result, expectedProposalJson)
   }
 }

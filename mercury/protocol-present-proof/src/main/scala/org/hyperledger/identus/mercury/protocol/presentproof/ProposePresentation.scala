@@ -1,9 +1,7 @@
 package org.hyperledger.identus.mercury.protocol.presentproof
 
-import io.circe.*
-import io.circe.generic.semiauto.*
-import io.circe.syntax.*
 import org.hyperledger.identus.mercury.model.*
+import zio.json.{DeriveJsonDecoder, DeriveJsonEncoder, EncoderOps, JsonDecoder, JsonEncoder}
 
 /** ALL parameterS are DIDCOMMV2 format and naming conventions and follows the protocol
   * @see
@@ -15,7 +13,7 @@ import org.hyperledger.identus.mercury.model.*
   * @param attachments
   */
 final case class ProposePresentation(
-    id: String = java.util.UUID.randomUUID.toString(),
+    id: String = java.util.UUID.randomUUID.toString,
     `type`: PIURI = ProposePresentation.`type`,
     body: ProposePresentation.Body,
     attachments: Seq[AttachmentDescriptor] = Seq.empty[AttachmentDescriptor],
@@ -31,7 +29,7 @@ final case class ProposePresentation(
     from = Some(this.from),
     to = Seq(this.to),
     thid = this.thid,
-    body = this.body.asJson.asObject.get, // TODO get
+    body = this.body.toJsonAST.toOption.flatMap(_.asObject).get, // TODO get
     attachments = Some(this.attachments)
   )
 }
@@ -41,8 +39,8 @@ object ProposePresentation {
   def `type`: PIURI = "https://didcomm.atalaprism.io/present-proof/3.0/propose-presentation"
 
   import AttachmentDescriptor.attachmentDescriptorEncoderV2
-  given Encoder[ProposePresentation] = deriveEncoder[ProposePresentation]
-  given Decoder[ProposePresentation] = deriveDecoder[ProposePresentation]
+  given JsonEncoder[ProposePresentation] = DeriveJsonEncoder.gen
+  given JsonDecoder[ProposePresentation] = DeriveJsonDecoder.gen
 
   /** @param goal_code
     * @param comment
@@ -56,12 +54,12 @@ object ProposePresentation {
   )
 
   object Body {
-    given Encoder[Body] = deriveEncoder[Body]
-    given Decoder[Body] = deriveDecoder[Body]
+    given JsonEncoder[Body] = DeriveJsonEncoder.gen
+    given JsonDecoder[Body] = DeriveJsonDecoder.gen
   }
 
   def readFromMessage(message: Message): ProposePresentation = {
-    val body = message.body.asJson.as[ProposePresentation.Body].toOption.get // TODO get
+    val body = message.body.as[ProposePresentation.Body].toOption.get // TODO get
 
     ProposePresentation(
       id = message.id,

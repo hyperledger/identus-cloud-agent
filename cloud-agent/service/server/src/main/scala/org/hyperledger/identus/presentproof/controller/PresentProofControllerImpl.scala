@@ -1,6 +1,7 @@
 package org.hyperledger.identus.presentproof.controller
 
 import org.hyperledger.identus.agent.server.config.AppConfig
+import org.hyperledger.identus.agent.server.config.FeatureFlagConfig
 import org.hyperledger.identus.agent.server.ControllerHelper
 import org.hyperledger.identus.agent.walletapi.service.ManagedDIDService
 import org.hyperledger.identus.api.http.{ErrorResponse, RequestContext}
@@ -11,7 +12,9 @@ import org.hyperledger.identus.mercury.model.DidId
 import org.hyperledger.identus.mercury.protocol.presentproof.{PresentCredentialRequestFormat, ProofType}
 import org.hyperledger.identus.pollux.core.model.{CredentialFormat, DidCommID, PresentationRecord}
 import org.hyperledger.identus.pollux.core.model.error.PresentationError
+import org.hyperledger.identus.pollux.core.model.error.PresentationError.UnsupportedCredentialFormatBecauseDisabled
 import org.hyperledger.identus.pollux.core.model.presentation.Options
+import org.hyperledger.identus.pollux.core.model.CredentialFormat.{AnonCreds, JWT, SDJWT}
 import org.hyperledger.identus.pollux.core.service.serdes.AnoncredPresentationRequestV1
 import org.hyperledger.identus.pollux.core.service.PresentationService
 import org.hyperledger.identus.presentproof.controller.http.*
@@ -31,11 +34,29 @@ class PresentProofControllerImpl(
     appConfig: AppConfig
 ) extends PresentProofController
     with ControllerHelper {
+
+  private def checkFeatureFlag(credentialFormat: CredentialFormat) = for {
+    _ <- credentialFormat match // Fail if feature is disabled
+      case JWT =>
+        appConfig.featureFlag.ifJWTIsDisable(
+          ZIO.fail(UnsupportedCredentialFormatBecauseDisabled(FeatureFlagConfig.messageIfDisableForJWT))
+        )
+      case SDJWT =>
+        appConfig.featureFlag.ifSDJWTIsDisable(
+          ZIO.fail(UnsupportedCredentialFormatBecauseDisabled(FeatureFlagConfig.messageIfDisableForSDJWT))
+        )
+      case AnonCreds =>
+        appConfig.featureFlag.ifAnoncredIsDisable(
+          ZIO.fail(UnsupportedCredentialFormatBecauseDisabled(FeatureFlagConfig.messageIfDisableForAnoncred))
+        )
+  } yield ()
+
   override def requestPresentation(request: RequestPresentationInput)(implicit
       rc: RequestContext
   ): ZIO[WalletAccessContext, ErrorResponse, PresentationStatus] = {
     val result: ZIO[WalletAccessContext, ConnectionServiceError | PresentationError, PresentationStatus] =
       for {
+        _ <- checkFeatureFlag(request.credentialFormat.map(CredentialFormat.valueOf).getOrElse(CredentialFormat.JWT))
         connectionId <- ZIO
           .fromOption(request.connectionId)
           .mapError(_ => PresentationError.MissingConnectionIdForPresentationRequest)
@@ -54,6 +75,7 @@ class PresentProofControllerImpl(
       rc: RequestContext
   ): ZIO[WalletAccessContext, ErrorResponse, PresentationStatus] = {
     val result: ZIO[WalletAccessContext, ConnectionServiceError | PresentationError, PresentationStatus] = for {
+      _ <- checkFeatureFlag(request.credentialFormat.map(CredentialFormat.valueOf).getOrElse(CredentialFormat.JWT))
       peerDid <- managedDIDService.createAndStorePeerDID(appConfig.agent.didCommEndpoint.publicEndpointUrl)
       record <- createRequestPresentation(
         verifierDID = peerDid.did,

@@ -160,6 +160,33 @@ object IssueBackgroundJobs extends BackgroundJobsHelper {
     val exchange = for {
       _ <- ZIO.logDebug(s"Running action with records => $record")
       _ <- record match {
+        case IssueCredentialRecord(
+              id,
+              _,
+              _,
+              _,
+              _,
+              _,
+              _,
+              _,
+              _,
+              Role.Issuer,
+              _,
+              _,
+              _,
+              _,
+              InvitationGenerated,
+              Some(offer),
+              _,
+              _,
+              _,
+              _,
+              _,
+              _,
+              _,
+              _,
+            ) =>
+          ZIO.debug(s" Connectionless InvitationGenerated record received no processing required") *> ZIO.unit
         // Offer should be sent from Issuer to Holder
         case IssueCredentialRecord(
               id,
@@ -246,17 +273,20 @@ object IssueBackgroundJobs extends BackgroundJobsHelper {
               _
             ) =>
           val holderPendingToGeneratedFlow = for {
-            walletAccessContext <- ZIO
-              .fromOption(offer.to)
-              .mapError(_ => CredentialServiceError.CredentialOfferMissingField(id.value, "recipient"))
-              .flatMap(buildWalletAccessContextLayer)
-            result <- for {
-              credentialService <- ZIO.service[CredentialService]
-              _ <- credentialService
-                .generateJWTCredentialRequest(id)
-                .provideSomeLayer(ZLayer.succeed(walletAccessContext))
-            } yield ()
-          } yield result
+            flags <- ZIO.service[AppConfig].map(_.featureFlag)
+            ret <- flags.ifJWTIsEnabled(
+              for {
+                walletAccessContext <- ZIO
+                  .fromOption(offer.to)
+                  .mapError(_ => CredentialServiceError.CredentialOfferMissingField(id.value, "recipient"))
+                  .flatMap(buildWalletAccessContextLayer)
+                credentialService <- ZIO.service[CredentialService]
+                _ <- credentialService
+                  .generateJWTCredentialRequest(id)
+                  .provideSomeLayer(ZLayer.succeed(walletAccessContext))
+              } yield ()
+            )
+          } yield ret
 
           holderPendingToGeneratedFlow @@ HolderPendingToGeneratedSuccess.trackSuccess
             @@ HolderPendingToGeneratedFailed.trackError
@@ -292,18 +322,20 @@ object IssueBackgroundJobs extends BackgroundJobsHelper {
               _
             ) =>
           val holderPendingToGeneratedFlow = for {
-            walletAccessContext <- ZIO
-              .fromOption(offer.to)
-              .mapError(_ => CredentialServiceError.CredentialOfferMissingField(id.value, "recipient"))
-              .flatMap(buildWalletAccessContextLayer)
-            result <- for {
-              credentialService <- ZIO.service[CredentialService]
-              _ <- credentialService
-                .generateSDJWTCredentialRequest(id)
-                .provideSomeLayer(ZLayer.succeed(walletAccessContext))
-            } yield ()
-          } yield result
-
+            flags <- ZIO.service[AppConfig].map(_.featureFlag)
+            ret <- flags.ifSDJWTIsEnabled(
+              for {
+                walletAccessContext <- ZIO
+                  .fromOption(offer.to)
+                  .mapError(_ => CredentialServiceError.CredentialOfferMissingField(id.value, "recipient"))
+                  .flatMap(buildWalletAccessContextLayer)
+                credentialService <- ZIO.service[CredentialService]
+                _ <- credentialService
+                  .generateSDJWTCredentialRequest(id)
+                  .provideSomeLayer(ZLayer.succeed(walletAccessContext))
+              } yield ()
+            )
+          } yield ret
           holderPendingToGeneratedFlow @@ HolderPendingToGeneratedSuccess.trackSuccess
             @@ HolderPendingToGeneratedFailed.trackError
             @@ HolderPendingToGeneratedAll
@@ -338,19 +370,20 @@ object IssueBackgroundJobs extends BackgroundJobsHelper {
               _
             ) =>
           val holderPendingToGeneratedFlow = for {
-            walletAccessContext <- ZIO
-              .fromOption(offer.to)
-              .mapError(_ => CredentialServiceError.CredentialOfferMissingField(id.value, "recipient"))
-              .flatMap(buildWalletAccessContextLayer)
-
-            result <- for {
-              credentialService <- ZIO.service[CredentialService]
-              _ <- credentialService
-                .generateAnonCredsCredentialRequest(id)
-                .provideSomeLayer(ZLayer.succeed(walletAccessContext))
-            } yield ()
-          } yield result
-
+            flags <- ZIO.service[AppConfig].map(_.featureFlag)
+            ret <- flags.ifAnoncredIsEnabled(
+              for {
+                walletAccessContext <- ZIO
+                  .fromOption(offer.to)
+                  .mapError(_ => CredentialServiceError.CredentialOfferMissingField(id.value, "recipient"))
+                  .flatMap(buildWalletAccessContextLayer)
+                credentialService <- ZIO.service[CredentialService]
+                _ <- credentialService
+                  .generateAnonCredsCredentialRequest(id)
+                  .provideSomeLayer(ZLayer.succeed(walletAccessContext))
+              } yield ()
+            )
+          } yield ret
           holderPendingToGeneratedFlow @@ HolderPendingToGeneratedSuccess.trackSuccess
             @@ HolderPendingToGeneratedFailed.trackError
             @@ HolderPendingToGeneratedAll
@@ -490,15 +523,18 @@ object IssueBackgroundJobs extends BackgroundJobsHelper {
           // Set ProtocolState to CredentialGenerated
           // TODO Move all logic to service
           val issuerPendingToGeneratedFlow = for {
-            walletAccessContext <- buildWalletAccessContextLayer(issue.from)
-            result <- (for {
-              credentialService <- ZIO.service[CredentialService]
-              config <- ZIO.service[AppConfig]
-              _ <- credentialService
-                .generateJWTCredential(id, config.pollux.statusListRegistry.publicEndpointUrl.toExternalForm)
-                .provideSomeLayer(ZLayer.succeed(walletAccessContext))
-            } yield ()).mapError(e => (walletAccessContext, e))
-          } yield result
+            config <- ZIO.service[AppConfig]
+            ret <- config.featureFlag.ifJWTIsEnabled(
+              for {
+                walletAccessContext <- buildWalletAccessContextLayer(issue.from)
+                credentialService <- ZIO.service[CredentialService]
+                _ <- credentialService
+                  .generateJWTCredential(id, config.pollux.statusListRegistry.publicEndpointUrl.toExternalForm)
+                  .provideSomeLayer(ZLayer.succeed(walletAccessContext))
+                  .mapError(e => (walletAccessContext, e))
+              } yield ()
+            )
+          } yield ret
 
           issuerPendingToGeneratedFlow @@ IssuerPendingToGeneratedSuccess.trackSuccess
             @@ IssuerPendingToGeneratedFailed.trackError
@@ -538,15 +574,20 @@ object IssueBackgroundJobs extends BackgroundJobsHelper {
           // Set ProtocolState to CredentialGenerated
           // TODO Move all logic to service
           val issuerPendingToGeneratedFlow = for {
-            walletAccessContext <- buildWalletAccessContextLayer(issue.from)
-            result <- (for {
-              credentialService <- ZIO.service[CredentialService]
-              config <- ZIO.service[AppConfig]
-              _ <- credentialService
-                .generateSDJWTCredential(id, config.pollux.credentialSdJwtExpirationTime)
-                .provideSomeLayer(ZLayer.succeed(walletAccessContext))
-            } yield ()).mapError(e => (walletAccessContext, e))
-          } yield result
+            config <- ZIO.service[AppConfig]
+            ret <- config.featureFlag.ifSDJWTIsEnabled(
+              for {
+                walletAccessContext <- buildWalletAccessContextLayer(issue.from)
+                result <- (for {
+                  credentialService <- ZIO.service[CredentialService]
+                  config <- ZIO.service[AppConfig]
+                  _ <- credentialService
+                    .generateSDJWTCredential(id, config.pollux.credentialSdJwtExpirationTime)
+                    .provideSomeLayer(ZLayer.succeed(walletAccessContext))
+                } yield ()).mapError(e => (walletAccessContext, e))
+              } yield result
+            )
+          } yield ret
 
           issuerPendingToGeneratedFlow @@ IssuerPendingToGeneratedSuccess.trackSuccess
             @@ IssuerPendingToGeneratedFailed.trackError
@@ -582,14 +623,20 @@ object IssueBackgroundJobs extends BackgroundJobsHelper {
               _,
             ) =>
           val issuerPendingToGeneratedFlow = for {
-            walletAccessContext <- buildWalletAccessContextLayer(issue.from)
-            result <- (for {
-              credentialService <- ZIO.service[CredentialService]
-              _ <- credentialService
-                .generateAnonCredsCredential(id)
-                .provideSomeLayer(ZLayer.succeed(walletAccessContext))
-            } yield ()).mapError(e => (walletAccessContext, e))
-          } yield result
+            config <- ZIO.service[AppConfig]
+            ret <-
+              config.featureFlag.ifAnoncredIsEnabled(
+                for {
+                  walletAccessContext <- buildWalletAccessContextLayer(issue.from)
+                  result <- (for {
+                    credentialService <- ZIO.service[CredentialService]
+                    _ <- credentialService
+                      .generateAnonCredsCredential(id)
+                      .provideSomeLayer(ZLayer.succeed(walletAccessContext))
+                  } yield ()).mapError(e => (walletAccessContext, e))
+                } yield result
+              )
+          } yield ret
 
           issuerPendingToGeneratedFlow @@ IssuerPendingToGeneratedSuccess.trackSuccess
             @@ IssuerPendingToGeneratedFailed.trackError

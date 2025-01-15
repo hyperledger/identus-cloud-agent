@@ -15,7 +15,7 @@ semantic interoperability of the Credential.
 
 The Identus Platform supports the following specifications of the credential schemas:
 
-- [Verifiable Credentials JSON Schema 2022](https://w3c-ccg.github.io/vc-json-schemas/)
+- [Verifiable Credentials JSON Schema 2022](https://www.w3.org/TR/vc-json-schema/)
 - [AnonCreds Schema](https://hyperledger.github.io/anoncreds-spec/#term:schemas)
 
 The signed credential schema allows doing following verifications:
@@ -320,5 +320,5 @@ The proof field is a JOSE object containing the credential schema's signature, i
 
 ## References
 
-- [Verifiable Credentials JSON Schema 2022](https://w3c-ccg.github.io/vc-json-schemas/)
+- [Verifiable Credentials JSON Schema 2022](https://www.w3.org/TR/vc-json-schema/)
 - [Verifiable Credential Data Integrity 1.0](https://www.w3.org/TR/vc-data-integrity/)

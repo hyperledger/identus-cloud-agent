@@ -1,7 +1,7 @@
 package org.hyperledger.identus.mercury.model
 
-import io.circe.JsonObject
 import munit.*
+import zio.json.ast.Json
 
 import scala.language.implicitConversions
 
@@ -12,7 +12,7 @@ class UnpackMessageImpSpec extends ZSuite {
       `type` = "type_test", // PIURI,
       from = None, // Option[DidId],
       to = Seq(), // Seq[DidId],
-      body = JsonObject.empty,
+      body = Json.Obj(),
       id = "id123",
       createdTime = None,
       expiresTimePlus = None,
@@ -35,12 +35,11 @@ class UnpackMessageImpSpec extends ZSuite {
       `type` = "type_test", // PIURI,
       from = None, // Option[DidId],
       to = Seq(), // Seq[DidId],
-      body = JsonObject.empty,
+      body = Json.Obj(),
       id = "id123",
       createdTime = None,
       expiresTimePlus = None,
       attachments = None,
-      thid = None,
       pthid = None,
       ack = None,
       pleaseAck = Some(Seq.empty),
@@ -57,7 +56,7 @@ class UnpackMessageImpSpec extends ZSuite {
       `type` = "type_test", // PIURI,
       from = None, // Option[DidId],
       to = Seq(), // Seq[DidId],
-      body = JsonObject.empty,
+      body = Json.Obj(),
       id = "id123",
       createdTime = None,
       expiresTimePlus = None,

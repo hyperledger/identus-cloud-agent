@@ -3,12 +3,13 @@ package org.hyperledger.identus.shared.messaging.kafka
 import org.apache.kafka.clients.consumer.ConsumerConfig
 import org.apache.kafka.common.header.Headers
 import org.hyperledger.identus.shared.messaging.*
-import zio.{Duration, RIO, Task, URIO, URLayer, ZIO, ZLayer}
+import zio.{Duration, RIO, Scope, Task, URIO, URLayer, ZIO, ZLayer}
 import zio.kafka.consumer.{
   Consumer as ZKConsumer,
   ConsumerSettings as ZKConsumerSettings,
   Subscription as ZKSubscription
 }
+import zio.kafka.consumer.Consumer.{AutoOffsetStrategy, OffsetRetrieval}
 import zio.kafka.producer.{Producer as ZKProducer, ProducerSettings as ZKProducerSettings}
 import zio.kafka.serde.{Deserializer as ZKDeserializer, Serializer as ZKSerializer}
 
@@ -20,23 +21,34 @@ class ZKafkaMessagingServiceImpl(
     pollTimeout: Duration,
     rebalanceSafeCommits: Boolean
 ) extends MessagingService {
-  override def makeConsumer[K, V](groupId: String)(implicit kSerde: Serde[K], vSerde: Serde[V]): Task[Consumer[K, V]] =
-    ZIO.succeed(
-      new ZKafkaConsumerImpl[K, V](
-        bootstrapServers,
-        groupId,
-        kSerde,
-        vSerde,
-        autoCreateTopics,
-        maxPollRecords,
-        maxPollInterval,
-        pollTimeout,
-        rebalanceSafeCommits
+  override def makeConsumer[K, V](
+      groupId: String
+  )(implicit kSerde: Serde[K], vSerde: Serde[V]): RIO[Scope, Consumer[K, V]] =
+    for {
+      zkConsumer <- ZKConsumer.make(
+        ZKConsumerSettings(bootstrapServers)
+          .withProperty(ConsumerConfig.ALLOW_AUTO_CREATE_TOPICS_CONFIG, autoCreateTopics.toString)
+          .withGroupId(groupId)
+          // 'max.poll.records' default is 500. This is a Kafka property.
+          .withMaxPollRecords(maxPollRecords)
+          // 'max.poll.interval.ms' default is 5 minutes. This is a Kafka property.
+          .withMaxPollInterval(maxPollInterval) // Should be max.poll.records x 'max processing time per record'
+          // 'pollTimeout' default is 50 millis. This is a ZIO Kafka property.
+          .withPollTimeout(pollTimeout)
+          .withOffsetRetrieval(OffsetRetrieval.Auto(AutoOffsetStrategy.Earliest))
+          .withRebalanceSafeCommits(rebalanceSafeCommits)
+          // .withMaxRebalanceDuration(30.seconds)
       )
+    } yield new ZKafkaConsumerImpl[K, V](
+      zkConsumer,
+      kSerde,
+      vSerde
     )
 
-  override def makeProducer[K, V]()(implicit kSerde: Serde[K], vSerde: Serde[V]): Task[Producer[K, V]] =
-    ZIO.succeed(new ZKafkaProducerImpl[K, V](bootstrapServers, kSerde, vSerde))
+  override def makeProducer[K, V]()(implicit kSerde: Serde[K], vSerde: Serde[V]): RIO[Scope, Producer[K, V]] =
+    for {
+      zkProducer <- ZKProducer.make(ZKProducerSettings(bootstrapServers))
+    } yield new ZKafkaProducerImpl[K, V](zkProducer, kSerde, vSerde)
 }
 
 object ZKafkaMessagingServiceImpl {
@@ -59,32 +71,10 @@ object ZKafkaMessagingServiceImpl {
 }
 
 class ZKafkaConsumerImpl[K, V](
-    bootstrapServers: List[String],
-    groupId: String,
+    zkConsumer: ZKConsumer,
     kSerde: Serde[K],
-    vSerde: Serde[V],
-    autoCreateTopics: Boolean,
-    maxPollRecords: Int,
-    maxPollInterval: Duration,
-    pollTimeout: Duration,
-    rebalanceSafeCommits: Boolean
+    vSerde: Serde[V]
 ) extends Consumer[K, V] {
-  private val zkConsumer = ZLayer.scoped(
-    ZKConsumer.make(
-      ZKConsumerSettings(bootstrapServers)
-        .withProperty(ConsumerConfig.ALLOW_AUTO_CREATE_TOPICS_CONFIG, autoCreateTopics.toString)
-        .withGroupId(groupId)
-        // 'max.poll.records' default is 500. This is a Kafka property.
-        .withMaxPollRecords(maxPollRecords)
-        // 'max.poll.interval.ms' default is 5 minutes. This is a Kafka property.
-        .withMaxPollInterval(maxPollInterval) // Should be max.poll.records x 'max processing time per record'
-        // 'pollTimeout' default is 50 millis. This is a ZIO Kafka property.
-        .withPollTimeout(pollTimeout)
-        // .withOffsetRetrieval(OffsetRetrieval.Auto(AutoOffsetStrategy.Earliest))
-        .withRebalanceSafeCommits(rebalanceSafeCommits)
-        // .withMaxRebalanceDuration(30.seconds)
-    )
-  )
 
   private val zkKeyDeserializer = new ZKDeserializer[Any, K] {
     override def deserialize(topic: String, headers: Headers, data: Array[Byte]): RIO[Any, K] =
@@ -97,9 +87,8 @@ class ZKafkaConsumerImpl[K, V](
   }
 
   override def consume[HR](topic: String, topics: String*)(handler: Message[K, V] => URIO[HR, Unit]): RIO[HR, Unit] =
-    ZKConsumer
+    zkConsumer
       .plainStream(ZKSubscription.topics(topic, topics*), zkKeyDeserializer, zkValueDeserializer)
-      .provideSomeLayer(zkConsumer)
       .mapZIO(record =>
         handler(Message(record.key, record.value, record.offset.offset, record.timestamp)).as(record.offset)
       )
@@ -108,13 +97,7 @@ class ZKafkaConsumerImpl[K, V](
       .runDrain
 }
 
-class ZKafkaProducerImpl[K, V](bootstrapServers: List[String], kSerde: Serde[K], vSerde: Serde[V])
-    extends Producer[K, V] {
-  private val zkProducer = ZLayer.scoped(
-    ZKProducer.make(
-      ZKProducerSettings(bootstrapServers)
-    )
-  )
+class ZKafkaProducerImpl[K, V](zkProducer: ZKProducer, kSerde: Serde[K], vSerde: Serde[V]) extends Producer[K, V] {
 
   private val zkKeySerializer = new ZKSerializer[Any, K] {
     override def serialize(topic: String, headers: Headers, value: K): RIO[Any, Array[Byte]] =
@@ -127,10 +110,9 @@ class ZKafkaProducerImpl[K, V](bootstrapServers: List[String], kSerde: Serde[K],
   }
 
   override def produce(topic: String, key: K, value: V): Task[Unit] =
-    ZKProducer
+    zkProducer
       .produce(topic, key, value, zkKeySerializer, zkValueSerializer)
       .tap(metadata => ZIO.logInfo(s"Message produced: ${metadata.offset()}"))
       .map(_ => ())
-      .provideSome(zkProducer)
 
 }

@@ -1,20 +1,15 @@
 package org.hyperledger.identus.pollux.core.service
 
-import io.circe.parser.decode
-import io.circe.syntax.*
 import org.hyperledger.identus.agent.walletapi.storage.GenericSecretStorage
 import org.hyperledger.identus.mercury.model.{AttachmentDescriptor, Base64, DidId}
 import org.hyperledger.identus.mercury.protocol.issuecredential.{IssueCredential, IssueCredentialIssuedFormat}
 import org.hyperledger.identus.mercury.protocol.presentproof.*
 import org.hyperledger.identus.pollux.anoncreds.*
 import org.hyperledger.identus.pollux.core.model.*
-import org.hyperledger.identus.pollux.core.model.error.PresentationError
 import org.hyperledger.identus.pollux.core.model.error.PresentationError.*
 import org.hyperledger.identus.pollux.core.model.presentation.Options
 import org.hyperledger.identus.pollux.core.model.schema.CredentialDefinition.Input
 import org.hyperledger.identus.pollux.core.model.secret.CredentialDefinitionSecret
-import org.hyperledger.identus.pollux.core.model.IssueCredentialRecord.*
-import org.hyperledger.identus.pollux.core.model.PresentationRecord.*
 import org.hyperledger.identus.pollux.core.repository.{CredentialRepository, PresentationRepository}
 import org.hyperledger.identus.pollux.core.service.serdes.{
   AnoncredCredentialProofV1,
@@ -22,9 +17,9 @@ import org.hyperledger.identus.pollux.core.service.serdes.{
   AnoncredPresentationRequestV1,
   AnoncredPresentationV1
 }
-import org.hyperledger.identus.pollux.vc.jwt.*
 import org.hyperledger.identus.shared.models.{WalletAccessContext, WalletId}
 import zio.*
+import zio.json.{DecoderOps, EncoderOps}
 import zio.test.*
 import zio.test.Assertion.*
 
@@ -96,10 +91,11 @@ object PresentationServiceSpec extends ZIOSpecDefault with PresentationServiceSp
                 val maybePresentationOptions =
                   record.requestPresentationData.get.attachments.headOption
                     .map(attachment =>
-                      decode[org.hyperledger.identus.mercury.model.JsonData](attachment.data.asJson.noSpaces)
+                      attachment.data.toJson
+                        .fromJson[org.hyperledger.identus.mercury.model.JsonData]
                         .flatMap(data =>
-                          org.hyperledger.identus.pollux.core.model.presentation.PresentationAttachment.given_Decoder_PresentationAttachment
-                            .decodeJson(data.json.asJson)
+                          org.hyperledger.identus.pollux.core.model.presentation.PresentationAttachment.given_JsonDecoder_PresentationAttachment
+                            .decodeJson(data.json.toJson)
                             .map(_.options)
                         )
                     )
@@ -880,8 +876,7 @@ object PresentationServiceSpec extends ZIOSpecDefault with PresentationServiceSp
           requestCredentialData = None,
           anonCredsRequestMetadata = None,
           issueCredentialData = Some(issueCredential),
-          issuedCredentialRaw =
-            Some(issueCredential.attachments.map(_.data.asJson.noSpaces).headOption.getOrElse("???")),
+          issuedCredentialRaw = Some(issueCredential.attachments.map(_.data.toJson).headOption.getOrElse("???")),
           issuingDID = None,
           metaRetries = 5,
           metaNextRetry = Some(Instant.now()),

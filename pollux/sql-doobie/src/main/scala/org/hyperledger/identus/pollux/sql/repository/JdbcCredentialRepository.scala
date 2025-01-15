@@ -5,9 +5,6 @@ import doobie.*
 import doobie.free.connection
 import doobie.implicits.*
 import doobie.postgres.implicits.*
-import io.circe.*
-import io.circe.parser.*
-import io.circe.syntax.*
 import org.hyperledger.identus.castor.core.model.did.*
 import org.hyperledger.identus.mercury.protocol.invitation.v2.Invitation
 import org.hyperledger.identus.mercury.protocol.issuecredential.{IssueCredential, OfferCredential, RequestCredential}
@@ -22,7 +19,6 @@ import zio.interop.catz.*
 import zio.json.*
 
 import java.time.Instant
-import java.util.UUID
 
 class JdbcCredentialRepository(xa: Transactor[ContextAwareTask], xb: Transactor[Task], maxRetries: Int)
     extends CredentialRepository {
@@ -41,20 +37,20 @@ class JdbcCredentialRepository(xa: Transactor[ContextAwareTask], xb: Transactor[
   given rolePut: Put[Role] = Put[String].contramap(_.toString)
 
   given offerCredentialGet: Get[OfferCredential] =
-    Get[String].map(decode[OfferCredential](_).getOrElse(UnexpectedCodeExecutionPath))
-  given offerCredentialPut: Put[OfferCredential] = Put[String].contramap(_.asJson.toString)
+    Get[String].map(_.fromJson[OfferCredential].getOrElse(UnexpectedCodeExecutionPath))
+  given offerCredentialPut: Put[OfferCredential] = Put[String].contramap(_.toJson)
 
   given requestCredentialGet: Get[RequestCredential] =
-    Get[String].map(decode[RequestCredential](_).getOrElse(UnexpectedCodeExecutionPath))
-  given requestCredentialPut: Put[RequestCredential] = Put[String].contramap(_.asJson.toString)
+    Get[String].map(_.fromJson[RequestCredential].getOrElse(UnexpectedCodeExecutionPath))
+  given requestCredentialPut: Put[RequestCredential] = Put[String].contramap(_.toJson)
 
   given acRequestMetadataGet: Get[AnoncredCredentialRequestMetadata] =
     Get[String].map(_.fromJson[AnoncredCredentialRequestMetadata].getOrElse(UnexpectedCodeExecutionPath))
   given acRequestMetadataPut: Put[AnoncredCredentialRequestMetadata] = Put[String].contramap(_.toJson)
 
   given issueCredentialGet: Get[IssueCredential] =
-    Get[String].map(decode[IssueCredential](_).getOrElse(UnexpectedCodeExecutionPath))
-  given issueCredentialPut: Put[IssueCredential] = Put[String].contramap(_.asJson.toString)
+    Get[String].map(_.fromJson[IssueCredential].getOrElse(UnexpectedCodeExecutionPath))
+  given issueCredentialPut: Put[IssueCredential] = Put[String].contramap(_.toJson)
 
   given keyIdGet: Get[KeyId] = Get[String].map(KeyId(_))
   given keyIdPut: Put[KeyId] = Put[String].contramap(_.value)
@@ -62,8 +58,8 @@ class JdbcCredentialRepository(xa: Transactor[ContextAwareTask], xb: Transactor[
   given failureGet: Get[Failure] = Get[String].temap(_.fromJson[FailureInfo])
   given failurePut: Put[Failure] = Put[String].contramap(_.asFailureInfo.toJson)
 
-  given invitationGet: Get[Invitation] = Get[String].map(decode[Invitation](_).getOrElse(UnexpectedCodeExecutionPath))
-  given invitationPut: Put[Invitation] = Put[String].contramap(_.asJson.toString)
+  given invitationGet: Get[Invitation] = Get[String].map(_.fromJson[Invitation].getOrElse(UnexpectedCodeExecutionPath))
+  given invitationPut: Put[Invitation] = Put[String].contramap(_.toJson)
 
   override def create(record: IssueCredentialRecord): URIO[WalletAccessContext, Unit] = {
     val cxnIO = sql"""
@@ -504,7 +500,8 @@ class JdbcCredentialRepository(xa: Transactor[ContextAwareTask], xb: Transactor[
                      |   credential_format,
                      |   schema_uris,
                      |   credential_definition_uri,
-                     |   subject_id
+                     |   subject_id,
+                     |   key_id
                      | FROM public.issue_credential_records
                      | WHERE 1=1
                      |   AND issue_credential_data IS NOT NULL

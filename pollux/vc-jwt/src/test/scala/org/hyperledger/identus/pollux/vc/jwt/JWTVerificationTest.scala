@@ -3,14 +3,12 @@ package org.hyperledger.identus.pollux.vc.jwt
 import com.nimbusds.jose.crypto.bc.BouncyCastleProviderSingleton
 import com.nimbusds.jose.jwk.{Curve, ECKey}
 import com.nimbusds.jose.jwk.gen.ECKeyGenerator
-import io.circe.*
-import io.circe.syntax.*
 import org.hyperledger.identus.castor.core.model.did.{DID, VerificationRelationship}
-import org.hyperledger.identus.pollux.vc.jwt.CredentialPayload.Implicits.*
 import org.hyperledger.identus.pollux.vc.jwt.StatusPurpose.Revocation
 import org.hyperledger.identus.shared.http.*
 import zio.*
-import zio.prelude.Validation
+import zio.json.ast.Json
+import zio.json.EncoderOps
 import zio.test.*
 import zio.test.Assertion.*
 
@@ -79,7 +77,7 @@ object JWTVerificationTest extends ZIOSpecDefault {
         `@context` = Set("https://www.w3.org/2018/credentials/v1", "https://www.w3.org/2018/credentials/examples/v1"),
         `type` = Set("VerifiableCredential", "UniversityDegreeCredential"),
         maybeCredentialSchema = None,
-        credentialSubject = Json.obj("id" -> Json.fromString("1")),
+        credentialSubject = Json.Obj("id" -> Json.Str("1")),
         maybeCredentialStatus = credentialStatus,
         maybeRefreshService = None,
         maybeEvidence = None,
@@ -96,7 +94,7 @@ object JWTVerificationTest extends ZIOSpecDefault {
       maybeExp = Some(jwtCredentialExp), // EXPIRATION DATE
       maybeJti = Some("http://example.edu/credentials/3732") // CREDENTIAL ID
     )
-    issuer.issuer.signer.encode(jwtCredentialPayload.asJson)
+    issuer.issuer.signer.encode(jwtCredentialPayload.toJsonAST.toOption.get)
   }
 
   private def generateDidDocument(

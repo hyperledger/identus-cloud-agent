@@ -16,7 +16,7 @@ import java.util.UUID
 
 class CredentialSchemasSteps {
 
-    @Given("{actor} has published {} schema")
+    @Given("{actor} has published '{}' schema")
     fun agentHasAPublishedSchema(agent: Actor, schema: CredentialSchema) {
         if (agent.recallAll().containsKey(schema.name)) {
             return
@@ -24,7 +24,7 @@ class CredentialSchemasSteps {
         agentCreatesANewCredentialSchema(agent, schema)
     }
 
-    @When("{actor} creates a new credential {} schema")
+    @When("{actor} creates a new credential '{}' schema")
     fun agentCreatesANewCredentialSchema(actor: Actor, schema: CredentialSchema) {
         actor.attemptsTo(
             Post.to("/schema-registry/schemas").body(
