@@ -247,8 +247,8 @@ case class SDJWTVCPropertiesV1(
     @description(annotations.issuingKid.description)
     @encodedExample(annotations.issuingKid.example)
     issuingKid: Option[KeyId],
-    @description(annotations.credentialSchema.description)
-    @encodedExample(annotations.credentialSchema.example)
+    @description(SDJWTVCPropertiesV1.annotations.credentialSchema.description)
+    @encodedExample(SDJWTVCPropertiesV1.annotations.credentialSchema.example)
     credentialSchema: CredentialSchemaRef,
     @description(annotations.claims.description)
     @encodedExample(annotations.claims.example)
