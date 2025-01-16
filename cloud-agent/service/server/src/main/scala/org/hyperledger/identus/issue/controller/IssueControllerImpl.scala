@@ -114,17 +114,20 @@ class IssueControllerImpl(
                 .fromOption(request.jwtVcPropertiesV1.map(_.claims).orElse(request.claims))
                 .orElseFail(ErrorResponse.badRequest(detail = Some("Missing request parameter: claims")))
               kid = request.jwtVcPropertiesV1
-                .map(_.issuingKid)
+                .flatMap(_.issuingKid)
                 .orElse(request.issuingKid) // TODO: should it be Option[KeyId]?
+              validityPeriod = request.jwtVcPropertiesV1
+                .flatMap(_.validityPeriod)
+                .orElse(request.validityPeriod)
               record <- credentialService
                 .createJWTIssueCredentialRecord(
                   pairwiseIssuerDID = offerContext.pairwiseIssuerDID,
                   pairwiseHolderDID = offerContext.pairwiseHolderDID,
-                  kidIssuer = request.issuingKid,
+                  kidIssuer = kid,
                   thid = DidCommID(),
                   credentialSchemaRef = Some(credentialSchemaRef),
                   claims = claims,
-                  validityPeriod = request.validityPeriod,
+                  validityPeriod = validityPeriod,
                   automaticIssuance = request.automaticIssuance.orElse(Some(true)),
                   issuingDID = issuingDID.asCanonical,
                   goalCode = offerContext.goalCode,
@@ -148,6 +151,9 @@ class IssueControllerImpl(
               kid = request.sdJwtVcPropertiesV1
                 .flatMap(_.issuingKid)
                 .orElse(request.issuingKid) // TODO: should it be Option[KeyId]?
+              validityPeriod = request.sdJwtVcPropertiesV1
+                .flatMap(_.validityPeriod)
+                .orElse(request.validityPeriod)
               record <- credentialService
                 .createSDJWTIssueCredentialRecord(
                   pairwiseIssuerDID = offerContext.pairwiseIssuerDID,

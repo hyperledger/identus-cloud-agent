@@ -135,7 +135,7 @@ case class JwtVCPropertiesV1(
     issuingKid: Option[KeyId],
     @description(JwtVCPropertiesV1.annotations.validityPeriod.description)
     @encodedExample(JwtVCPropertiesV1.annotations.validityPeriod.example)
-    validityPeriod: Double,
+    validityPeriod: Option[Double],
     @description(JwtVCPropertiesV1.annotations.claims.description)
     @encodedExample(JwtVCPropertiesV1.annotations.claims.example)
     claims: zio.json.ast.Json,
@@ -247,6 +247,9 @@ case class SDJWTVCPropertiesV1(
     @description(annotations.issuingKid.description)
     @encodedExample(annotations.issuingKid.example)
     issuingKid: Option[KeyId],
+    @description(SDJWTVCPropertiesV1.annotations.validityPeriod.description)
+    @encodedExample(SDJWTVCPropertiesV1.annotations.validityPeriod.example)
+    validityPeriod: Option[Double],
     @description(SDJWTVCPropertiesV1.annotations.credentialSchema.description)
     @encodedExample(SDJWTVCPropertiesV1.annotations.credentialSchema.example)
     credentialSchema: CredentialSchemaRef,
@@ -263,6 +266,11 @@ object SDJWTVCPropertiesV1 {
   given decoder: JsonDecoder[SDJWTVCPropertiesV1] = DeriveJsonDecoder.gen
 
   object annotations {
+    object validityPeriod
+      extends Annotation[Double](
+        description = "The validity period in seconds of the verifiable credential that will be issued.",
+        example = 3600
+      )
     object issuingDID
         extends Annotation[String](
           description = """
