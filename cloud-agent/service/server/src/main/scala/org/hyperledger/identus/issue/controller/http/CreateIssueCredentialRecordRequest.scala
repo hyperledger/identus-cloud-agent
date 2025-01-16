@@ -267,10 +267,10 @@ object SDJWTVCPropertiesV1 {
 
   object annotations {
     object validityPeriod
-      extends Annotation[Double](
-        description = "The validity period in seconds of the verifiable credential that will be issued.",
-        example = 3600
-      )
+        extends Annotation[Double](
+          description = "The validity period in seconds of the verifiable credential that will be issued.",
+          example = 3600
+        )
     object issuingDID
         extends Annotation[String](
           description = """

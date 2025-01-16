@@ -64,6 +64,7 @@ enum class CreateCredentialOfferAPIVersion {
                     claims = claims,
                     issuingDID = did,
                     issuingKid = assertionKey,
+                    validityPeriod = validityPeriod ?: 3600.0,
                 )
             } else {
                 null
