@@ -11,7 +11,7 @@ enum class CredentialType {
         override val format: String = "AnonCreds"
     },
     SD_JWT_VCDM_1_1 {
-        override val format: String = "SD_JWT"
+        override val format: String = "SDJWT"
     },
     ;
 

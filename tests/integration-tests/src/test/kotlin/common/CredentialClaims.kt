@@ -9,8 +9,8 @@ enum class CredentialClaims {
     },
     ID_CLAIMS {
         override val claims: Map<String, Any> = linkedMapOf(
-            "firstName" to "First Name",
-            "lastName" to "Last Name",
+            "firstName" to "John",
+            "lastName" to "Doe",
         )
     },
     ;

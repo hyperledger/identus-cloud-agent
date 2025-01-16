@@ -1,5 +1,5 @@
-@jwt @issuance @compatibility
-Feature: Issue JWT credential REST API compatibility
+@jwt @issuance @refactoring
+Feature: Issue JWT credential using different REST API request versions
 
   Background:
     Given Issuer and Holder have an existing connection
