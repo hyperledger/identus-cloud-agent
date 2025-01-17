@@ -176,7 +176,8 @@ class IssueControllerImpl(
             for {
               issuingDID <- getIssuingDIDFromAnonCredsProperties(request)
               credentialDefinitionGUID <- ZIO
-                .fromOption(request.credentialDefinitionId)
+                .fromOption(request.anoncredsVcPropertiesV1.map(_.credentialDefinitionId)
+                  .orElse(request.credentialDefinitionId))
                 .mapError(_ =>
                   ErrorResponse.badRequest(detail = Some("Missing request parameter: credentialDefinitionId"))
                 )

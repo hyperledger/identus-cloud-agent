@@ -197,7 +197,7 @@ case class AnonCredsVCPropertiesV1(
     schemaId: String,
     @description(AnonCredsVCPropertiesV1.annotations.credentialDefinitionId.description)
     @encodedExample(AnonCredsVCPropertiesV1.annotations.credentialDefinitionId.example)
-    credentialDefinitionId: String,
+    credentialDefinitionId: UUID,
     @description(AnonCredsVCPropertiesV1.annotations.claims.description)
     @encodedExample(AnonCredsVCPropertiesV1.annotations.claims.example)
     claims: zio.json.ast.Json
