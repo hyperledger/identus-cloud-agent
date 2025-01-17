@@ -192,15 +192,15 @@ case class AnonCredsVCPropertiesV1(
     @description(annotations.issuingDID.description)
     @encodedExample(annotations.issuingDID.example)
     issuingDID: String,
-    @description(AnonCredsVCPropertiesV1.annotations.schemaId.description)
-    @encodedExample(AnonCredsVCPropertiesV1.annotations.schemaId.example)
-    schemaId: String,
     @description(AnonCredsVCPropertiesV1.annotations.credentialDefinitionId.description)
     @encodedExample(AnonCredsVCPropertiesV1.annotations.credentialDefinitionId.example)
     credentialDefinitionId: UUID,
     @description(AnonCredsVCPropertiesV1.annotations.claims.description)
     @encodedExample(AnonCredsVCPropertiesV1.annotations.claims.example)
-    claims: zio.json.ast.Json
+    claims: zio.json.ast.Json,
+    @description(annotations.validityPeriod.description)
+    @encodedExample(annotations.validityPeriod.example)
+    validityPeriod: Option[Double]
 )
 
 object AnonCredsVCPropertiesV1 {
@@ -209,15 +209,6 @@ object AnonCredsVCPropertiesV1 {
   given decoder: JsonDecoder[AnonCredsVCPropertiesV1] = DeriveJsonDecoder.gen
 
   object annotations {
-    object schemaId
-        extends Annotation[String](
-          description = """
-          |The URL or DIDURL pointing to the AnonCreds schema that will be used for this offer.
-          |When dereferenced, the returned content should be a JSON schema compliant with the '[AnonCreds v1.0 schema](https://hyperledger.github.io/anoncreds-spec/#term:schema)' version of the specification.
-          |""".stripMargin,
-          example =
-            "https://agent-host.com/cloud-agent/schema-registry/schemas/d9569cec-c81e-4779-aa86-0d5994d82676/schema"
-        )
     object credentialDefinitionId
         extends Annotation[UUID](
           description = """
