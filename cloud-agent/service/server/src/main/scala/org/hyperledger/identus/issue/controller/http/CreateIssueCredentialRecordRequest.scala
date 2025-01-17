@@ -48,14 +48,14 @@ final case class CreateIssueCredentialRecordRequest(
     @description(annotations.claims.description)
     @encodedExample(annotations.claims.example)
     @deprecated("Use specific properties of the verifiable credentials *.claims instead", "2.0.0")
-    claims: zio.json.ast.Json,
+    claims: Option[zio.json.ast.Json],
     @description(annotations.automaticIssuance.description)
     @encodedExample(annotations.automaticIssuance.example)
     automaticIssuance: Option[Boolean] = None,
     @description(annotations.issuingDID.description)
     @encodedExample(annotations.issuingDID.example)
     @deprecated("Use specific properties of the verifiable credentials *.issuingDID instead", "2.0.0")
-    issuingDID: String,
+    issuingDID: Option[String],
     @description(annotations.issuingKid.description)
     @encodedExample(annotations.issuingKid.example)
     @deprecated("Use specific jwtVcPropertiesV1.issuingKid instead", "2.0.0")
@@ -130,16 +130,23 @@ case class JwtVCPropertiesV1(
     @description(JwtVCPropertiesV1.annotations.issuingDID.description)
     @encodedExample(JwtVCPropertiesV1.annotations.issuingDID.example)
     issuingDID: String,
+    @description(annotations.issuingKid.description)
+    @encodedExample(annotations.issuingKid.example)
+    issuingKid: Option[KeyId],
     @description(JwtVCPropertiesV1.annotations.validityPeriod.description)
     @encodedExample(JwtVCPropertiesV1.annotations.validityPeriod.example)
-    validityPeriod: Double,
+    validityPeriod: Option[Double],
     @description(JwtVCPropertiesV1.annotations.claims.description)
     @encodedExample(JwtVCPropertiesV1.annotations.claims.example)
     claims: zio.json.ast.Json,
+    @description(JwtVCPropertiesV1.annotations.credentialSchema.description)
+    @encodedExample(JwtVCPropertiesV1.annotations.credentialSchema.example)
     credentialSchema: CredentialSchemaRef
 )
 
 object JwtVCPropertiesV1 {
+  import CreateIssueCredentialRecordRequest.schemaJson
+
   given schema: Schema[JwtVCPropertiesV1] = Schema.derived
   given encoder: JsonEncoder[JwtVCPropertiesV1] = DeriveJsonEncoder.gen
   given decoder: JsonDecoder[JwtVCPropertiesV1] = DeriveJsonDecoder.gen
@@ -233,14 +240,37 @@ object AnonCredsVCPropertiesV1 {
   }
 }
 
-case class SDJWTVCPropertiesV1(issuingDID: String, credentialSchema: CredentialSchemaRef, claims: zio.json.ast.Json)
+case class SDJWTVCPropertiesV1(
+    @description(annotations.issuingDID.description)
+    @encodedExample(annotations.issuingDID.example)
+    issuingDID: String,
+    @description(annotations.issuingKid.description)
+    @encodedExample(annotations.issuingKid.example)
+    issuingKid: Option[KeyId],
+    @description(SDJWTVCPropertiesV1.annotations.validityPeriod.description)
+    @encodedExample(SDJWTVCPropertiesV1.annotations.validityPeriod.example)
+    validityPeriod: Option[Double],
+    @description(SDJWTVCPropertiesV1.annotations.credentialSchema.description)
+    @encodedExample(SDJWTVCPropertiesV1.annotations.credentialSchema.example)
+    credentialSchema: CredentialSchemaRef,
+    @description(annotations.claims.description)
+    @encodedExample(annotations.claims.example)
+    claims: zio.json.ast.Json
+)
 
 object SDJWTVCPropertiesV1 {
+  import CreateIssueCredentialRecordRequest.schemaJson
+
   given schema: Schema[SDJWTVCPropertiesV1] = Schema.derived
   given encoder: JsonEncoder[SDJWTVCPropertiesV1] = DeriveJsonEncoder.gen
   given decoder: JsonDecoder[SDJWTVCPropertiesV1] = DeriveJsonDecoder.gen
 
   object annotations {
+    object validityPeriod
+        extends Annotation[Double](
+          description = "The validity period in seconds of the verifiable credential that will be issued.",
+          example = 3600
+        )
     object issuingDID
         extends Annotation[String](
           description = """
@@ -257,6 +287,17 @@ object SDJWTVCPropertiesV1 {
           example = zio.json.ast.Json.Obj(
             "firstname" -> zio.json.ast.Json.Str("Alice"),
             "lastname" -> zio.json.ast.Json.Str("Wonderland"),
+          )
+        )
+    object credentialSchema
+        extends Annotation[CredentialSchemaRef](
+          description = """
+            |The properties of the SD-JWT verifiable credential that will be issued complied with VCDM 1.1.
+            |The current implementation of SD-JWT doesn't includ this property in the JWT payload, but the it is used to validate the credential.
+            |""".stripMargin,
+          example = CredentialSchemaRef(
+            "https://agent-host.com/cloud-agent/schema-registry/schemas/d9569cec-c81e-4779-aa86-0d5994d82676",
+            "JsonSchemaValidator2018"
           )
         )
   }
