@@ -176,7 +176,11 @@ class IssueControllerImpl(
             for {
               issuingDID <- getIssuingDIDFromAnonCredsProperties(request)
               credentialDefinitionGUID <- ZIO
-                .fromOption(request.credentialDefinitionId)
+                .fromOption(
+                  request.anoncredsVcPropertiesV1
+                    .map(_.credentialDefinitionId)
+                    .orElse(request.credentialDefinitionId)
+                )
                 .mapError(_ =>
                   ErrorResponse.badRequest(detail = Some("Missing request parameter: credentialDefinitionId"))
                 )
@@ -219,6 +223,9 @@ class IssueControllerImpl(
               claims <- ZIO
                 .fromOption(request.anoncredsVcPropertiesV1.map(_.claims).orElse(request.claims))
                 .orElseFail(ErrorResponse.badRequest(detail = Some("Missing request parameter: claims")))
+              validityPeriod = request.anoncredsVcPropertiesV1
+                .flatMap(_.validityPeriod)
+                .orElse(request.validityPeriod)
               record <- credentialService
                 .createAnonCredsIssueCredentialRecord(
                   pairwiseIssuerDID = offerContext.pairwiseIssuerDID,
@@ -227,7 +234,7 @@ class IssueControllerImpl(
                   credentialDefinitionGUID = credentialDefinitionGUID,
                   credentialDefinitionId = credentialDefinitionId,
                   claims = claims,
-                  validityPeriod = request.validityPeriod,
+                  validityPeriod = validityPeriod,
                   automaticIssuance = request.automaticIssuance.orElse(Some(true)),
                   goalCode = offerContext.goalCode,
                   goal = offerContext.goal,
