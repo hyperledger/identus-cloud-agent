@@ -1,6 +1,7 @@
 package org.hyperledger.identus.issue.controller
 
 import org.hyperledger.identus.agent.server.config.AppConfig
+import org.hyperledger.identus.agent.server.config.FeatureFlagConfig
 import org.hyperledger.identus.agent.server.ControllerHelper
 import org.hyperledger.identus.agent.walletapi.model.PublicationState
 import org.hyperledger.identus.agent.walletapi.model.PublicationState.{Created, PublicationPending, Published}
@@ -35,7 +36,8 @@ class IssueControllerImpl(
     managedDIDService: ManagedDIDService,
     appConfig: AppConfig
 ) extends IssueController
-    with ControllerHelper {
+    with ControllerHelper
+    with CredentialSchemaReferenceParsingLogic {
 
   private case class OfferContext(
       pairwiseIssuerDID: DidId,
@@ -45,75 +47,140 @@ class IssueControllerImpl(
       expirationDuration: Option[Duration]
   )
 
+  private def checkFeatureFlag(credentialFormat: CredentialFormat) = for {
+    _ <- credentialFormat match // Fail if feature is disabled
+      case JWT =>
+        appConfig.featureFlag.ifJWTIsDisable(
+          ZIO.fail(ErrorResponse.badRequestDisabled(FeatureFlagConfig.messageIfDisableForJWT))
+        )
+      case SDJWT =>
+        appConfig.featureFlag.ifSDJWTIsDisable(
+          ZIO.fail(ErrorResponse.badRequestDisabled(FeatureFlagConfig.messageIfDisableForSDJWT))
+        )
+      case AnonCreds =>
+        appConfig.featureFlag.ifAnoncredIsDisable(
+          ZIO.fail(ErrorResponse.badRequestDisabled(FeatureFlagConfig.messageIfDisableForAnoncred))
+        )
+  } yield ()
+
+  private def getIssuingDIDFromRequestJwtProperties(
+      request: CreateIssueCredentialRecordRequest
+  ): IO[ErrorResponse, PrismDID] =
+    ZIO
+      .fromOption(request.jwtVcPropertiesV1.map(_.issuingDID))
+      .orElse(ZIO.fromOption(request.issuingDID))
+      .orElseFail(ErrorResponse.badRequest(detail = Some("Missing request parameter: issuingDID")))
+      .flatMap(extractPrismDIDFromString)
+
+  private def getIssuingDIDFromRequestSDJWTProperties(
+      request: CreateIssueCredentialRecordRequest
+  ): IO[ErrorResponse, PrismDID] =
+    ZIO
+      .fromOption(request.sdJwtVcPropertiesV1.map(_.issuingDID))
+      .orElse(ZIO.fromOption(request.issuingDID))
+      .orElseFail(ErrorResponse.badRequest(detail = Some("Missing request parameter: issuingDID")))
+      .flatMap(extractPrismDIDFromString)
+
+  private def getIssuingDIDFromAnonCredsProperties(
+      request: CreateIssueCredentialRecordRequest
+  ): IO[ErrorResponse, PrismDID] =
+    ZIO
+      .fromOption(request.anoncredsVcPropertiesV1.map(_.issuingDID))
+      .orElse(ZIO.fromOption(request.issuingDID))
+      .orElseFail(ErrorResponse.badRequest(detail = Some("Missing request parameter: issuingDID")))
+      .flatMap(extractPrismDIDFromString)
+
   private def createCredentialOfferRecord(
       request: CreateIssueCredentialRecordRequest,
       offerContext: OfferContext
   ): ZIO[WalletAccessContext, ErrorResponse, IssueCredentialRecord] = {
 
-    def getIssuingDidFromRequest(request: CreateIssueCredentialRecordRequest) = extractPrismDIDFromString(
-      request.issuingDID
-    )
-
     for {
-      jsonClaims <- ZIO // TODO: Get read of Circe and use zio-json all the way down
-        .fromEither(io.circe.parser.parse(request.claims.toString()))
-        .mapError(e => ErrorResponse.badRequest(detail = Some(e.getMessage)))
-      credentialFormat = request.credentialFormat.map(CredentialFormat.valueOf).getOrElse(CredentialFormat.JWT)
+      credentialFormat <- ZIO.succeed(
+        request.credentialFormat.map(CredentialFormat.valueOf).getOrElse(CredentialFormat.JWT)
+      )
+      _ <- checkFeatureFlag(credentialFormat)
       outcome <-
         credentialFormat match
           case JWT =>
             for {
-              issuingDID <- getIssuingDidFromRequest(request)
+              issuingDID <- getIssuingDIDFromRequestJwtProperties(request)
               _ <- validatePrismDID(issuingDID, allowUnpublished = true, Role.Issuer)
+              credentialSchemaRef <- parseCredentialSchemaRef_VCDM1_1(
+                request.schemaId,
+                request.jwtVcPropertiesV1.map(_.credentialSchema)
+              )
+              claims <- ZIO
+                .fromOption(request.jwtVcPropertiesV1.map(_.claims).orElse(request.claims))
+                .orElseFail(ErrorResponse.badRequest(detail = Some("Missing request parameter: claims")))
+              kid = request.jwtVcPropertiesV1
+                .flatMap(_.issuingKid)
+                .orElse(request.issuingKid) // TODO: should it be Option[KeyId]?
+              validityPeriod = request.jwtVcPropertiesV1
+                .flatMap(_.validityPeriod)
+                .orElse(request.validityPeriod)
               record <- credentialService
                 .createJWTIssueCredentialRecord(
                   pairwiseIssuerDID = offerContext.pairwiseIssuerDID,
                   pairwiseHolderDID = offerContext.pairwiseHolderDID,
-                  kidIssuer = request.issuingKid,
+                  kidIssuer = kid,
                   thid = DidCommID(),
-                  maybeSchemaIds = request.schemaId.map {
-                    case schemaId: String        => List(schemaId)
-                    case schemaIds: List[String] => schemaIds
-                  },
-                  claims = jsonClaims,
-                  validityPeriod = request.validityPeriod,
+                  credentialSchemaRef = Some(credentialSchemaRef),
+                  claims = claims,
+                  validityPeriod = validityPeriod,
                   automaticIssuance = request.automaticIssuance.orElse(Some(true)),
                   issuingDID = issuingDID.asCanonical,
                   goalCode = offerContext.goalCode,
                   goal = offerContext.goal,
                   expirationDuration = offerContext.expirationDuration,
-                  connectionId = request.connectionId
+                  connectionId = request.connectionId,
+                  domain = request.domain.getOrElse(appConfig.pollux.defaultJwtVCOfferDomain)
                 )
             } yield record
           case SDJWT =>
             for {
-              issuingDID <- getIssuingDidFromRequest(request)
+              issuingDID <- getIssuingDIDFromRequestSDJWTProperties(request)
               _ <- validatePrismDID(issuingDID, allowUnpublished = true, Role.Issuer)
+              credentialSchemaRef <- parseCredentialSchemaRef_VCDM1_1(
+                request.schemaId,
+                request.sdJwtVcPropertiesV1.map(_.credentialSchema)
+              )
+              claims <- ZIO
+                .fromOption(request.sdJwtVcPropertiesV1.map(_.claims).orElse(request.claims))
+                .orElseFail(ErrorResponse.badRequest(detail = Some("Missing request parameter: claims")))
+              kid = request.sdJwtVcPropertiesV1
+                .flatMap(_.issuingKid)
+                .orElse(request.issuingKid) // TODO: should it be Option[KeyId]?
+              validityPeriod = request.sdJwtVcPropertiesV1
+                .flatMap(_.validityPeriod)
+                .orElse(request.validityPeriod)
               record <- credentialService
                 .createSDJWTIssueCredentialRecord(
                   pairwiseIssuerDID = offerContext.pairwiseIssuerDID,
                   pairwiseHolderDID = offerContext.pairwiseHolderDID,
-                  kidIssuer = request.issuingKid,
+                  kidIssuer = kid,
                   thid = DidCommID(),
-                  maybeSchemaIds = request.schemaId.map {
-                    case schemaId: String        => List(schemaId)
-                    case schemaIds: List[String] => schemaIds
-                  },
-                  claims = jsonClaims,
+                  credentialSchemaRef = Option(credentialSchemaRef),
+                  claims = claims,
                   validityPeriod = request.validityPeriod,
                   automaticIssuance = request.automaticIssuance.orElse(Some(true)),
                   issuingDID = issuingDID.asCanonical,
                   goalCode = offerContext.goalCode,
                   goal = offerContext.goal,
                   expirationDuration = offerContext.expirationDuration,
-                  connectionId = request.connectionId
+                  connectionId = request.connectionId,
+                  domain = request.domain.getOrElse(appConfig.pollux.defaultJwtVCOfferDomain)
                 )
             } yield record
           case AnonCreds =>
             for {
-              issuingDID <- getIssuingDidFromRequest(request)
+              issuingDID <- getIssuingDIDFromAnonCredsProperties(request)
               credentialDefinitionGUID <- ZIO
-                .fromOption(request.credentialDefinitionId)
+                .fromOption(
+                  request.anoncredsVcPropertiesV1
+                    .map(_.credentialDefinitionId)
+                    .orElse(request.credentialDefinitionId)
+                )
                 .mapError(_ =>
                   ErrorResponse.badRequest(detail = Some("Missing request parameter: credentialDefinitionId"))
                 )
@@ -153,6 +220,12 @@ class IssueControllerImpl(
                     val urlPrefix = if (publicEndpointUrl.endsWith("/")) publicEndpointUrl else publicEndpointUrl + "/"
                     ZIO.succeed(s"$urlPrefix$httpUrlSuffix")
               }
+              claims <- ZIO
+                .fromOption(request.anoncredsVcPropertiesV1.map(_.claims).orElse(request.claims))
+                .orElseFail(ErrorResponse.badRequest(detail = Some("Missing request parameter: claims")))
+              validityPeriod = request.anoncredsVcPropertiesV1
+                .flatMap(_.validityPeriod)
+                .orElse(request.validityPeriod)
               record <- credentialService
                 .createAnonCredsIssueCredentialRecord(
                   pairwiseIssuerDID = offerContext.pairwiseIssuerDID,
@@ -160,8 +233,8 @@ class IssueControllerImpl(
                   thid = DidCommID(),
                   credentialDefinitionGUID = credentialDefinitionGUID,
                   credentialDefinitionId = credentialDefinitionId,
-                  claims = jsonClaims,
-                  validityPeriod = request.validityPeriod,
+                  claims = claims,
+                  validityPeriod = validityPeriod,
                   automaticIssuance = request.automaticIssuance.orElse(Some(true)),
                   goalCode = offerContext.goalCode,
                   goal = offerContext.goal,
@@ -181,6 +254,7 @@ class IssueControllerImpl(
       connectionId <- ZIO
         .fromOption(request.connectionId)
         .mapError(_ => ErrorResponse.badRequest(detail = Some("Missing connectionId for credential offer")))
+      _ <- checkFeatureFlag(request.credentialFormat.map(CredentialFormat.valueOf).getOrElse(CredentialFormat.JWT))
       didIdPair <- getPairwiseDIDs(connectionId).provideSomeLayer(ZLayer.succeed(connectionService))
       offerContext = OfferContext(
         pairwiseIssuerDID = didIdPair.myDID,
@@ -198,6 +272,7 @@ class IssueControllerImpl(
   )(implicit rc: RequestContext): ZIO[WalletAccessContext, ErrorResponse, IssueCredentialRecord] = {
     for {
       peerDid <- managedDIDService.createAndStorePeerDID(appConfig.agent.didCommEndpoint.publicEndpointUrl)
+      _ <- checkFeatureFlag(request.credentialFormat.map(CredentialFormat.valueOf).getOrElse(CredentialFormat.JWT))
       offerContext = OfferContext(
         pairwiseIssuerDID = peerDid.did,
         pairwiseHolderDID = None,

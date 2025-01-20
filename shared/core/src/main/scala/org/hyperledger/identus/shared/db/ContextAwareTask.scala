@@ -1,12 +1,17 @@
 package org.hyperledger.identus.shared.db
 
+import cats.data.NonEmptyList
+import cats.Show
 import doobie.*
 import doobie.postgres.implicits.*
 import doobie.syntax.ConnectionIOOps
 import doobie.util.transactor.Transactor
 import org.hyperledger.identus.shared.models.{WalletAccessContext, WalletId}
+import org.postgresql.util.PGobject
 import zio.*
 import zio.interop.catz.*
+import zio.json.{DecoderOps, EncoderOps}
+import zio.json.ast.Json
 
 import java.util.UUID
 
@@ -18,6 +23,19 @@ object Errors {
 }
 
 object Implicits {
+
+  private implicit val showPGobject: Show[PGobject] = Show.show(_.getValue.take(250))
+  implicit val jsonPut: Put[Json] = Put.Advanced
+    .other[PGobject](NonEmptyList.of("json"))
+    .tcontramap[Json] { a =>
+      val o = new PGobject
+      o.setType("json")
+      o.setValue(a.toJson)
+      o
+    }
+  implicit val jsonGet: Get[Json] = Get.Advanced
+    .other[PGobject](NonEmptyList.of("json"))
+    .temap[Json](a => a.getValue.fromJson[Json])
 
   given walletIdGet: Get[WalletId] = Get[UUID].map(WalletId.fromUUID)
   given walletIdPut: Put[WalletId] = Put[UUID].contramap(_.toUUID)

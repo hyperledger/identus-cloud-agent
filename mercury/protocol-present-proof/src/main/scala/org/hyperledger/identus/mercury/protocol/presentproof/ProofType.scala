@@ -1,8 +1,7 @@
 package org.hyperledger.identus.mercury.protocol.presentproof
 
-import io.circe.*
-import io.circe.generic.semiauto.*
 import org.hyperledger.identus.mercury.model.DidId
+import zio.json.{DeriveJsonDecoder, DeriveJsonEncoder, JsonDecoder, JsonEncoder}
 
 case class ProofType(
     schema: String, // Schema ID EX: https://schema.org/Person
@@ -10,6 +9,6 @@ case class ProofType(
     trustIssuers: Option[Seq[DidId]] // ["did:prism:123321123"]
 )
 object ProofType {
-  given Encoder[ProofType] = deriveEncoder[ProofType]
-  given Decoder[ProofType] = deriveDecoder[ProofType]
+  given JsonEncoder[ProofType] = DeriveJsonEncoder.gen
+  given JsonDecoder[ProofType] = DeriveJsonDecoder.gen
 }

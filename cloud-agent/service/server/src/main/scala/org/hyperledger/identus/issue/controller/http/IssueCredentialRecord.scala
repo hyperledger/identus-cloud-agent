@@ -4,7 +4,6 @@ import org.hyperledger.identus.api.http.{Annotation, ErrorResponse}
 import org.hyperledger.identus.issue.controller.http.IssueCredentialRecord.annotations
 import org.hyperledger.identus.mercury.model.{AttachmentDescriptor, Base64}
 import org.hyperledger.identus.pollux.core.model.IssueCredentialRecord as PolluxIssueCredentialRecord
-import org.hyperledger.identus.shared.models.{FailureInfo, StatusCode}
 import sttp.tapir.{Schema, Validator}
 import sttp.tapir.json.zio.schemaForZioJsonValue
 import sttp.tapir.Schema.annotations.{description, encodedExample, validate}
@@ -195,7 +194,7 @@ object IssueCredentialRecord {
     object createdAt
         extends Annotation[OffsetDateTime](
           description = "The date and time when the issue credential record was created.",
-          example = OffsetDateTime.now()
+          example = OffsetDateTime.parse("2023-01-01T00:00:00Z")
         )
 
     object updatedAt
@@ -262,15 +261,19 @@ object IssueCredentialRecord {
 
     object goalcode
         extends Annotation[String](
-          description =
-            "A self-attested code the receiver may want to display to the user or use in automatically deciding what to do with the out-of-band message.",
+          description = """
+              |A self-attested code the receiver may want to display to the user or use in automatically deciding what to do with the out-of-band message.
+              |The goalCode is optional and can be included when the credential offer originates from an invitation for connectionless issuance
+              |""".stripMargin,
           example = "issue-vc"
         )
 
     object goal
         extends Annotation[String](
-          description =
-            "A self-attested string that the receiver may want to display to the user about the context-specific goal of the out-of-band message.",
+          description = """
+              |A self-attested string that the receiver may want to display to the user about the context-specific goal of the out-of-band message.
+              |The goal is optional and can be included when the credential offer originates from an invitation for connectionless issuance
+              |""".stripMargin,
           example = "To issue a Faber College Graduate credential"
         )
 
@@ -295,8 +298,7 @@ object IssueCredentialRecord {
     object metaLastFailure
         extends Annotation[ErrorResponse](
           description = "The last failure if any.",
-          example =
-            ErrorResponse.failureToErrorResponseConversion(FailureInfo("Error", StatusCode.NotFound, "Not Found"))
+          example = ErrorResponse.example
         )
 
   }

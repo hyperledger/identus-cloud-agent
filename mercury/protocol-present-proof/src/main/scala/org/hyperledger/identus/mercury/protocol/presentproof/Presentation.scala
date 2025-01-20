@@ -1,9 +1,7 @@
 package org.hyperledger.identus.mercury.protocol.presentproof
 
-import io.circe.{Decoder, Encoder}
-import io.circe.generic.semiauto.*
-import io.circe.syntax.*
 import org.hyperledger.identus.mercury.model.{AttachmentDescriptor, DidId, Message, PIURI}
+import zio.json.{DeriveJsonDecoder, DeriveJsonEncoder, EncoderOps, JsonDecoder, JsonEncoder}
 
 /** @param attach_id
   * @param format
@@ -16,8 +14,8 @@ import org.hyperledger.identus.mercury.model.{AttachmentDescriptor, DidId, Messa
 final case class PresentationFormat(attach_id: String, format: String)
 
 object PresentationFormat {
-  given Encoder[PresentationFormat] = deriveEncoder[PresentationFormat]
-  given Decoder[PresentationFormat] = deriveDecoder[PresentationFormat]
+  given JsonEncoder[PresentationFormat] = DeriveJsonEncoder.gen
+  given JsonDecoder[PresentationFormat] = DeriveJsonDecoder.gen
 }
 
 /** ALL parameterS are DIDCOMMV2 format and naming conventions and follows the protocol
@@ -30,7 +28,7 @@ object PresentationFormat {
   * @param attachments
   */
 final case class Presentation(
-    id: String = java.util.UUID.randomUUID.toString(),
+    id: String = java.util.UUID.randomUUID.toString,
     `type`: PIURI = Presentation.`type`,
     body: Presentation.Body,
     attachments: Seq[AttachmentDescriptor] = Seq.empty[AttachmentDescriptor],
@@ -46,7 +44,7 @@ final case class Presentation(
     from = Some(this.from),
     to = Seq(this.to),
     thid = this.thid,
-    body = this.body.asJson.asObject.get, // TODO get
+    body = this.body.toJsonAST.toOption.flatMap(_.asObject).get, // TODO get
     attachments = Some(this.attachments)
   )
 }
@@ -56,8 +54,8 @@ object Presentation {
   def `type`: PIURI = "https://didcomm.atalaprism.io/present-proof/3.0/presentation"
 
   import AttachmentDescriptor.attachmentDescriptorEncoderV2
-  given Encoder[Presentation] = deriveEncoder[Presentation]
-  given Decoder[Presentation] = deriveDecoder[Presentation]
+  given JsonEncoder[Presentation] = DeriveJsonEncoder.gen
+  given JsonDecoder[Presentation] = DeriveJsonDecoder.gen
 
   /** @param goal_code
     * @param comment
@@ -69,8 +67,8 @@ object Presentation {
   )
 
   object Body {
-    given Encoder[Body] = deriveEncoder[Body]
-    given Decoder[Body] = deriveDecoder[Body]
+    given JsonEncoder[Body] = DeriveJsonEncoder.gen
+    given JsonDecoder[Body] = DeriveJsonDecoder.gen
   }
 
   def makePresentationFromRequest(msg: Message): Presentation = { // TODO change msg: Message to RequestCredential
@@ -92,7 +90,7 @@ object Presentation {
   }
 
   def readFromMessage(message: Message): Presentation = {
-    val body = message.body.asJson.as[Presentation.Body].toOption.get // TODO get
+    val body = message.body.as[Presentation.Body].toOption.get // TODO get
     Presentation(
       id = message.id,
       `type` = message.piuri,

@@ -11,6 +11,7 @@ import org.hyperledger.identus.pollux.vc.jwt.revocation.BitStringError.{
 import org.hyperledger.identus.pollux.vc.jwt.Issuer
 import org.hyperledger.identus.shared.models.{WalletAccessContext, WalletId}
 import zio.*
+import zio.json.EncoderOps
 
 import java.util.UUID
 
@@ -36,7 +37,7 @@ trait CredentialStatusListRepository {
         .mapError(x => new Throwable(x.msg))
 
       credentialWithEmbeddedProof <- emptyStatusListCredential.toJsonWithEmbeddedProof
-    } yield credentialWithEmbeddedProof.spaces2
+    } yield credentialWithEmbeddedProof.toJson
   }
 
   def getCredentialStatusListIds: UIO[Seq[(WalletId, UUID)]]

@@ -1,14 +1,13 @@
 package org.hyperledger.identus.pollux.core.service.verification
 
-import io.circe.*
-import io.circe.syntax.*
 import org.hyperledger.identus.agent.walletapi.service.MockManagedDIDService
 import org.hyperledger.identus.castor.core.service.MockDIDService
 import org.hyperledger.identus.pollux.core.service.uriResolvers.ResourceUrlResolver
 import org.hyperledger.identus.pollux.vc.jwt.*
-import org.hyperledger.identus.pollux.vc.jwt.CredentialPayload.Implicits.*
 import org.hyperledger.identus.shared.models.{WalletAccessContext, WalletId}
 import zio.*
+import zio.json.ast.Json
+import zio.json.EncoderOps
 import zio.test.*
 import zio.Config.OffsetDateTime
 
@@ -38,10 +37,10 @@ object VcVerificationServiceImplSpec extends ZIOSpecDefault with VcVerificationS
                 `type` = "JsonSchemaValidator2018"
               )
             ),
-            credentialSubject = Json.obj(
-              "userName" -> Json.fromString("Bob"),
-              "age" -> Json.fromInt(42),
-              "email" -> Json.fromString("email")
+            credentialSubject = Json.Obj(
+              "userName" -> Json.Str("Bob"),
+              "age" -> Json.Num(42),
+              "email" -> Json.Str("email")
             ),
             maybeCredentialStatus = Some(
               CredentialStatus(
@@ -62,7 +61,7 @@ object VcVerificationServiceImplSpec extends ZIOSpecDefault with VcVerificationS
             maybeTermsOfUse = Option.empty,
             aud = Set(verifier)
           ).toJwtCredentialPayload
-          signedJwtCredential = issuer.signer.encode(jwtCredentialPayload.asJson)
+          signedJwtCredential = issuer.signer.encode(jwtCredentialPayload.toJsonAST.toOption.get)
           result <-
             svc.verify(
               List(
@@ -103,10 +102,10 @@ object VcVerificationServiceImplSpec extends ZIOSpecDefault with VcVerificationS
                 `type` = "JsonSchemaValidator2018"
               )
             ),
-            credentialSubject = Json.obj(
-              "userName" -> Json.fromString("Bob"),
-              "age" -> Json.fromInt(42),
-              "email" -> Json.fromString("email")
+            credentialSubject = Json.Obj(
+              "userName" -> Json.Str("Bob"),
+              "age" -> Json.Num(42),
+              "email" -> Json.Str("email")
             ),
             maybeCredentialStatus = Some(
               CredentialStatus(
@@ -127,7 +126,7 @@ object VcVerificationServiceImplSpec extends ZIOSpecDefault with VcVerificationS
             maybeTermsOfUse = Option.empty,
             aud = Set(verifier)
           ).toJwtCredentialPayload
-          signedJwtCredential = issuer.signer.encode(jwtCredentialPayload.asJson)
+          signedJwtCredential = issuer.signer.encode(jwtCredentialPayload.toJsonAST.toOption.get)
           result <-
             svc.verify(
               List(
@@ -168,10 +167,10 @@ object VcVerificationServiceImplSpec extends ZIOSpecDefault with VcVerificationS
                 `type` = "JsonSchemaValidator2018"
               )
             ),
-            credentialSubject = Json.obj(
-              "userName" -> Json.fromString("Bob"),
-              "age" -> Json.fromInt(42),
-              "email" -> Json.fromString("email")
+            credentialSubject = Json.Obj(
+              "userName" -> Json.Str("Bob"),
+              "age" -> Json.Num(42),
+              "email" -> Json.Str("email")
             ),
             maybeCredentialStatus = Some(
               CredentialStatus(
@@ -192,7 +191,7 @@ object VcVerificationServiceImplSpec extends ZIOSpecDefault with VcVerificationS
             maybeTermsOfUse = Option.empty,
             aud = Set(verifier)
           ).toJwtCredentialPayload
-          signedJwtCredential = issuer.signer.encode(jwtCredentialPayload.asJson)
+          signedJwtCredential = issuer.signer.encode(jwtCredentialPayload.toJsonAST.toOption.get)
           result <-
             svc.verify(
               List(
@@ -233,10 +232,10 @@ object VcVerificationServiceImplSpec extends ZIOSpecDefault with VcVerificationS
                 `type` = "JsonSchemaValidator2018"
               )
             ),
-            credentialSubject = Json.obj(
-              "userName" -> Json.fromString("Bob"),
-              "age" -> Json.fromInt(42),
-              "email" -> Json.fromString("email")
+            credentialSubject = Json.Obj(
+              "userName" -> Json.Str("Bob"),
+              "age" -> Json.Num(42),
+              "email" -> Json.Str("email")
             ),
             maybeCredentialStatus = Some(
               CredentialStatus(
@@ -257,7 +256,7 @@ object VcVerificationServiceImplSpec extends ZIOSpecDefault with VcVerificationS
             maybeTermsOfUse = Option.empty,
             aud = Set(verifier)
           ).toJwtCredentialPayload
-          signedJwtCredential = issuer.signer.encode(jwtCredentialPayload.asJson)
+          signedJwtCredential = issuer.signer.encode(jwtCredentialPayload.toJsonAST.toOption.get)
           result <-
             svc.verify(
               List(
@@ -305,10 +304,10 @@ object VcVerificationServiceImplSpec extends ZIOSpecDefault with VcVerificationS
                 `type` = "JsonSchemaValidator2018"
               )
             ),
-            credentialSubject = Json.obj(
-              "userName" -> Json.fromString("Bob"),
-              "age" -> Json.fromInt(42),
-              "email" -> Json.fromString("email")
+            credentialSubject = Json.Obj(
+              "userName" -> Json.Str("Bob"),
+              "age" -> Json.Num(42),
+              "email" -> Json.Str("email")
             ),
             maybeCredentialStatus = Some(
               CredentialStatus(
@@ -329,7 +328,7 @@ object VcVerificationServiceImplSpec extends ZIOSpecDefault with VcVerificationS
             maybeTermsOfUse = Option.empty,
             aud = Set(verifier)
           ).toJwtCredentialPayload
-          signedJwtCredential = issuer.signer.encode(jwtCredentialPayload.asJson)
+          signedJwtCredential = issuer.signer.encode(jwtCredentialPayload.toJsonAST.toOption.get)
           result <-
             svc.verify(
               List(
@@ -374,10 +373,10 @@ object VcVerificationServiceImplSpec extends ZIOSpecDefault with VcVerificationS
                 `type` = "JsonSchemaValidator2018"
               )
             ),
-            credentialSubject = Json.obj(
-              "userName" -> Json.fromString("Alice"),
-              "age" -> Json.fromInt(42),
-              "email" -> Json.fromString("alice@wonderland.com")
+            credentialSubject = Json.Obj(
+              "userName" -> Json.Str("Alice"),
+              "age" -> Json.Num(42),
+              "email" -> Json.Str("alice@wonderland.com")
             ),
             maybeCredentialStatus = Some(
               CredentialStatus(
@@ -398,7 +397,7 @@ object VcVerificationServiceImplSpec extends ZIOSpecDefault with VcVerificationS
             maybeTermsOfUse = Option.empty,
             aud = Set(verifier)
           ).toJwtCredentialPayload
-          signedJwtCredential = issuer.signer.encode(jwtCredentialPayload.asJson)
+          signedJwtCredential = issuer.signer.encode(jwtCredentialPayload.toJsonAST.toOption.get)
           result <-
             svc.verify(
               List(
@@ -449,13 +448,13 @@ object VcVerificationServiceImplSpec extends ZIOSpecDefault with VcVerificationS
                 )
               )
             ),
-            credentialSubject = Json.obj(
-              "userName" -> Json.fromString("Alice"),
-              "age" -> Json.fromInt(42),
-              "email" -> Json.fromString("alice@wonderland.com"),
-              "dateOfIssuance" -> Json.fromString("2000-01-01T10:00:00Z"),
-              "drivingLicenseID" -> Json.fromInt(12345),
-              "drivingClass" -> Json.fromString("5")
+            credentialSubject = Json.Obj(
+              "userName" -> Json.Str("Alice"),
+              "age" -> Json.Num(42),
+              "email" -> Json.Str("alice@wonderland.com"),
+              "dateOfIssuance" -> Json.Str("2000-01-01T10:00:00Z"),
+              "drivingLicenseID" -> Json.Num(12345),
+              "drivingClass" -> Json.Str("5")
             ),
             maybeCredentialStatus = Some(
               CredentialStatus(
@@ -476,7 +475,7 @@ object VcVerificationServiceImplSpec extends ZIOSpecDefault with VcVerificationS
             maybeTermsOfUse = Option.empty,
             aud = Set(verifier)
           ).toJwtCredentialPayload
-          signedJwtCredential = issuer.signer.encode(jwtCredentialPayload.asJson)
+          signedJwtCredential = issuer.signer.encode(jwtCredentialPayload.toJsonAST.toOption.get)
           result <-
             svc.verify(
               List(
@@ -527,13 +526,13 @@ object VcVerificationServiceImplSpec extends ZIOSpecDefault with VcVerificationS
                 )
               )
             ),
-            credentialSubject = Json.obj(
-              "userName" -> Json.fromString("Alice"),
-              "age" -> Json.fromInt(42),
-              "email" -> Json.fromString("alice@wonderland.com"),
-              "dateOfIssuance" -> Json.fromString("2000-01-01T10:00:00Z"),
-              "drivingLicenseID" -> Json.fromInt(12345),
-              "drivingClass" -> Json.fromInt(5)
+            credentialSubject = Json.Obj(
+              "userName" -> Json.Str("Alice"),
+              "age" -> Json.Num(42),
+              "email" -> Json.Str("alice@wonderland.com"),
+              "dateOfIssuance" -> Json.Str("2000-01-01T10:00:00Z"),
+              "drivingLicenseID" -> Json.Num(12345),
+              "drivingClass" -> Json.Num(5)
             ),
             maybeCredentialStatus = Some(
               CredentialStatus(
@@ -554,7 +553,7 @@ object VcVerificationServiceImplSpec extends ZIOSpecDefault with VcVerificationS
             maybeTermsOfUse = Option.empty,
             aud = Set(verifier)
           ).toJwtCredentialPayload
-          signedJwtCredential = issuer.signer.encode(jwtCredentialPayload.asJson)
+          signedJwtCredential = issuer.signer.encode(jwtCredentialPayload.toJsonAST.toOption.get)
           result <-
             svc.verify(
               List(
@@ -600,10 +599,10 @@ object VcVerificationServiceImplSpec extends ZIOSpecDefault with VcVerificationS
                 `type` = "JsonSchemaValidator2018"
               )
             ),
-            credentialSubject = Json.obj(
-              "userName" -> Json.fromString("Bob"),
-              "age" -> Json.fromInt(42),
-              "email" -> Json.fromString("email")
+            credentialSubject = Json.Obj(
+              "userName" -> Json.Str("Bob"),
+              "age" -> Json.Num(42),
+              "email" -> Json.Str("email")
             ),
             maybeCredentialStatus = Some(
               CredentialStatus(
@@ -624,7 +623,7 @@ object VcVerificationServiceImplSpec extends ZIOSpecDefault with VcVerificationS
             maybeTermsOfUse = Option.empty,
             aud = Set(verifier)
           ).toJwtCredentialPayload
-          signedJwtCredential = issuer.signer.encode(jwtCredentialPayload.asJson)
+          signedJwtCredential = issuer.signer.encode(jwtCredentialPayload.toJsonAST.toOption.get)
           result <-
             svc.verify(
               List(
@@ -666,10 +665,10 @@ object VcVerificationServiceImplSpec extends ZIOSpecDefault with VcVerificationS
                 `type` = "JsonSchemaValidator2018"
               )
             ),
-            credentialSubject = Json.obj(
-              "userName" -> Json.fromString("Bob"),
-              "age" -> Json.fromInt(42),
-              "email" -> Json.fromString("email")
+            credentialSubject = Json.Obj(
+              "userName" -> Json.Str("Bob"),
+              "age" -> Json.Num(42),
+              "email" -> Json.Str("email")
             ),
             maybeCredentialStatus = Some(
               CredentialStatus(
@@ -690,7 +689,7 @@ object VcVerificationServiceImplSpec extends ZIOSpecDefault with VcVerificationS
             maybeTermsOfUse = Option.empty,
             aud = Set(verifier)
           ).toJwtCredentialPayload
-          signedJwtCredential = issuer.signer.encode(jwtCredentialPayload.asJson)
+          signedJwtCredential = issuer.signer.encode(jwtCredentialPayload.toJsonAST.toOption.get)
           result <-
             svc.verify(
               List(
@@ -732,10 +731,10 @@ object VcVerificationServiceImplSpec extends ZIOSpecDefault with VcVerificationS
                 `type` = "JsonSchemaValidator2018"
               )
             ),
-            credentialSubject = Json.obj(
-              "userName" -> Json.fromString("Bob"),
-              "age" -> Json.fromInt(42),
-              "email" -> Json.fromString("email")
+            credentialSubject = Json.Obj(
+              "userName" -> Json.Str("Bob"),
+              "age" -> Json.Num(42),
+              "email" -> Json.Str("email")
             ),
             maybeCredentialStatus = Some(
               CredentialStatus(
@@ -756,7 +755,7 @@ object VcVerificationServiceImplSpec extends ZIOSpecDefault with VcVerificationS
             maybeTermsOfUse = Option.empty,
             aud = Set(verifier)
           ).toJwtCredentialPayload
-          signedJwtCredential = issuer.signer.encode(jwtCredentialPayload.asJson)
+          signedJwtCredential = issuer.signer.encode(jwtCredentialPayload.toJsonAST.toOption.get)
           result <-
             svc.verify(
               List(
@@ -798,10 +797,10 @@ object VcVerificationServiceImplSpec extends ZIOSpecDefault with VcVerificationS
                 `type` = "JsonSchemaValidator2018"
               )
             ),
-            credentialSubject = Json.obj(
-              "userName" -> Json.fromString("Bob"),
-              "age" -> Json.fromInt(42),
-              "email" -> Json.fromString("email")
+            credentialSubject = Json.Obj(
+              "userName" -> Json.Str("Bob"),
+              "age" -> Json.Num(42),
+              "email" -> Json.Str("email")
             ),
             maybeCredentialStatus = Some(
               CredentialStatus(
@@ -822,7 +821,7 @@ object VcVerificationServiceImplSpec extends ZIOSpecDefault with VcVerificationS
             maybeTermsOfUse = Option.empty,
             aud = Set(verifier)
           ).toJwtCredentialPayload
-          signedJwtCredential = issuer.signer.encode(jwtCredentialPayload.asJson)
+          signedJwtCredential = issuer.signer.encode(jwtCredentialPayload.toJsonAST.toOption.get)
           result <-
             svc.verify(
               List(

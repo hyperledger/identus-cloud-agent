@@ -4,7 +4,6 @@ import org.hyperledger.identus.api.http.Annotation
 import org.hyperledger.identus.castor.controller.http.Service.annotations
 import org.hyperledger.identus.castor.core.model.{did as castorDomain, ProtoModelHelper}
 import org.hyperledger.identus.castor.core.model.did.w3c
-import org.hyperledger.identus.shared.json.JsonInterop
 import org.hyperledger.identus.shared.utils.Traverse.*
 import sttp.tapir.Schema
 import sttp.tapir.Schema.annotations.{description, encodedExample}
@@ -62,7 +61,7 @@ object Service {
     Service(
       id = service.id,
       `type` = service.`type`,
-      serviceEndpoint = ServiceEndpoint.fromJson(JsonInterop.toZioJsonAst(service.serviceEndpoint))
+      serviceEndpoint = ServiceEndpoint.fromJson(service.serviceEndpoint)
     )
 
   extension (service: Service) {

@@ -59,7 +59,7 @@ object RequestPresentationInput {
         extends Annotation[Option[String]](
           description = """
             | A self-attested code the receiver may want to display to the user or use in automatically deciding what to do with the out-of-band message.
-            | goalcode is optional and can be provided when the presentation request is from invitation for connectionless verification.
+            | goalcode is optional and can be included when the presentation request is from invitation for connectionless verification.
             |""".stripMargin,
           example = Some("present-vp")
         )
@@ -68,7 +68,7 @@ object RequestPresentationInput {
         extends Annotation[Option[String]](
           description = """
           | A self-attested string that the receiver may want to display to the user about the context-specific goal of the out-of-band message.
-          | goal is optional and can be provided when the presentation request is from invitation for connectionless verification.
+          | goal is optional and can be included when the presentation request is from invitation for connectionless verification.
           |""".stripMargin,
           example = Some("Request proof of vaccine")
         )

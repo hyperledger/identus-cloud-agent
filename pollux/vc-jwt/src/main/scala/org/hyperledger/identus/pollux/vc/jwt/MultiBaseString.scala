@@ -1,8 +1,8 @@
 package org.hyperledger.identus.pollux.vc.jwt
 
-import io.circe.*
 import org.hyperledger.identus.shared.utils.Base64Utils
 import scodec.bits.ByteVector
+import zio.json.{JsonDecoder, JsonEncoder}
 
 case class MultiBaseString(header: MultiBaseString.Header, data: String) {
   def toMultiBaseString: String = s"${header.value}$data"
@@ -36,15 +36,13 @@ object MultiBaseString {
     }
   }
 
-  given multiBaseStringEncoder: Encoder[MultiBaseString] = (multiBaseString: MultiBaseString) =>
-    Json.fromString(multiBaseString.toMultiBaseString)
+  given JsonEncoder[MultiBaseString] = JsonEncoder.string.contramap(_.toMultiBaseString)
 
-  given multiBaseStringDecoder: Decoder[MultiBaseString] = (c: HCursor) =>
-    Decoder.decodeString(c).flatMap { str =>
-      val header = MultiBaseString.Header.fromValue(str.head)
-      header match {
-        case Some(value) => Right(MultiBaseString(value, str.tail))
-        case None        => Left(DecodingFailure(s"no enum value matched for $str", List(CursorOp.Field(str))))
-      }
+  given JsonDecoder[MultiBaseString] = JsonDecoder[String].mapOrFail { str =>
+    val header = MultiBaseString.Header.fromValue(str.head)
+    header match {
+      case Some(value) => Right(MultiBaseString(value, str.tail))
+      case None        => Left(s"no enum value matched for $str")
     }
+  }
 }

@@ -7,8 +7,7 @@ import net.serenitybdd.screenplay.Actor
 
 enum class SchemaErrorTemplate {
     TYPE_AND_PROPERTIES_WITHOUT_SCHEMA_TYPE {
-        override fun inner_schema(): String {
-            return """
+        override fun innerSchema(): String = """
                 {
                     "type": "object",
                     "properties": {
@@ -21,12 +20,10 @@ enum class SchemaErrorTemplate {
                     },
                     "required": ["name"]
                 }
-            """.trimIndent()
-        }
+        """.trimIndent()
     },
     CUSTOM_WORDS_NOT_DEFINED {
-        override fun inner_schema(): String {
-            return """
+        override fun innerSchema(): String = """
                 {
                   "${"$"}schema": "http://json-schema.org/draft-2020-12/schema#",
                   "type": "object",
@@ -40,12 +37,10 @@ enum class SchemaErrorTemplate {
                   },
                   "customKeyword": "value"
                 }
-            """.trimIndent()
-        }
+        """.trimIndent()
     },
     MISSING_REQUIRED_FOR_MANDATORY_PROPERTY {
-        override fun inner_schema(): String {
-            return """
+        override fun innerSchema(): String = """
             {
               "${"$"}schema": "http://json-schema.org/draft-2020-12/schema#",
               "type": "object",
@@ -59,13 +54,12 @@ enum class SchemaErrorTemplate {
               }
             }
             """
-        }
     }, ;
 
-    abstract fun inner_schema(): String
+    abstract fun innerSchema(): String
 
     fun schema(actor: Actor): String {
-        val innerSchema = Gson().fromJson(inner_schema(), JsonObject::class.java)
+        val innerSchema = Gson().fromJson(innerSchema(), JsonObject::class.java)
         val json = getJson(actor)
         json.add("schema", innerSchema)
         return json.toString()

@@ -14,6 +14,7 @@ import org.hyperledger.identus.pollux.vc.jwt.{Issuer, PresentationPayload, W3cCr
 import org.hyperledger.identus.shared.models.*
 import zio.*
 import zio.json.*
+import zio.json.ast.Json
 import zio.URIO
 
 import java.time.Instant
@@ -328,6 +329,12 @@ class PresentationServiceNotifier(
       invitation: String
   ): ZIO[WalletAccessContext, PresentationError, RequestPresentation] =
     svc.getRequestPresentationFromInvitation(pairwiseProverDID, invitation)
+
+  override def updateWithSDJWTDisclosedClaims(
+      recordId: DidCommID,
+      claimsDisclosed: Json
+  ): ZIO[WalletAccessContext, PresentationError, PresentationRecord] =
+    svc.updateWithSDJWTDisclosedClaims(recordId, claimsDisclosed)
 }
 
 object PresentationServiceNotifier {

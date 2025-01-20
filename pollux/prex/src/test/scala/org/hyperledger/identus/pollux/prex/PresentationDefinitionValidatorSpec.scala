@@ -1,8 +1,5 @@
 package org.hyperledger.identus.pollux.prex
 
-import io.circe.*
-import io.circe.generic.auto.*
-import io.circe.parser.*
 import org.hyperledger.identus.pollux.prex.PresentationDefinitionError.{
   DuplicatedDescriptorId,
   InvalidFilterJsonPath,
@@ -10,6 +7,7 @@ import org.hyperledger.identus.pollux.prex.PresentationDefinitionError.{
   JsonSchemaOptionNotSupported
 }
 import zio.*
+import zio.json.{DecoderOps, DeriveJsonDecoder, DeriveJsonEncoder, JsonDecoder, JsonEncoder}
 import zio.test.*
 import zio.test.Assertion.*
 
@@ -19,6 +17,11 @@ import scala.util.Using
 object PresentationDefinitionValidatorSpec extends ZIOSpecDefault {
 
   final case class ExampleTransportEnvelope(presentation_definition: PresentationDefinition)
+
+  object ExampleTransportEnvelope {
+    given JsonEncoder[ExampleTransportEnvelope] = DeriveJsonEncoder.gen
+    given JsonDecoder[ExampleTransportEnvelope] = DeriveJsonDecoder.gen
+  }
 
   override def spec = suite("PresentationDefinitionValidatorSpec")(
     test("accept presentation-definition examples from spec") {
@@ -34,7 +37,7 @@ object PresentationDefinitionValidatorSpec extends ZIOSpecDefault {
             validator <- ZIO.service[PresentationDefinitionValidator]
             _ <- ZIO
               .fromTry(Using(Source.fromResource(path))(_.mkString))
-              .flatMap(json => ZIO.fromEither(decode[ExampleTransportEnvelope](json)))
+              .flatMap(json => ZIO.fromEither(json.fromJson[ExampleTransportEnvelope]))
               .map(_.presentation_definition)
               .flatMap(validator.validate)
           } yield ()
@@ -68,7 +71,7 @@ object PresentationDefinitionValidatorSpec extends ZIOSpecDefault {
       for {
         validator <- ZIO.service[PresentationDefinitionValidator]
         pd <- ZIO
-          .fromEither(decode[ExampleTransportEnvelope](pdJson))
+          .fromEither(pdJson.fromJson[ExampleTransportEnvelope])
           .map(_.presentation_definition)
         exit <- validator.validate(pd).exit
       } yield assert(exit)(failsWithA[InvalidFilterJsonSchema])
@@ -100,7 +103,7 @@ object PresentationDefinitionValidatorSpec extends ZIOSpecDefault {
       for {
         validator <- ZIO.service[PresentationDefinitionValidator]
         pd <- ZIO
-          .fromEither(decode[ExampleTransportEnvelope](pdJson))
+          .fromEither(pdJson.fromJson[ExampleTransportEnvelope])
           .map(_.presentation_definition)
         exit <- validator.validate(pd).exit
       } yield assert(exit)(failsWithA[JsonSchemaOptionNotSupported])
@@ -131,7 +134,7 @@ object PresentationDefinitionValidatorSpec extends ZIOSpecDefault {
       for {
         validator <- ZIO.service[PresentationDefinitionValidator]
         pd <- ZIO
-          .fromEither(decode[ExampleTransportEnvelope](pdJson))
+          .fromEither(pdJson.fromJson[ExampleTransportEnvelope])
           .map(_.presentation_definition)
         exit <- validator.validate(pd).exit
       } yield assert(exit)(failsWithA[InvalidFilterJsonPath])
@@ -158,7 +161,7 @@ object PresentationDefinitionValidatorSpec extends ZIOSpecDefault {
       for {
         validator <- ZIO.service[PresentationDefinitionValidator]
         pd <- ZIO
-          .fromEither(decode[ExampleTransportEnvelope](pdJson))
+          .fromEither(pdJson.fromJson[ExampleTransportEnvelope])
           .map(_.presentation_definition)
         exit <- validator.validate(pd).exit
       } yield assert(exit)(failsWithA[DuplicatedDescriptorId])

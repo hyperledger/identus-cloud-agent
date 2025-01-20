@@ -1,4 +1,4 @@
-import { Connection, PresentationStatus } from "@input-output-hk/prism-typescript-client";
+import { Connection, PresentationStatus } from "@hyperledger/identus-cloud-agent-client-ts";
 import { Actor } from "./Actor";
 import { VERIFIER_AGENT_API_KEY, VERIFIER_AGENT_URL } from "../common/Config";
 
