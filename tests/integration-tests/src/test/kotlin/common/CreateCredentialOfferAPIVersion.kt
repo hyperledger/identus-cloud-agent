@@ -130,7 +130,7 @@ enum class CreateCredentialOfferAPIVersion {
             credentialDefinitionId: UUID,
             claims: Map<String, Any>,
             connectionId: UUID,
-            validityPeriod: Double?
+            validityPeriod: Double?,
         ) = CreateIssueCredentialRecordRequest(
             connectionId = connectionId,
             credentialFormat = credentialType.format,
@@ -141,7 +141,7 @@ enum class CreateCredentialOfferAPIVersion {
                 credentialDefinitionId = credentialDefinitionId,
                 claims = claims,
                 validityPeriod = validityPeriod ?: 3600.0,
-            )
+            ),
         )
     },
     ;

@@ -15,12 +15,11 @@ enum class CredentialClaims {
     },
     ANONCREDS_STUDENT_CLAIMS {
         override val claims: Map<String, Any> = linkedMapOf(
-        "name" to "Bob",
-        "age" to "21",
-        "sex" to "M",
+            "name" to "Bob",
+            "age" to "21",
+            "sex" to "M",
         )
-    }
-    ;
+    }, ;
 
     abstract val claims: Map<String, Any>
 }
