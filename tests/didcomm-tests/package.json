@@ -1,0 +1,14 @@
+{
+  "name": "didcomm-tests",
+  "version": "1.0.0",
+  "description": "Test suite for executing didcomm tests",
+  "main": "index.js",
+  "scripts": {
+    "test": "node node_modules/@amagyar-iohk/didcomm-test/dist/suite.spec.js"
+  },
+  "author": "Allain Magyar",
+  "license": "ISC",
+  "dependencies": {
+    "@amagyar-iohk/didcomm-test": "^1.0.4"
+  }
+}

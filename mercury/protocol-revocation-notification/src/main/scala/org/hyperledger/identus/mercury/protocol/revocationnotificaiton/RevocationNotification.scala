@@ -1,9 +1,7 @@
 package org.hyperledger.identus.mercury.protocol.revocationnotificaiton
 
-import io.circe.*
-import io.circe.generic.semiauto.*
-import io.circe.syntax.*
 import org.hyperledger.identus.mercury.model.{DidId, Message, PIURI}
+import zio.json.{DeriveJsonDecoder, DeriveJsonEncoder, EncoderOps, JsonDecoder, JsonEncoder}
 
 final case class RevocationNotification(
     id: String = java.util.UUID.randomUUID.toString(),
@@ -21,13 +19,13 @@ final case class RevocationNotification(
     from = Some(this.from),
     to = Seq(this.to),
     thid = this.thid,
-    body = this.body.asJson.asObject.get,
+    body = this.body.toJsonAST.toOption.flatMap(_.asObject).get,
   )
 }
 object RevocationNotification {
 
-  given Encoder[RevocationNotification] = deriveEncoder[RevocationNotification]
-  given Decoder[RevocationNotification] = deriveDecoder[RevocationNotification]
+  given JsonEncoder[RevocationNotification] = DeriveJsonEncoder.gen
+  given JsonDecoder[RevocationNotification] = DeriveJsonDecoder.gen
 
   def `type`: PIURI = "https://atalaprism.io/revocation_notification/1.0/revoke"
 
@@ -54,13 +52,13 @@ object RevocationNotification {
   )
 
   object Body {
-    given Encoder[Body] = deriveEncoder[Body]
-    given Decoder[Body] = deriveDecoder[Body]
+    given JsonEncoder[Body] = DeriveJsonEncoder.gen
+    given JsonDecoder[Body] = DeriveJsonDecoder.gen
   }
 
   def readFromMessage(message: Message): Either[String, RevocationNotification] =
-    message.body.asJson.as[RevocationNotification.Body] match
-      case Left(fail) => Left("Fail to parse RevocationNotification's body: " + fail.getMessage)
+    message.body.as[RevocationNotification.Body] match
+      case Left(err) => Left("Fail to parse RevocationNotification's body: " + err)
       case Right(body) =>
         message.from match
           case None => Left("OfferCredential MUST have the sender explicit")

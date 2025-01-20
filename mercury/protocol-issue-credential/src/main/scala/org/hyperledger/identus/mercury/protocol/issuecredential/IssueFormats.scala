@@ -1,7 +1,6 @@
 package org.hyperledger.identus.mercury.protocol.issuecredential
 
-import io.circe.{Decoder, Encoder}
-import io.circe.generic.semiauto.*
+import zio.json.{DeriveJsonDecoder, DeriveJsonEncoder, JsonDecoder, JsonEncoder}
 
 /*
 Issue Credential Formats:
@@ -74,8 +73,8 @@ enum IssueCredentialProposeFormat(val name: String) {
 }
 
 object IssueCredentialProposeFormat {
-  given Encoder[IssueCredentialProposeFormat] = deriveEncoder[IssueCredentialProposeFormat]
-  given Decoder[IssueCredentialProposeFormat] = deriveDecoder[IssueCredentialProposeFormat]
+  given JsonEncoder[IssueCredentialProposeFormat] = DeriveJsonEncoder.gen
+  given JsonDecoder[IssueCredentialProposeFormat] = DeriveJsonDecoder.gen
 }
 
 /** Issue Offer:
@@ -102,8 +101,8 @@ enum IssueCredentialOfferFormat(val name: String) {
 }
 
 object IssueCredentialOfferFormat {
-  given Encoder[IssueCredentialOfferFormat] = deriveEncoder[IssueCredentialOfferFormat]
-  given Decoder[IssueCredentialOfferFormat] = deriveDecoder[IssueCredentialOfferFormat]
+  given JsonEncoder[IssueCredentialOfferFormat] = DeriveJsonEncoder.gen
+  given JsonDecoder[IssueCredentialOfferFormat] = DeriveJsonDecoder.gen
 }
 
 /** Issue Request:
@@ -130,8 +129,8 @@ enum IssueCredentialRequestFormat(val name: String) {
 }
 
 object IssueCredentialRequestFormat {
-  given Encoder[IssueCredentialRequestFormat] = deriveEncoder[IssueCredentialRequestFormat]
-  given Decoder[IssueCredentialRequestFormat] = deriveDecoder[IssueCredentialRequestFormat]
+  given JsonEncoder[IssueCredentialRequestFormat] = DeriveJsonEncoder.gen
+  given JsonDecoder[IssueCredentialRequestFormat] = DeriveJsonDecoder.gen
 }
 
 /** Issue Credential:
@@ -156,6 +155,6 @@ enum IssueCredentialIssuedFormat(val name: String) {
 }
 
 object IssueCredentialIssuedFormat {
-  given Encoder[IssueCredentialIssuedFormat] = deriveEncoder[IssueCredentialIssuedFormat]
-  given Decoder[IssueCredentialIssuedFormat] = deriveDecoder[IssueCredentialIssuedFormat]
+  given JsonEncoder[IssueCredentialIssuedFormat] = DeriveJsonEncoder.gen
+  given JsonDecoder[IssueCredentialIssuedFormat] = DeriveJsonDecoder.gen
 }

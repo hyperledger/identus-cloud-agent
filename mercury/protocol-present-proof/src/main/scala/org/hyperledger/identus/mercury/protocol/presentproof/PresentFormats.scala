@@ -1,7 +1,5 @@
 package org.hyperledger.identus.mercury.protocol.presentproof
 
-import io.circe.{Decoder, Encoder}
-import io.circe.generic.semiauto.*
 import zio.json.{DeriveJsonDecoder, DeriveJsonEncoder, JsonDecoder, JsonEncoder}
 
 /*
@@ -55,8 +53,8 @@ enum PresentCredentialProposeFormat(val name: String) {
 }
 
 object PresentCredentialProposeFormat {
-  given Encoder[PresentCredentialProposeFormat] = deriveEncoder[PresentCredentialProposeFormat]
-  given Decoder[PresentCredentialProposeFormat] = deriveDecoder[PresentCredentialProposeFormat]
+  given JsonEncoder[PresentCredentialProposeFormat] = DeriveJsonEncoder.gen
+  given JsonDecoder[PresentCredentialProposeFormat] = DeriveJsonDecoder.gen
 }
 
 /** Present Request:
@@ -79,15 +77,8 @@ enum PresentCredentialRequestFormat(val name: String) {
 }
 
 object PresentCredentialRequestFormat {
-  given Encoder[PresentCredentialRequestFormat] = deriveEncoder[PresentCredentialRequestFormat]
-  given Decoder[PresentCredentialRequestFormat] = deriveDecoder[PresentCredentialRequestFormat]
-
-  given JsonEncoder[PresentCredentialRequestFormat] =
-    DeriveJsonEncoder.gen[PresentCredentialRequestFormat]
-
-  given JsonDecoder[PresentCredentialRequestFormat] =
-    DeriveJsonDecoder.gen[PresentCredentialRequestFormat]
-
+  given JsonEncoder[PresentCredentialRequestFormat] = DeriveJsonEncoder.gen
+  given JsonDecoder[PresentCredentialRequestFormat] = DeriveJsonDecoder.gen
 }
 
 /** Present Credential:
@@ -111,6 +102,6 @@ enum PresentCredentialFormat(val name: String) {
 }
 
 object PresentCredentialFormat {
-  given Encoder[PresentCredentialFormat] = deriveEncoder[PresentCredentialFormat]
-  given Decoder[PresentCredentialFormat] = deriveDecoder[PresentCredentialFormat]
+  given JsonEncoder[PresentCredentialFormat] = DeriveJsonEncoder.gen
+  given JsonDecoder[PresentCredentialFormat] = DeriveJsonDecoder.gen
 }

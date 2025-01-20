@@ -1,6 +1,6 @@
 package org.hyperledger.identus.didcomm.controller
 
-import org.hyperledger.identus.mercury.model.DidId
+import org.hyperledger.identus.mercury.model.{DidId, PIURI}
 import org.hyperledger.identus.shared.models.{Failure, KeyId, StatusCode}
 
 sealed trait DIDCommControllerError extends Failure {
@@ -38,5 +38,11 @@ object DIDCommControllerError {
     override def statusCode: StatusCode = StatusCode.UnprocessableContent
     override def userFacingMessage: String =
       s"The Peer DID does not contain the required key: DID=${did.value}, keyId=${keyId.value}"
+  }
+
+  final case class UnsupportedPIURI(piuri: PIURI) extends DIDCommControllerError {
+    override def statusCode: StatusCode = StatusCode.UnprocessableContent
+    override def userFacingMessage: String =
+      s"The Protocol Identifier URI (URI) found in the DIDComm message is not supported: PIURI=$piuri"
   }
 }

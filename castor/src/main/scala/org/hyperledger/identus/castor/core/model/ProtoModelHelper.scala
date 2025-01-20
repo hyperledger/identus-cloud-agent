@@ -1,33 +1,16 @@
 package org.hyperledger.identus.castor.core.model
 
 import com.google.protobuf.ByteString
-import io.circe.Json
-import io.iohk.atala.prism.protos.{common_models, node_api, node_models}
+import io.iohk.atala.prism.protos.{node_api, node_models}
 import io.iohk.atala.prism.protos.common_models.OperationStatus
-import io.iohk.atala.prism.protos.node_models.KeyUsage
 import io.iohk.atala.prism.protos.node_models.PublicKey.KeyData
-import org.hyperledger.identus.castor.core.model.did.{
-  DIDData,
-  EllipticCurve,
-  InternalKeyPurpose,
-  InternalPublicKey,
-  PrismDID,
-  PrismDIDOperation,
-  PublicKey,
-  PublicKeyData,
-  ScheduledDIDOperationDetail,
-  ScheduledDIDOperationStatus,
-  Service,
-  ServiceEndpoint,
-  ServiceType,
-  SignedPrismDIDOperation,
-  UpdateDIDAction,
-  VerificationRelationship
-}
+import org.hyperledger.identus.castor.core.model.did.*
 import org.hyperledger.identus.castor.core.model.did.ServiceEndpoint.{value, UriOrJsonEndpoint}
 import org.hyperledger.identus.shared.models.{Base64UrlString, KeyId}
 import org.hyperledger.identus.shared.utils.Traverse.*
 import zio.*
+import zio.json.{DecoderOps, EncoderOps}
+import zio.json.ast.Json
 
 import java.time.Instant
 import scala.language.implicitConversions
@@ -191,8 +174,8 @@ private[castor] trait ProtoModelHelper {
       serviceType match {
         case ServiceType.Single(name) => name.value
         case ts: ServiceType.Multiple =>
-          val names = ts.values.map(_.value).map(Json.fromString)
-          Json.arr(names*).noSpaces
+          val names = ts.values.map(_.value).map(Json.Str(_))
+          Json.Arr(names*).toJson
       }
     }
   }
@@ -203,14 +186,14 @@ private[castor] trait ProtoModelHelper {
         case ServiceEndpoint.Single(value) =>
           value match {
             case UriOrJsonEndpoint.Uri(uri)   => uri.value
-            case UriOrJsonEndpoint.Json(json) => Json.fromJsonObject(json).noSpaces
+            case UriOrJsonEndpoint.Json(json) => json.toJson
           }
         case endpoints: ServiceEndpoint.Multiple =>
           val uris = endpoints.values.map {
-            case UriOrJsonEndpoint.Uri(uri)   => Json.fromString(uri.value)
-            case UriOrJsonEndpoint.Json(json) => Json.fromJsonObject(json)
+            case UriOrJsonEndpoint.Uri(uri)   => Json.Str(uri.value)
+            case UriOrJsonEndpoint.Json(json) => json
           }
-          Json.arr(uris*).noSpaces
+          Json.Arr(uris*).toJson
       }
     }
   }
@@ -356,24 +339,24 @@ private[castor] trait ProtoModelHelper {
 
   def parseServiceType(s: String): Either[String, ServiceType] = {
     // The type field MUST be a string or a non-empty JSON array of strings.
-    val parsedJson: Option[Either[String, ServiceType.Multiple]] = io.circe.parser
-      .parse(s)
-      .toOption // it's OK to let parsing fail (e.g. LinkedDomains without quote is not a JSON string)
-      .flatMap(_.asArray)
-      .map { jsonArr =>
-        jsonArr
-          .traverse(_.asString.toRight("the service type is not a JSON array of strings"))
-          .flatMap(_.traverse(ServiceType.Name.fromString))
-          .map(_.toList)
-          .flatMap {
-            case head :: tail => Right(ServiceType.Multiple(head, tail))
-            case Nil          => Left("the service type cannot be an empty JSON array")
-          }
-          .filterOrElse(
-            _ => s == io.circe.Json.arr(jsonArr*).noSpaces,
-            "the service type is a valid JSON array of strings, but not conform to the ABNF"
-          )
-      }
+    val parsedJson: Option[Either[String, ServiceType.Multiple]] =
+      s.fromJson[Json]
+        .toOption // it's OK to let parsing fail (e.g. LinkedDomains without quote is not a JSON string)
+        .flatMap(_.asArray)
+        .map { jsonArr =>
+          jsonArr
+            .traverse(_.asString.toRight("the service type is not a JSON array of strings"))
+            .flatMap(_.traverse(ServiceType.Name.fromString))
+            .map(_.toList)
+            .flatMap {
+              case head :: tail => Right(ServiceType.Multiple(head, tail))
+              case Nil          => Left("the service type cannot be an empty JSON array")
+            }
+            .filterOrElse(
+              _ => s == Json.Arr(jsonArr*).toJson,
+              "the service type is a valid JSON array of strings, but not conform to the ABNF"
+            )
+        }
 
     parsedJson match {
       // serviceType is a valid JSON array of strings
@@ -391,22 +374,22 @@ private[castor] trait ProtoModelHelper {
      * 2. a JSON object
      * 3. a non-empty JSON array of URIs and/or JSON objects
      */
-    val parsedJson: Option[Either[String, ServiceEndpoint]] = io.circe.parser
-      .parse(s)
-      .toOption // it's OK to let parsing fail (e.g. http://example.com without quote is not a JSON string)
-      .flatMap { json =>
-        val parsedObject = json.asObject.map(obj => Right(ServiceEndpoint.Single(obj)))
-        val parsedArray = json.asArray.map(_.traverse[String, UriOrJsonEndpoint] { js =>
-          val obj = js.asObject.map(obj => Right(obj: UriOrJsonEndpoint))
-          val str = js.asString.map(str => ServiceEndpoint.UriValue.fromString(str).map[UriOrJsonEndpoint](i => i))
-          obj.orElse(str).getOrElse(Left("the service endpoint is not a JSON array of URIs and/or JSON objects"))
-        }.map(_.toList).flatMap {
-          case head :: tail => Right(ServiceEndpoint.Multiple(head, tail))
-          case Nil          => Left("the service endpoint cannot be an empty JSON array")
-        })
+    val parsedJson: Option[Either[String, ServiceEndpoint]] =
+      s.fromJson[Json]
+        .toOption // it's OK to let parsing fail (e.g. http://example.com without quote is not a JSON string)
+        .flatMap { json =>
+          val parsedObject = json.asObject.map(obj => Right(ServiceEndpoint.Single(obj)))
+          val parsedArray = json.asArray.map(_.traverse[String, UriOrJsonEndpoint] { js =>
+            val obj = js.asObject.map(obj => Right(obj: UriOrJsonEndpoint))
+            val str = js.asString.map(str => ServiceEndpoint.UriValue.fromString(str).map[UriOrJsonEndpoint](i => i))
+            obj.orElse(str).getOrElse(Left("the service endpoint is not a JSON array of URIs and/or JSON objects"))
+          }.map(_.toList).flatMap {
+            case head :: tail => Right(ServiceEndpoint.Multiple(head, tail))
+            case Nil          => Left("the service endpoint cannot be an empty JSON array")
+          })
 
-        parsedObject.orElse(parsedArray)
-      }
+          parsedObject.orElse(parsedArray)
+        }
 
     parsedJson match {
       // serviceEndpoint is a valid JSON object or array

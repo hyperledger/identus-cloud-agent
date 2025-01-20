@@ -1,10 +1,9 @@
 package org.hyperledger.identus.mercury.protocol.connection
 
-import io.circe.{Decoder, Encoder}
-import io.circe.generic.semiauto.{deriveDecoder, deriveEncoder}
-import io.circe.syntax.*
-import org.hyperledger.identus.mercury.model.{AttachmentDescriptor, DidId, Message, PIURI}
+import org.hyperledger.identus.mercury.model.{DidId, Message, PIURI}
 import org.hyperledger.identus.mercury.protocol.invitation.v2.Invitation
+import zio.json.{DeriveJsonDecoder, DeriveJsonEncoder, EncoderOps, JsonDecoder, JsonEncoder}
+import zio.json.ast.Json
 
 object ConnectionRequest {
   def `type`: PIURI = "https://atalaprism.io/mercury/connections/1.0/request"
@@ -16,12 +15,12 @@ object ConnectionRequest {
   )
 
   object Body {
-    given Encoder[Body] = deriveEncoder[Body]
-    given Decoder[Body] = deriveDecoder[Body]
+    given JsonEncoder[Body] = DeriveJsonEncoder.gen[Body]
+    given JsonDecoder[Body] = DeriveJsonDecoder.gen[Body]
   }
 
-  given Encoder[ConnectionRequest] = deriveEncoder[ConnectionRequest]
-  given Decoder[ConnectionRequest] = deriveDecoder[ConnectionRequest]
+  given JsonEncoder[ConnectionRequest] = DeriveJsonEncoder.gen[ConnectionRequest]
+  given JsonDecoder[ConnectionRequest] = DeriveJsonDecoder.gen[ConnectionRequest]
 
   /** Utility method to start a ConnectionRequest for the scenario where he has an OOB Invitation
     *
@@ -48,10 +47,10 @@ object ConnectionRequest {
       piuri <-
         if (message.`type` == ConnectionRequest.`type`) Right(message.`type`)
         else Left(s"Message MUST be of the type '${ConnectionRequest.`type`}' instead of '${message.`type`}'")
-      body <- message.body.asJson
+      body <- message.body
         .as[ConnectionRequest.Body]
         .left
-        .map(ex => "Fail to parse the body of the ConnectionRequest because: " + ex.message)
+        .map(err => "Fail to parse the body of the ConnectionRequest because: " + err)
       ret <- message.to match
         case Seq(onlyOneRecipient) =>
           message.from match
@@ -91,6 +90,6 @@ final case class ConnectionRequest(
     to = Seq(this.to),
     thid = this.thid,
     pthid = this.pthid,
-    body = this.body.asJson.asObject.get,
+    body = this.body.toJsonAST.toOption.flatMap(_.asObject).getOrElse(Json.Obj()),
   )
 }

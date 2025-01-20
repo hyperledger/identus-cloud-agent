@@ -1,11 +1,11 @@
 package org.hyperledger.identus.castor.core.util
 
-import io.circe.Json
 import org.hyperledger.identus.castor.core.model.did.*
 import org.hyperledger.identus.castor.core.model.did.ServiceEndpoint.{UriOrJsonEndpoint, UriValue}
 import org.hyperledger.identus.shared.crypto.Apollo
 import org.hyperledger.identus.shared.models.{Base64UrlString, KeyId}
 import zio.*
+import zio.json.ast.Json
 import zio.test.Gen
 
 import scala.language.implicitConversions
@@ -62,7 +62,7 @@ object GenUtils {
       )
       sampleUri = "https://example.com"
       uriEndpointGen = Gen.const(UriOrJsonEndpoint.Uri(UriValue.fromString(sampleUri).toOption.get))
-      jsonEndpointGen = Gen.const(UriOrJsonEndpoint.Json(Json.obj("uri" -> Json.fromString(sampleUri)).asObject.get))
+      jsonEndpointGen = Gen.const(UriOrJsonEndpoint.Json(Json.Obj("uri" -> Json.Str(sampleUri)).asObject.get))
       endpoints <- Gen.oneOf[Any, ServiceEndpoint](
         uriEndpointGen.map(ServiceEndpoint.Single(_)),
         jsonEndpointGen.map(ServiceEndpoint.Single(_)),

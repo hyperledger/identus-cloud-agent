@@ -1,10 +1,6 @@
 package org.hyperledger.identus.pollux.core.service
 
-import cats.*
 import cats.implicits.*
-import io.circe.*
-import io.circe.parser.*
-import io.circe.syntax.*
 import org.hyperledger.identus.mercury.model.*
 import org.hyperledger.identus.mercury.protocol.invitation.v2.Invitation
 import org.hyperledger.identus.mercury.protocol.issuecredential.IssueCredentialIssuedFormat
@@ -25,11 +21,10 @@ import org.hyperledger.identus.shared.models.*
 import org.hyperledger.identus.shared.utils.aspects.CustomMetricsAspect
 import org.hyperledger.identus.shared.utils.Base64Utils
 import zio.*
-import zio.json.*
+import zio.json.{EncoderOps, *}
 
 import java.time.Instant
 import java.util.{Base64 as JBase64, UUID}
-import java.util as ju
 import scala.util.chaining.*
 import scala.util.Try
 
@@ -458,6 +453,7 @@ private class PresentationServiceImpl(
         anoncredCredentialsToUse = None,
         sdJwtClaimsToUseJsonSchemaId = None,
         sdJwtClaimsToDisclose = None,
+        sdJwtDisclosedClaims = None,
         metaRetries = maxRetries,
         metaNextRetry = Some(Instant.now()),
         metaLastFailure = None
@@ -537,6 +533,7 @@ private class PresentationServiceImpl(
         anoncredCredentialsToUse = None,
         sdJwtClaimsToUseJsonSchemaId = None,
         sdJwtClaimsToDisclose = None,
+        sdJwtDisclosedClaims = None,
         metaRetries = maxRetries,
         metaNextRetry = Some(Instant.now()),
         metaLastFailure = None,
@@ -561,7 +558,8 @@ private class PresentationServiceImpl(
       PresentationError.PresentationDecodingError,
       Seq[CredentialCompact]
     ] = issuedCredentials.map { signedCredential =>
-      decode[org.hyperledger.identus.mercury.model.Base64](signedCredential)
+      signedCredential
+        .fromJson[org.hyperledger.identus.mercury.model.Base64]
         .flatMap(x =>
           Right(CredentialCompact.unsafeFromCompact(new String(java.util.Base64.getUrlDecoder.decode(x.base64))))
         )
@@ -569,15 +567,13 @@ private class PresentationServiceImpl(
         .map(err => PresentationDecodingError(s"JsonData decoding error: $err"))
     }.sequence
 
-    import io.circe.parser.decode
-    import io.circe.syntax.*
-
     import java.util.Base64
 
     val result: Either[PresentationDecodingError, SDJwtPresentation] =
       requestPresentation.attachments.headOption
         .map(attachment =>
-          decode[org.hyperledger.identus.mercury.model.Base64](attachment.data.asJson.noSpaces)
+          attachment.data.toJson
+            .fromJson[org.hyperledger.identus.mercury.model.Base64]
             .leftMap(err => PresentationDecodingError(s"PresentationAttachment decoding error: $err"))
             .flatMap { base64 =>
               org.hyperledger.identus.pollux.core.service.serdes.SDJwtPresentation.given_JsonDecoder_SDJwtPresentation
@@ -631,7 +627,8 @@ private class PresentationServiceImpl(
       Seq[JwtVerifiableCredentialPayload]
     ] =
       issuedCredentials.map { signedCredential =>
-        decode[org.hyperledger.identus.mercury.model.Base64](signedCredential)
+        signedCredential
+          .fromJson[org.hyperledger.identus.mercury.model.Base64]
           .flatMap(x => Right(new String(java.util.Base64.getUrlDecoder.decode(x.base64))))
           .flatMap(x => Right(JwtVerifiableCredentialPayload(JWT(x))))
           .left
@@ -642,10 +639,11 @@ private class PresentationServiceImpl(
         : Either[PresentationError, Option[org.hyperledger.identus.pollux.core.model.presentation.Options]] =
       requestPresentation.attachments.headOption
         .map(attachment =>
-          decode[org.hyperledger.identus.mercury.model.JsonData](attachment.data.asJson.noSpaces)
+          attachment.data.toJson
+            .fromJson[org.hyperledger.identus.mercury.model.JsonData]
             .flatMap(data =>
-              org.hyperledger.identus.pollux.core.model.presentation.PresentationAttachment.given_Decoder_PresentationAttachment
-                .decodeJson(data.json.asJson)
+              org.hyperledger.identus.pollux.core.model.presentation.PresentationAttachment.given_JsonDecoder_PresentationAttachment
+                .decodeJson(data.json.toJson)
                 .map(_.options)
                 .leftMap(err => PresentationDecodingError(s"PresentationAttachment decoding error: $err"))
             )
@@ -865,6 +863,22 @@ private class PresentationServiceImpl(
       _ <- messageProducer
         .produce(TOPIC_NAME, record.id.uuid, WalletIdAndRecordId(walletAccessContext.walletId.toUUID, record.id.uuid))
         .orDie
+      record <- getRecord(recordId)
+    } yield record
+  }
+
+  def updateWithSDJWTDisclosedClaims(
+      recordId: DidCommID,
+      claimsDisclosed: SdJwtDisclosedClaims
+  ): ZIO[WalletAccessContext, PresentationError, PresentationRecord] = {
+    for {
+      record <- getRecordWithState(recordId, ProtocolState.PresentationReceived)
+      _ <-
+        presentationRepository
+          .updateWithSDJWTDisclosedClaims(
+            recordId,
+            claimsDisclosed
+          )
       record <- getRecord(recordId)
     } yield record
   }
@@ -1299,8 +1313,8 @@ private class PresentationServiceImpl(
   ): ZIO[WalletAccessContext, PresentationError, RequestPresentation] = {
     for {
       invitation <- ZIO
-        .fromEither(io.circe.parser.decode[Invitation](Base64Utils.decodeUrlToString(invitation)))
-        .mapError(err => InvitationParsingError(err.getMessage))
+        .fromEither(Base64Utils.decodeUrlToString(invitation).fromJson[Invitation])
+        .mapError(err => InvitationParsingError(err))
       _ <- invitation.expires_time match {
         case Some(expiryTime) =>
           ZIO
@@ -1318,16 +1332,15 @@ private class PresentationServiceImpl(
         invitation.attachments
           .flatMap(
             _.headOption.map(attachment =>
-              decode[org.hyperledger.identus.mercury.model.JsonData](
-                attachment.data.asJson.noSpaces
-              ) // TODO Move mercury to use ZIO JSON
+              attachment.data.toJson
+                .fromJson[org.hyperledger.identus.mercury.model.JsonData]
                 .flatMap { data =>
-                  RequestPresentation.given_Decoder_RequestPresentation
-                    .decodeJson(data.json.asJson)
+                  RequestPresentation.given_JsonDecoder_RequestPresentation
+                    .decodeJson(data.json.toJson)
                     .map(r => r.copy(to = Some(pairwiseProverDID)))
                     .leftMap(err =>
                       PresentationDecodingError(
-                        s"RequestPresentation As Attachment decoding error: ${err.getMessage}"
+                        s"RequestPresentation As Attachment decoding error: $err"
                       )
                     )
                 }

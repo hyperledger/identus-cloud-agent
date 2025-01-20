@@ -332,6 +332,11 @@ object MockPresentationService extends Mock[PresentationService] {
       override def findPresentationRecord(recordId: DidCommID): URIO[WalletAccessContext, Option[PresentationRecord]] =
         ???
 
+      def updateWithSDJWTDisclosedClaims(
+          recordId: DidCommID,
+          claimsDisclosed: ast.Json
+      ): ZIO[WalletAccessContext, PresentationError, PresentationRecord] = ???
+
       override def findPresentationRecordByThreadId(
           thid: DidCommID
       ): IO[PresentationError, Option[PresentationRecord]] =

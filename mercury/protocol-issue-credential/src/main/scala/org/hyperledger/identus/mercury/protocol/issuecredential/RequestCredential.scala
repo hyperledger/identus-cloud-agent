@@ -1,9 +1,7 @@
 package org.hyperledger.identus.mercury.protocol.issuecredential
 
-import io.circe.*
-import io.circe.generic.semiauto.*
-import io.circe.syntax.*
 import org.hyperledger.identus.mercury.model.{AttachmentDescriptor, DidId, Message, PIURI}
+import zio.json.{DeriveJsonDecoder, DeriveJsonEncoder, EncoderOps, JsonDecoder, JsonEncoder}
 
 final case class RequestCredential(
     id: String = java.util.UUID.randomUUID.toString(),
@@ -22,15 +20,15 @@ final case class RequestCredential(
     from = Some(this.from),
     to = Seq(this.to),
     thid = this.thid,
-    body = this.body.asJson.asObject.get, // TODO get
+    body = this.body.toJsonAST.toOption.flatMap(_.asObject).get, // TODO get
     attachments = Some(this.attachments),
   )
 }
 object RequestCredential {
 
   import AttachmentDescriptor.attachmentDescriptorEncoderV2
-  given Encoder[RequestCredential] = deriveEncoder[RequestCredential]
-  given Decoder[RequestCredential] = deriveDecoder[RequestCredential]
+  given JsonEncoder[RequestCredential] = DeriveJsonEncoder.gen
+  given JsonDecoder[RequestCredential] = DeriveJsonDecoder.gen
 
   def `type`: PIURI = "https://didcomm.org/issue-credential/3.0/request-credential"
 
@@ -58,8 +56,8 @@ object RequestCredential {
   )
 
   object Body {
-    given Encoder[Body] = deriveEncoder[Body]
-    given Decoder[Body] = deriveDecoder[Body]
+    given JsonEncoder[Body] = DeriveJsonEncoder.gen
+    given JsonDecoder[Body] = DeriveJsonDecoder.gen
   }
 
   def makeRequestCredentialFromOffer(oc: OfferCredential): RequestCredential =
@@ -72,8 +70,8 @@ object RequestCredential {
     )
 
   def readFromMessage(message: Message): Either[String, RequestCredential] = {
-    message.body.asJson.as[RequestCredential.Body] match
-      case Left(fail) => Left("Fail to parse RequestCredential's body: " + fail.getMessage)
+    message.body.as[RequestCredential.Body] match
+      case Left(err) => Left("Fail to parse RequestCredential's body: " + err)
       case Right(body) =>
         message.from match
           case None => Left("RequestCredential MUST have the sender explicit")

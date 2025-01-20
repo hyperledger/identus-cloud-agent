@@ -3,26 +3,37 @@ package abilities
 import com.google.gson.GsonBuilder
 import common.TestConstants
 import io.iohk.atala.automation.restassured.CustomGsonObjectMapperFactory
-import io.ktor.http.*
-import io.ktor.server.application.*
-import io.ktor.server.engine.*
-import io.ktor.server.netty.*
-import io.ktor.server.request.*
-import io.ktor.server.response.*
-import io.ktor.server.routing.*
-import models.*
+import io.ktor.http.HttpStatusCode
+import io.ktor.server.application.Application
+import io.ktor.server.application.call
+import io.ktor.server.engine.ApplicationEngine
+import io.ktor.server.engine.embeddedServer
+import io.ktor.server.netty.Netty
+import io.ktor.server.request.receiveText
+import io.ktor.server.response.respond
+import io.ktor.server.routing.get
+import io.ktor.server.routing.post
+import io.ktor.server.routing.routing
+import models.ConnectionEvent
+import models.CredentialEvent
+import models.DidEvent
+import models.Event
+import models.PresentationEvent
+import models.PresentationStatusAdapter
 import net.serenitybdd.screenplay.Ability
 import net.serenitybdd.screenplay.Actor
 import net.serenitybdd.screenplay.HasTeardown
 import net.serenitybdd.screenplay.Question
-import org.hyperledger.identus.client.models.*
+import org.hyperledger.identus.client.models.Connection
+import org.hyperledger.identus.client.models.IssueCredentialRecord
 import java.net.URL
 import java.time.OffsetDateTime
 
 open class ListenToEvents(
     private val url: URL,
     webhookPort: Int?,
-) : Ability, HasTeardown {
+) : Ability,
+    HasTeardown {
 
     private val server: ApplicationEngine
     private val gson = GsonBuilder()
@@ -88,48 +99,36 @@ open class ListenToEvents(
     }
 
     companion object {
-        fun at(url: URL, webhookPort: Int?): ListenToEvents {
-            return ListenToEvents(url, webhookPort)
-        }
+        fun at(url: URL, webhookPort: Int?): ListenToEvents = ListenToEvents(url, webhookPort)
 
-        fun with(actor: Actor): ListenToEvents {
-            return actor.abilityTo(ListenToEvents::class.java)
-        }
+        fun with(actor: Actor): ListenToEvents = actor.abilityTo(ListenToEvents::class.java)
 
-        fun presentationProofStatus(actor: Actor): Question<PresentationStatusAdapter.Status?> {
-            return Question.about("presentation status").answeredBy {
-                val proofEvent = with(actor).presentationEvents.lastOrNull {
-                    it.data.thid == actor.recall<String>("thid")
-                }
-                proofEvent?.data?.status
+        fun presentationProofStatus(actor: Actor): Question<PresentationStatusAdapter.Status?> = Question.about("presentation status").answeredBy {
+            val proofEvent = with(actor).presentationEvents.lastOrNull {
+                it.data.thid == actor.recall<String>("thid")
             }
+            proofEvent?.data?.status
         }
 
-        fun connectionState(actor: Actor): Question<Connection.State?> {
-            return Question.about("connection state").answeredBy {
-                val lastEvent = with(actor).connectionEvents.lastOrNull {
-                    it.data.thid == actor.recall<Connection>("connection").thid
-                }
-                lastEvent?.data?.state
+        fun connectionState(actor: Actor): Question<Connection.State?> = Question.about("connection state").answeredBy {
+            val lastEvent = with(actor).connectionEvents.lastOrNull {
+                it.data.thid == actor.recall<Connection>("connection").thid
             }
+            lastEvent?.data?.state
         }
 
-        fun credentialState(actor: Actor): Question<IssueCredentialRecord.ProtocolState?> {
-            return Question.about("credential state").answeredBy {
-                val credentialEvent = ListenToEvents.with(actor).credentialEvents.lastOrNull {
-                    it.data.thid == actor.recall<String>("thid")
-                }
-                credentialEvent?.data?.protocolState
+        fun credentialState(actor: Actor): Question<IssueCredentialRecord.ProtocolState?> = Question.about("credential state").answeredBy {
+            val credentialEvent = ListenToEvents.with(actor).credentialEvents.lastOrNull {
+                it.data.thid == actor.recall<String>("thid")
             }
+            credentialEvent?.data?.protocolState
         }
 
-        fun didStatus(actor: Actor): Question<String> {
-            return Question.about("did status").answeredBy {
-                val didEvent = ListenToEvents.with(actor).didEvents.lastOrNull {
-                    it.data.did == actor.recall<String>("shortFormDid")
-                }
-                didEvent?.data?.status
+        fun didStatus(actor: Actor): Question<String> = Question.about("did status").answeredBy {
+            val didEvent = ListenToEvents.with(actor).didEvents.lastOrNull {
+                it.data.did == actor.recall<String>("shortFormDid")
             }
+            didEvent?.data?.status
         }
     }
 
@@ -143,9 +142,7 @@ open class ListenToEvents(
             .start(wait = false)
     }
 
-    override fun toString(): String {
-        return "Listen HTTP port at $url"
-    }
+    override fun toString(): String = "Listen HTTP port at $url"
 
     override fun tearDown() {
         server.stop()

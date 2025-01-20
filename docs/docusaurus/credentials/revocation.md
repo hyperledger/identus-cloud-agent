@@ -169,5 +169,5 @@ curl -X 'PATCH' \
 ```
 
 :::note
-[Present proof](./issue.md) will fail the verification if one of the credentials the holder presents a revoked credential.
+[Present proof](./didcomm/issue.md) will fail the verification if one of the credentials the holder presents a revoked credential.
 :::

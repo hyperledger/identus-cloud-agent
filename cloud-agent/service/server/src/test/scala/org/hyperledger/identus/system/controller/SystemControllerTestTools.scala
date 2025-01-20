@@ -1,7 +1,6 @@
 package org.hyperledger.identus.system.controller
 
-import io.micrometer.prometheus.{PrometheusConfig, PrometheusMeterRegistry}
-import org.hyperledger.identus.agent.server.config.AppConfig
+import io.micrometer.prometheusmetrics.{PrometheusConfig, PrometheusMeterRegistry}
 import org.hyperledger.identus.agent.server.http.CustomServerInterceptors
 import org.hyperledger.identus.agent.server.SystemModule.configLayer
 import org.hyperledger.identus.system.controller.http.HealthInfo
