@@ -7,7 +7,6 @@ import org.hyperledger.identus.shared.db.Implicits.*
 import org.hyperledger.identus.shared.models.*
 import zio.*
 import zio.json.*
-import zio.json.ast.Json
 
 import java.time.Instant
 
@@ -300,6 +299,35 @@ class PresentationRepositoryInMemory(
                     updatedAt = Some(Instant.now),
                     requestPresentationData = Some(request),
                     protocolState = protocolState,
+                    metaRetries = maxRetries,
+                    metaLastFailure = None,
+                  )
+                )
+              )
+            } yield 1
+          )
+          .getOrElse(ZIO.succeed(0))
+      } yield count
+    result.ensureOneAffectedRowOrDie
+  }
+
+  override def updateWithSDJWTDisclosedClaims(
+      recordId: DidCommID,
+      sdJwtDisclosedClaims: SdJwtDisclosedClaims,
+  ): URIO[WalletAccessContext, Unit] = {
+    val result =
+      for {
+        storeRef <- walletStoreRef
+        maybeRecord <- findPresentationRecord(recordId)
+        count <- maybeRecord
+          .map(record =>
+            for {
+              _ <- storeRef.update(r =>
+                r.updated(
+                  recordId,
+                  record.copy(
+                    updatedAt = Some(Instant.now),
+                    sdJwtDisclosedClaims = Some(sdJwtDisclosedClaims),
                     metaRetries = maxRetries,
                     metaLastFailure = None,
                   )

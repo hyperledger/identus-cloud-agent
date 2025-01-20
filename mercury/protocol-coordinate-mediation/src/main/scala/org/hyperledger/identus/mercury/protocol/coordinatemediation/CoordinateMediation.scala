@@ -1,8 +1,7 @@
 package org.hyperledger.identus.mercury.protocol.coordinatemediation
 
-import io.circe.*
-import io.circe.generic.semiauto.*
 import org.hyperledger.identus.mercury.model.PIURI
+import zio.json.{DeriveJsonDecoder, DeriveJsonEncoder, JsonDecoder, JsonEncoder}
 
 final case class MediateRequest(
     id: String = java.util.UUID.randomUUID.toString(),
@@ -10,15 +9,15 @@ final case class MediateRequest(
 ) { assert(`type` == MediateRequest.`type`) }
 object MediateRequest {
   def `type`: PIURI = "https://didcomm.org/coordinate-mediation/2.0/mediate-request"
-  given Encoder[MediateRequest] = deriveEncoder[MediateRequest]
-  given Decoder[MediateRequest] = deriveDecoder[MediateRequest]
+  given JsonEncoder[MediateRequest] = DeriveJsonEncoder.gen
+  given JsonDecoder[MediateRequest] = DeriveJsonDecoder.gen
 }
 
 final case class MediateDeny(id: String, `type`: PIURI) { assert(`type` == MediateDeny.`type`) }
 object MediateDeny {
   def `type`: PIURI = "https://didcomm.org/coordinate-mediation/2.0/mediate-deny"
-  given Encoder[MediateDeny] = deriveEncoder[MediateDeny]
-  given Decoder[MediateDeny] = deriveDecoder[MediateDeny]
+  given JsonEncoder[MediateDeny] = DeriveJsonEncoder.gen
+  given JsonDecoder[MediateDeny] = DeriveJsonDecoder.gen
 }
 
 final case class MediateGrant(id: String, `type`: PIURI, body: MediateGrant.Body) {
@@ -26,8 +25,8 @@ final case class MediateGrant(id: String, `type`: PIURI, body: MediateGrant.Body
 }
 object MediateGrant {
   def `type`: PIURI = "https://didcomm.org/coordinate-mediation/2.0/mediate-grant"
-  given Encoder[MediateGrant] = deriveEncoder[MediateGrant]
-  given Decoder[MediateGrant] = deriveDecoder[MediateGrant]
+  given JsonEncoder[MediateGrant] = DeriveJsonEncoder.gen
+  given JsonDecoder[MediateGrant] = DeriveJsonDecoder.gen
 
   /** @param routing_did
     *   DID of the mediator where forwarded messages should be sent. The recipient may use this DID as an enpoint as
@@ -38,8 +37,8 @@ object MediateGrant {
   final case class Body(routing_did: String) // Seq[String])
 
   object Body {
-    given Encoder[Body] = deriveEncoder[Body]
-    given Decoder[Body] = deriveDecoder[Body]
+    given JsonEncoder[Body] = DeriveJsonEncoder.gen
+    given JsonDecoder[Body] = DeriveJsonDecoder.gen
   }
 }
 
@@ -48,16 +47,16 @@ final case class KeylistUpdate(id: String, `type`: PIURI, body: KeylistUpdate.Bo
 }
 object KeylistUpdate {
   def `type`: PIURI = "https://didcomm.org/coordinate-mediation/2.0/keylist-update"
-  given Encoder[KeylistUpdate] = deriveEncoder[KeylistUpdate]
-  given Decoder[KeylistUpdate] = deriveDecoder[KeylistUpdate]
-  given Encoder[Update] = deriveEncoder[Update]
-  given Decoder[Update] = deriveDecoder[Update]
+  given JsonEncoder[KeylistUpdate] = DeriveJsonEncoder.gen[KeylistUpdate]
+  given JsonDecoder[KeylistUpdate] = DeriveJsonDecoder.gen
+  given JsonEncoder[Update] = DeriveJsonEncoder.gen
+  given JsonDecoder[Update] = DeriveJsonDecoder.gen
 
   final case class Body(updates: Seq[Update])
 
   object Body {
-    given Encoder[Body] = deriveEncoder[Body]
-    given Decoder[Body] = deriveDecoder[Body]
+    given JsonEncoder[Body] = DeriveJsonEncoder.gen
+    given JsonDecoder[Body] = DeriveJsonDecoder.gen
   }
 
   /** @param recipient_did
@@ -70,8 +69,8 @@ object KeylistUpdate {
     case add extends Action
     case remove extends Action
   object Action {
-    given Encoder[Action] = deriveEncoder[Action]
-    given Decoder[Action] = deriveDecoder[Action]
+    given JsonEncoder[Action] = DeriveJsonEncoder.gen
+    given JsonDecoder[Action] = DeriveJsonDecoder.gen
   }
 }
 
@@ -80,16 +79,16 @@ final case class KeylistResponse(id: String, `type`: PIURI, body: KeylistRespons
 }
 object KeylistResponse {
   def `type`: PIURI = "https://didcomm.org/coordinate-mediation/2.0/keylist-update-response"
-  given Encoder[KeylistResponse] = deriveEncoder[KeylistResponse]
-  given Decoder[KeylistResponse] = deriveDecoder[KeylistResponse]
-  given Encoder[Update] = deriveEncoder[Update]
-  given Decoder[Update] = deriveDecoder[Update]
+  given JsonEncoder[KeylistResponse] = DeriveJsonEncoder.gen
+  given JsonDecoder[KeylistResponse] = DeriveJsonDecoder.gen
+  given JsonEncoder[Update] = DeriveJsonEncoder.gen
+  given JsonDecoder[Update] = DeriveJsonDecoder.gen
 
   final case class Body(updated: Seq[Update])
 
   object Body {
-    given Encoder[Body] = deriveEncoder[Body]
-    given Decoder[Body] = deriveDecoder[Body]
+    given JsonEncoder[Body] = DeriveJsonEncoder.gen
+    given JsonDecoder[Body] = DeriveJsonDecoder.gen
   }
 
   /** @param recipient_did
@@ -104,8 +103,8 @@ object KeylistResponse {
     case add extends Action
     case remove extends Action
   object Action {
-    given Encoder[Action] = deriveEncoder[Action]
-    given Decoder[Action] = deriveDecoder[Action]
+    given JsonEncoder[Action] = DeriveJsonEncoder.gen
+    given JsonDecoder[Action] = DeriveJsonDecoder.gen
   }
 
   enum Result:
@@ -114,8 +113,8 @@ object KeylistResponse {
     case no_change extends Result
     case success extends Result
   object Result {
-    given Encoder[Result] = deriveEncoder[Result]
-    given Decoder[Result] = deriveDecoder[Result]
+    given JsonEncoder[Result] = DeriveJsonEncoder.gen
+    given JsonDecoder[Result] = DeriveJsonDecoder.gen
   }
 }
 
@@ -124,18 +123,18 @@ final case class KeylistQuery(id: String, `type`: PIURI, body: KeylistQuery.Body
 }
 object KeylistQuery {
   def `type`: PIURI = "https://didcomm.org/coordinate-mediation/2.0/keylist-query"
-  given Encoder[KeylistQuery] = deriveEncoder[KeylistQuery]
-  given Decoder[KeylistQuery] = deriveDecoder[KeylistQuery]
+  given JsonEncoder[KeylistQuery] = DeriveJsonEncoder.gen
+  given JsonDecoder[KeylistQuery] = DeriveJsonDecoder.gen
 
   final case class Body(paginate: Option[Paginate] = None)
   final case class Paginate(limit: Int, offset: Int)
   object Body {
-    given Encoder[Body] = deriveEncoder[Body]
-    given Decoder[Body] = deriveDecoder[Body]
+    given JsonEncoder[Body] = DeriveJsonEncoder.gen
+    given JsonDecoder[Body] = DeriveJsonDecoder.gen
   }
   object Paginate {
-    given Encoder[Paginate] = deriveEncoder[Paginate]
-    given Decoder[Paginate] = deriveDecoder[Paginate]
+    given JsonEncoder[Paginate] = DeriveJsonEncoder.gen
+    given JsonDecoder[Paginate] = DeriveJsonDecoder.gen
   }
 }
 
@@ -144,25 +143,25 @@ final case class Keylist(id: String, `type`: PIURI, body: Keylist.Body) {
 }
 object Keylist {
   def `type`: PIURI = "https://didcomm.org/coordinate-mediation/2.0/keylist"
-  given Encoder[Keylist] = deriveEncoder[Keylist]
-  given Decoder[Keylist] = deriveDecoder[Keylist]
-  given Encoder[Key] = deriveEncoder[Key]
-  given Decoder[Key] = deriveDecoder[Key]
+  given JsonEncoder[Keylist] = DeriveJsonEncoder.gen
+  given JsonDecoder[Keylist] = DeriveJsonDecoder.gen
+  given JsonEncoder[Key] = DeriveJsonEncoder.gen
+  given JsonDecoder[Key] = DeriveJsonDecoder.gen
 
   final case class Body(keys: Seq[Key], pagination: Option[Pagination])
   final case class Key(recipient_did: String)
   final case class Pagination(count: Int, offset: Int, remaining: Int)
 
   object Body {
-    given Encoder[Body] = deriveEncoder[Body]
-    given Decoder[Body] = deriveDecoder[Body]
+    given JsonEncoder[Body] = DeriveJsonEncoder.gen
+    given JsonDecoder[Body] = DeriveJsonDecoder.gen
   }
   object Key {
-    given Encoder[Key] = deriveEncoder[Key]
-    given Decoder[Key] = deriveDecoder[Key]
+    given JsonEncoder[Key] = DeriveJsonEncoder.gen
+    given JsonDecoder[Key] = DeriveJsonDecoder.gen
   }
   object Pagination {
-    given Encoder[Pagination] = deriveEncoder[Pagination]
-    given Decoder[Pagination] = deriveDecoder[Pagination]
+    given JsonEncoder[Pagination] = DeriveJsonEncoder.gen
+    given JsonDecoder[Pagination] = DeriveJsonDecoder.gen
   }
 }

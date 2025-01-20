@@ -9,7 +9,8 @@ import java.time.temporal.ChronoUnit
 import java.time.Instant
 
 type AnoncredCredentialProofs = zio.json.ast.Json
-type SdJwtCredentialToDisclose = zio.json.ast.Json.Obj
+type SdJwtCredentialToDisclose = zio.json.ast.Json
+type SdJwtDisclosedClaims = zio.json.ast.Json
 
 final case class PresentationRecord(
     id: DidCommID,
@@ -30,6 +31,7 @@ final case class PresentationRecord(
     anoncredCredentialsToUse: Option[AnoncredCredentialProofs],
     sdJwtClaimsToUseJsonSchemaId: Option[String],
     sdJwtClaimsToDisclose: Option[SdJwtCredentialToDisclose],
+    sdJwtDisclosedClaims: Option[SdJwtDisclosedClaims],
     metaRetries: Int,
     metaNextRetry: Option[Instant],
     metaLastFailure: Option[Failure],
@@ -64,6 +66,7 @@ object PresentationRecord {
       anoncredCredentialsToUse: Option[AnoncredCredentialProofs],
       sdJwtClaimsToUseJsonSchemaId: Option[String],
       sdJwtClaimsToDisclose: Option[SdJwtCredentialToDisclose],
+      sdJwtDisclosedClaims: Option[SdJwtDisclosedClaims],
       metaRetries: Int,
       metaNextRetry: Option[Instant],
       metaLastFailure: Option[Failure]
@@ -88,6 +91,7 @@ object PresentationRecord {
         anoncredCredentialsToUse,
         sdJwtClaimsToUseJsonSchemaId,
         sdJwtClaimsToDisclose,
+        sdJwtDisclosedClaims,
         metaRetries,
         metaNextRetry,
         metaLastFailure,

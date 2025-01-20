@@ -1,7 +1,7 @@
 package org.hyperledger.identus.agent.server
 
 import com.nimbusds.jose.crypto.bc.BouncyCastleProviderSingleton
-import io.micrometer.prometheus.{PrometheusConfig, PrometheusMeterRegistry}
+import io.micrometer.prometheusmetrics.{PrometheusConfig, PrometheusMeterRegistry}
 import org.hyperledger.identus.agent.server.config.AppConfig
 import org.hyperledger.identus.agent.server.http.ZioHttpClient
 import org.hyperledger.identus.agent.server.sql.Migrations as AgentMigrations
@@ -149,6 +149,12 @@ object MainApp extends ZIOAppDefault {
         .ignore
 
       appConfig <- ZIO.service[AppConfig].provide(SystemModule.configLayer)
+      flags = appConfig.featureFlag
+      _ <- Console.printLine(s"""### Feature Flags: ####
+         | - Support for the credential type JWT VC is ${if (flags.enableJWT) "ENABLED" else "DISABLED"}
+         | - Support for the credential type SD JWT VC is ${if (flags.enableSDJWT) "ENABLED" else "DISABLED"}
+         | - Support for the credential type  Anoncred is ${if (flags.enableAnoncred) "ENABLED" else "DISABLED"}
+         |""")
       // these services are added to any DID document by default when they are created.
       defaultDidDocumentServices = Set(
         DidDocumentService(

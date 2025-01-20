@@ -1,11 +1,9 @@
 package org.hyperledger.identus.pollux.core.repository
 
-import io.circe.*
-import io.circe.generic.auto.*
-import io.circe.parser.*
 import org.hyperledger.identus.pollux.prex.PresentationDefinition
 import org.hyperledger.identus.shared.models.{WalletAccessContext, WalletId}
 import zio.{durationInt, ZIO, ZLayer}
+import zio.json.{DecoderOps, DeriveJsonDecoder, JsonDecoder}
 import zio.test.*
 import zio.test.Assertion.*
 
@@ -15,11 +13,12 @@ import scala.util.Using
 
 object PresentationExchangeRepositorySpecSuite {
   final case class ExampleTransportEnvelope(presentation_definition: PresentationDefinition)
+  given JsonDecoder[ExampleTransportEnvelope] = DeriveJsonDecoder.gen
 
   private val loadPd =
     ZIO
       .fromTry(Using(Source.fromResource("pd/minimal_example.json"))(_.mkString))
-      .flatMap(json => ZIO.fromEither(decode[ExampleTransportEnvelope](json)))
+      .flatMap(json => ZIO.fromEither(json.fromJson[ExampleTransportEnvelope]))
       .map(_.presentation_definition)
 
   val testSuite = suite("CRUD operations")(

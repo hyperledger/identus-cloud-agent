@@ -120,7 +120,13 @@ object CredentialServiceError {
         StatusCode.NotFound,
         s"A key with the given purpose was not found in the DID: did=${did.toString}, purpose=${verificationRelationship.name}"
       )
-
+  final case class MultipleKeysWithSamePurposeFoundInDID(
+      did: PrismDID,
+      verificationRelationship: VerificationRelationship
+  ) extends CredentialServiceError(
+        StatusCode.BadRequest,
+        s"A key with the given purpose was found multiple times in the DID: did=${did.toString}, purpose=${verificationRelationship.name}"
+      )
   final case class InvalidCredentialRequest(cause: String)
       extends CredentialServiceError(
         StatusCode.BadRequest,

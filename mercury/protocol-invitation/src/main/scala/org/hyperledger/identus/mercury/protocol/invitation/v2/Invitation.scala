@@ -1,11 +1,11 @@
 package org.hyperledger.identus.mercury.protocol.invitation.v2
-import io.circe.{Decoder, Encoder}
-import io.circe.generic.semiauto.*
-import io.circe.syntax.*
+
 import org.hyperledger.identus.mercury.model.{AttachmentDescriptor, DidId, PIURI}
 import org.hyperledger.identus.mercury.model.AttachmentDescriptor.attachmentDescriptorEncoderV2
+import zio.json.{DeriveJsonDecoder, DeriveJsonEncoder, EncoderOps, JsonDecoder, JsonEncoder}
 
 /** Out-Of-Band invitation
+  *
   * @see
   *   https://identity.foundation/didcomm-messaging/spec/#invitation
   */
@@ -19,7 +19,7 @@ final case class Invitation(
     expires_time: Option[Long] = None,
 ) {
   assert(`type` == "https://didcomm.org/out-of-band/2.0/invitation")
-  def toBase64: String = java.util.Base64.getUrlEncoder.encodeToString(this.asJson.deepDropNullValues.noSpaces.getBytes)
+  def toBase64: String = java.util.Base64.getUrlEncoder.encodeToString(this.toJson.getBytes)
 }
 
 object Invitation {
@@ -31,13 +31,12 @@ object Invitation {
   )
 
   object Body {
-    given Encoder[Body] = deriveEncoder[Body]
-
-    given Decoder[Body] = deriveDecoder[Body]
+    given JsonEncoder[Body] = DeriveJsonEncoder.gen
+    given JsonDecoder[Body] = DeriveJsonDecoder.gen
   }
 
   def `type`: PIURI = "https://didcomm.org/out-of-band/2.0/invitation"
-  given Encoder[Invitation] = deriveEncoder[Invitation]
-  given Decoder[Invitation] = deriveDecoder[Invitation]
+  given JsonEncoder[Invitation] = DeriveJsonEncoder.gen
+  given JsonDecoder[Invitation] = DeriveJsonDecoder.gen
 
 }

@@ -1,6 +1,6 @@
 package org.hyperledger.identus.castor.core.model.did.w3c
 
-import io.circe.Json
+import zio.json.ast.Json
 
 /** A projection of DIDDocument data model to W3C compliant DID representation */
 final case class DIDDocumentRepr(

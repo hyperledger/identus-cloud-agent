@@ -397,7 +397,7 @@ The following variables must be set before running the tests:
 * `AGENT_VERSION`: version of the ICA docker image to use.
 
 ```shell
-TESTS_CONFIG=/configs/basic.conf PRISM_NODE_VERSION=2.3.0 AGENT_VERSION=1.36.1 ./gradlew test
+TESTS_CONFIG=/configs/basic.conf PRISM_NODE_VERSION=2.5.0 AGENT_VERSION=1.36.1 ./gradlew test
 ```
 
 > Please note: there is no need to pass environment variables if you're using already running agents.
@@ -414,13 +414,13 @@ To simplify the execution, each configuration file creates a new `gradle` task. 
 It's possible to execute the configuration file as
 
 ```shell
-PRISM_NODE_VERSION=2.3.0 AGENT_VERSION=1.36.1 ./gradlew test_basic
+PRISM_NODE_VERSION=2.5.0 AGENT_VERSION=1.36.1 ./gradlew test_basic
 ```
 
 Also, it's possible to execute the integration tests to all configurations files. The task is named `regression`, it should take a long time to execute.
 
 ```shell
-PRISM_NODE_VERSION=2.3.0 AGENT_VERSION=1.36.1 ./gradlew regression
+PRISM_NODE_VERSION=2.5.0 AGENT_VERSION=1.36.1 ./gradlew regression
 ```
 
 #### Regression report
@@ -432,7 +432,7 @@ To run all scenarios, even if there's a failure, it's required to add `--continu
 
 Example
 ```bash
-AGENT_VERSION=v1.36.1 PRISM_NODE_VERSION=v2.3.0 ./gradlew regression --continue
+AGENT_VERSION=v1.36.1 PRISM_NODE_VERSION=v2.5.0 ./gradlew regression --continue
 ```
 
 Each `context` is based on the configuration used for the current execution and will be displayed in the

@@ -19,11 +19,13 @@ class InMemoryMessagingService(
     ]
 ) extends MessagingService {
 
-  override def makeConsumer[K, V](groupId: String)(using kSerde: Serde[K], vSerde: Serde[V]): Task[Consumer[K, V]] = {
+  override def makeConsumer[K, V](
+      groupId: String
+  )(using kSerde: Serde[K], vSerde: Serde[V]): RIO[Scope, Consumer[K, V]] = {
     ZIO.succeed(new InMemoryConsumer[K, V](groupId, topicQueues, processedMessagesMap))
   }
 
-  override def makeProducer[K, V]()(using kSerde: Serde[K], vSerde: Serde[V]): Task[Producer[K, V]] =
+  override def makeProducer[K, V]()(using kSerde: Serde[K], vSerde: Serde[V]): RIO[Scope, Producer[K, V]] =
     ZIO.succeed(new InMemoryProducer[K, V](topicQueues, queueCapacity))
 }
 

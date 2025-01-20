@@ -44,7 +44,7 @@ trait PresentationServiceSpecHelper {
     PresentationRepositoryInMemory.layer,
     CredentialRepositoryInMemory.layer,
     (MessagingServiceConfig.inMemoryLayer >>> MessagingService.serviceLayer >>>
-      MessagingService.producerLayer[UUID, WalletIdAndRecordId]).orDie,
+      (zio.Scope.default >>> MessagingService.producerLayer[UUID, WalletIdAndRecordId])).orDie,
   ) ++ defaultWalletLayer
 
   def createIssuer(did: String): Issuer = {

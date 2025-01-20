@@ -54,7 +54,7 @@ object OIDCCredentialIssuerServiceSpec
       LinkSecretServiceImpl.layer,
       CredentialServiceImpl.layer,
       (MessagingServiceConfig.inMemoryLayer >>> MessagingService.serviceLayer >>>
-        MessagingService.producerLayer[UUID, WalletIdAndRecordId]).orDie,
+        (zio.Scope.default >>> MessagingService.producerLayer[UUID, WalletIdAndRecordId])).orDie,
       OIDCCredentialIssuerServiceImpl.layer
     )
 
@@ -64,10 +64,10 @@ object OIDCCredentialIssuerServiceSpec
   )
 
   private val (_, issuerKp, issuerDidMetadata, issuerDidData) =
-    MockDIDService.createDID(VerificationRelationship.AssertionMethod)
+    MockDIDService.createDIDOIDC(VerificationRelationship.AssertionMethod)
 
   private val (holderOp, holderKp, holderDidMetadata, holderDidData) =
-    MockDIDService.createDID(VerificationRelationship.AssertionMethod)
+    MockDIDService.createDIDOIDC(VerificationRelationship.AssertionMethod)
 
   private val holderDidServiceExpectations =
     MockDIDService.resolveDIDExpectation(holderDidMetadata, holderDidData)

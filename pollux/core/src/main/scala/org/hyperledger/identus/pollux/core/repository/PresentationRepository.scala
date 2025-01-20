@@ -47,6 +47,11 @@ trait PresentationRepository {
       protocolState: ProtocolState
   ): URIO[WalletAccessContext, Unit]
 
+  def updateWithSDJWTDisclosedClaims(
+      recordId: DidCommID,
+      sdJwtDisclosedClaims: SdJwtDisclosedClaims,
+  ): URIO[WalletAccessContext, Unit]
+
   def updateWithPresentation(
       recordId: DidCommID,
       presentation: Presentation,

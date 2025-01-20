@@ -1,17 +1,16 @@
 package org.hyperledger.identus.pollux.core.model.presentation
 
-import io.circe.parser.*
-import io.circe.syntax.*
-import io.circe.Json
 import munit.*
 import org.hyperledger.identus.pollux.prex.*
+import zio.json.{DecoderOps, EncoderOps}
+import zio.json.ast.Json
 
 import scala.language.implicitConversions
 
 class PresentationAttachmentSpec extends ZSuite {
 
   test("Verifier Request Presentation Attachment") {
-    val expectedConstraintJson = parse(s"""
+    val expectedConstraintJson = s"""
         {
           "fields": [
             {
@@ -24,7 +23,7 @@ class PresentationAttachmentSpec extends ZSuite {
             }
           ]
         }
-    """.stripMargin).getOrElse(Json.Null)
+    """.stripMargin.fromJson[Json]
     val field = Field(
       None,
       path = Seq(
@@ -35,10 +34,10 @@ class PresentationAttachmentSpec extends ZSuite {
       )
     )
     val constraints = Constraints(fields = Some(Seq(field)))
-    val result = constraints.asJson.deepDropNullValues
+    val result = constraints.toJsonAST
     assertEquals(result, expectedConstraintJson)
 
-    val expectedInputDescriptorJson = parse(s"""
+    val expectedInputDescriptorJson = s"""
       {
         "id": "wa_driver_license",
         "name": "Washington State Business License",
@@ -56,7 +55,7 @@ class PresentationAttachmentSpec extends ZSuite {
           ]
         }
       }
-      """.stripMargin).getOrElse(Json.Null)
+      """.stripMargin.fromJson[Json]
 
     val inputDescriptor = InputDescriptor(
       id = "wa_driver_license",
@@ -65,10 +64,10 @@ class PresentationAttachmentSpec extends ZSuite {
         Some("We can only allow licensed Washington State business representatives into the WA Business Conference"),
       constraints = constraints
     )
-    val resultInputDescriptor = inputDescriptor.asJson.deepDropNullValues
+    val resultInputDescriptor = inputDescriptor.toJsonAST
     assertEquals(resultInputDescriptor, expectedInputDescriptorJson)
 
-    val expectedPresentationDefinitionJson = parse(s"""
+    val expectedPresentationDefinitionJson = s"""
       {
         "id": "32f54163-7166-48f1-93d8-ff217bdb0653",
         "input_descriptors": [
@@ -91,14 +90,14 @@ class PresentationAttachmentSpec extends ZSuite {
           }
         ]
       }
-      """.stripMargin).getOrElse(Json.Null)
+      """.stripMargin.fromJson[Json]
 
     val presentationDefinition =
       PresentationDefinition(id = "32f54163-7166-48f1-93d8-ff217bdb0653", input_descriptors = Seq(inputDescriptor))
-    val resultPresentationDefinition = presentationDefinition.asJson.deepDropNullValues
+    val resultPresentationDefinition = presentationDefinition.toJsonAST
     assertEquals(resultPresentationDefinition, expectedPresentationDefinitionJson)
 
-    val expectedPresentationAttachmentJson = parse(s"""
+    val expectedPresentationAttachmentJson = s"""
       {
         "options": {
           "challenge": "23516943-1d79-4ebd-8981-623f036365ef",
@@ -127,11 +126,11 @@ class PresentationAttachmentSpec extends ZSuite {
           ]
         }
       }
-      """.stripMargin).getOrElse(Json.Null)
+      """.stripMargin.fromJson[Json]
     val options = Options(challenge = "23516943-1d79-4ebd-8981-623f036365ef", domain = "us.gov/DriversLicense")
     val presentationAttachment =
       PresentationAttachment(presentation_definition = presentationDefinition, options = Some(options))
-    val resultPresentationAttachment = presentationAttachment.asJson.deepDropNullValues
+    val resultPresentationAttachment = presentationAttachment.toJsonAST
     println(resultPresentationAttachment)
     assertEquals(resultPresentationAttachment, expectedPresentationAttachmentJson)
 
