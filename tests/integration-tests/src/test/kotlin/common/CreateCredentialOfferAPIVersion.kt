@@ -130,18 +130,17 @@ enum class CreateCredentialOfferAPIVersion {
             credentialDefinitionId: UUID,
             claims: Map<String, Any>,
             connectionId: UUID,
-            validityPeriod: Double?
+            validityPeriod: Double?,
         ) = CreateIssueCredentialRecordRequest(
             connectionId = connectionId,
             credentialFormat = credentialType.format,
             automaticIssuance = false,
-            anoncredsVcPropertiesV1 =
-            AnonCredsVCPropertiesV1(
+            anoncredsVcPropertiesV1 = AnonCredsVCPropertiesV1(
                 issuingDID = did,
                 credentialDefinitionId = credentialDefinitionId,
                 claims = claims,
                 validityPeriod = validityPeriod ?: 3600.0,
-            )
+            ),
         )
     },
     ;
