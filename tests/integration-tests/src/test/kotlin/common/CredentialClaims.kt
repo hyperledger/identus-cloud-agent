@@ -13,6 +13,13 @@ enum class CredentialClaims {
             "lastName" to "Doe",
         )
     },
+    ANONCREDS_STUDENT_CLAIMS {
+        override val claims: Map<String, Any> = linkedMapOf(
+        "name" to "Bob",
+        "age" to "21",
+        "sex" to "M",
+        )
+    }
     ;
 
     abstract val claims: Map<String, Any>
