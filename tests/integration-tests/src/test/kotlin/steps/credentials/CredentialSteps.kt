@@ -78,6 +78,7 @@ class CredentialSteps {
         val api = issuer.recall<CreateCredentialOfferAPIVersion>("currentAPI")
         val credentialType = issuer.recall<CredentialType>("currentCredentialType")
         val did = issuer.recall<String>("currentDID")
+
         val assertionKey = issuer.recall<String>("currentAssertionKey")
         val schema = issuer.recall<CredentialSchema>("currentSchema")
         val schemaGuid = issuer.recall<String>(schema.name)
@@ -89,7 +90,11 @@ class CredentialSteps {
             "${issuer.recall<String>("baseUrl")}/schema-registry/schemas/$it"
         }
 
-        val credentialOfferRequest = api.buildCredentialOfferRequest(credentialType, did, assertionKey, schemaUrl!!, claims, connectionId)
+        val credentialOfferRequest = when (credentialType) {
+            CredentialType.JWT_VCDM_1_1 -> api.buildJWTCredentialOfferRequest(credentialType, did, assertionKey, schemaUrl!!, claims, connectionId)
+            CredentialType.SD_JWT_VCDM_1_1 -> api.buildSDJWTCredentialOfferRequest(credentialType, did, assertionKey, schemaUrl!!, claims, connectionId)
+            else -> throw IllegalArgumentException("Unsupported credential type: $credentialType")
+        }
 
         issuer.attemptsTo(
             Post.to("/issue-credentials/credential-offers").body(credentialOfferRequest),
