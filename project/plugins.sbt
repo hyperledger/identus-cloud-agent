@@ -4,7 +4,7 @@ addSbtPlugin("ch.epfl.scala" % "sbt-scalafix" % "0.12.1")
 addSbtPlugin("com.github.sbt" % "sbt-release" % "1.4.0")
 addSbtPlugin("com.github.sbt" % "sbt-native-packager" % "1.11.0")
 addSbtPlugin("org.scoverage" % "sbt-scoverage" % "2.2.1")
-addSbtPlugin("org.scoverage" % "sbt-coveralls" % "1.3.14")
+addSbtPlugin("org.scoverage" % "sbt-coveralls" % "1.3.15")
 addSbtPlugin("com.thesamet" % "sbt-protoc" % "1.0.6")
 
 // In order to import proper version of com.google.protobuf.ByteString we need to add this dependency
