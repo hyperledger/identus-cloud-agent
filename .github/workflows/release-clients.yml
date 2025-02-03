@@ -65,9 +65,6 @@ jobs:
           username: ${{ env.GITHUB_ACTOR }}
           password: ${{ env.GITHUB_TOKEN }}
 
-      - name: Setup yq - portable yaml processor
-        uses: mikefarah/yq@v4.34.2
-
       - name: Delete existing Open API specification
         if: ${{ !inputs.releaseTag }}
         run: |
