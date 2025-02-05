@@ -303,7 +303,7 @@ curl -X 'POST' \
 9. `sdJwtVcPropertiesV1.credentialSchema.type`: The required field that must equal to `JsonSchemaValidator2018`
 
 :::note
-The __issuingDID__ and `connectionId` properties come from completing the pre-requisite steps listed above
+The `issuingDID` and `connectionId` properties come from completing the pre-requisite steps listed above
 :::
 
 :::note
