@@ -7,7 +7,8 @@ echo version=${AGENT_VERSION}
 # install dependencies
 yarn
 
-gradle -p ../kotlin -Pversion=${AGENT_VERSION} publishToSonatype closeAndReleaseSonatypeStagingRepository
+gradle -p ../kotlin -Pversion=${AGENT_VERSION} build
+gradle -p ../kotlin -Pversion=${AGENT_VERSION} publish
 
 # typescript
 yarn --cwd ../typescript
