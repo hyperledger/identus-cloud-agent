@@ -29,7 +29,7 @@ setup(
     description="Identus Cloud Agent Client",
     author="Allain Magyar",
     author_email="",
-    url="https://github.com/hyperledger/identus-cloud-agent",
+    url="https://github.com/hyperledger-identus/cloud-agent",
     keywords=["Identus Cloud Agent Client"],
     python_requires=">=3.7",
     install_requires=REQUIRES,
