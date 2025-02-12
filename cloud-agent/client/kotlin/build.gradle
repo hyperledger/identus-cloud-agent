@@ -1,5 +1,5 @@
 plugins {
-    id("io.github.gradle-nexus.publish-plugin") version "2.0.0"
+    id('io.github.gradle-nexus.publish-plugin') version '2.0.0'
 }
 
 group 'org.hyperledger.identus'
@@ -37,9 +37,9 @@ test {
 
 dependencies {
     implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk8:$kotlin_version"
-    implementation "com.google.code.gson:gson:2.9.0"
-    implementation "com.squareup.okhttp3:okhttp:4.10.0"
-    testImplementation "io.kotlintest:kotlintest-runner-junit5:3.4.2"
+    implementation 'com.google.code.gson:gson:2.9.0'
+    implementation 'com.squareup.okhttp3:okhttp:4.10.0'
+    testImplementation 'io.kotlintest:kotlintest-runner-junit5:3.4.2'
 }
 
 java {
@@ -57,10 +57,10 @@ publishing {
 nexusPublishing {
     repositories {
         sonatype {
-            nexusUrl.set(uri("https://oss.sonatype.org/service/local/"))
-            snapshotRepositoryUrl.set(uri("https://oss.sonatype.org/content/repositories/snapshots/"))
-            username.set(System.getenv("OSSRH_USERNAME"))
-            password.set(System.getenv("OSSRH_TOKEN"))
+            nexusUrl.set(uri('https://oss.sonatype.org/service/local/'))
+            snapshotRepositoryUrl.set(uri('https://oss.sonatype.org/content/repositories/snapshots/'))
+            username.set(System.getenv('OSSRH_USERNAME'))
+            password.set(System.getenv('OSSRH_TOKEN'))
         }
     }
 }
