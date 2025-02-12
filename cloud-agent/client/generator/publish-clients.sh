@@ -8,7 +8,16 @@ echo version=${AGENT_VERSION}
 yarn
 
 # kotlin
-gradle -p ../kotlin -Pversion=${AGENT_VERSION} publish
+# Determine if the version is a snapshot or a release
+if [[ "$AGENT_VERSION" == *-* ]]; then
+  echo "Publishing snapshot version"
+  # kotlin
+  gradle -p ../kotlin -Pversion=${AGENT_VERSION} publishToSonatype
+else
+  echo "Publishing release version"
+  # kotlin
+  gradle -p ../kotlin -Pversion=${AGENT_VERSION} publishToSonatype closeAndReleaseSonatypeStagingRepository
+fi
 
 # typescript
 yarn --cwd ../typescript
