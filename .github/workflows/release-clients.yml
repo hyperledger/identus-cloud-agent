@@ -55,20 +55,8 @@ jobs:
           registry-url: https://npm.pkg.github.com/
           scope: "@hyperledger"
 
-      - name: Setup Python
-        uses: actions/setup-python@v4
-        with:
-          python-version: "3.10"
-
       - name: Setup Gradle
         uses: gradle/gradle-build-action@v2.8.0
-
-      - name: Login to Github Hub
-        uses: docker/login-action@v2
-        with:
-          registry: ghcr.io
-          username: ${{ env.GITHUB_ACTOR }}
-          password: ${{ env.GITHUB_TOKEN }}
 
       - name: Setup yq - portable yaml processor
         uses: mikefarah/yq@v4.34.2
@@ -117,6 +105,9 @@ jobs:
         working-directory: cloud-agent/client/generator
         env:
           VERSION_TAG: ${{ env.VERSION_TAG }}
+          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+          OSSRH_PASSWORD: ${{ secrets.OSSRH_PASSWORD }}
+          OSSRH_USERNAME: ${{ secrets.OSSRH_USERNAME }}
         run: |
           if [ -z "${{ github.event.inputs.releaseTag }}" ]; then
             echo "Using revision version for publishing: ${VERSION_TAG}"
