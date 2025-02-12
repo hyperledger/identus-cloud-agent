@@ -99,7 +99,7 @@ jobs:
       - name: Build Docker Image
         run: |
           sbt "set version := \"${{ env.BUILD_VERSION }}\"" "docker:stage"
-          docker buildx build --platform=linux/arm64,linux/amd64 --push -t ${{ vars.DOCKERHUB_ORG }}/cloud-agent:${{ env.BUILD_VERSION }} ./cloud-agent/service/server/target/docker/stage --load
+          docker buildx build --platform=linux/arm64,linux/amd64 --push -t ${{ vars.DOCKERHUB_ORG }}/cloud-agent:${{ env.BUILD_VERSION }} ./cloud-agent/service/server/target/docker/stage
 
       - name: Docker Metadata Action
         id: meta
