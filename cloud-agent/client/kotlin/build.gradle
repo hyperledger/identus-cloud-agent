@@ -22,9 +22,10 @@ buildscript {
     }
 }
 
-apply plugin: 'kotlin'
-apply plugin: 'maven-publish'
-apply plugin: 'java'
+apply(plugin = "kotlin")
+apply(plugin = "java")
+apply(plugin = "org.gradle.maven-publish")
+apply(plugin = "org.gradle.signing")
 
 repositories {
     mavenLocal()
@@ -49,11 +50,99 @@ java {
 
 publishing {
     publications {
-        maven(MavenPublication) {
+        mavenJava(MavenPublications){
             from components.java
+            groupId = group.toString()
+            artifactId = project.name
+            version = project.version.toString()
+            pom {
+                name.set("HyperledgerIdentus Apollo")
+                description.set("Collection of the cryptographic methods used all around Identus Platform")
+                url.set("https://hyperledger-identus.github.io/docs/")
+                organization {
+                    name.set("Hyperledger")
+                    url.set("https://www.hyperledger.org/")
+                }
+                issueManagement {
+                    system.set("Github")
+                    url.set("https://github.com/hyperledger-identus/apollo")
+                }
+                licenses {
+                    license {
+                        name.set("The Apache License, Version 2.0")
+                        url.set("https://www.apache.org/licenses/LICENSE-2.0.txt")
+                    }
+                }
+                developers {
+                    developer {
+                        id.set("amagyar-iohk")
+                        name.set("Allain Magyar")
+                        email.set("allain.magyar@iohk.io")
+                        organization.set("IOG")
+                        roles.add("developer")
+                    }
+                    developer {
+                        id.set("yshyn-iohk")
+                        name.set("Yurii Shynbuiev")
+                        email.set("yurii.shynbuiev@iohk.io")
+                        organization.set("IOG")
+                        roles.add("developer")
+                    }
+                    developer {
+                        id.set("elribonazo")
+                        name.set("Javier Ribó")
+                        email.set("javier.ribo@iohk.io")
+                        organization.set("IOG")
+                        roles.add("developer")
+                    }
+                    developer {
+                        id.set("goncalo-frade-iohk")
+                        name.set("Gonçalo Frade")
+                        email.set("goncalo.frade@iohk.io")
+                        organization.set("IOG")
+                        roles.add("developer")
+                    }
+                    developer {
+                        id.set("curtis-h")
+                        name.set("Curtis Harding")
+                        email.set("curtis.harding@iohk.io")
+                        organization.set("IOG")
+                        roles.add("developer")
+                    }
+                    developer {
+                        id.set("mineme0110")
+                        name.set("Shailesh Patil")
+                        email.set("shailesh.patil@iohk.io")
+                        organization.set("IOG")
+                        roles.add("developer")
+                    }
+                    developer {
+                        id.set("FabioPinheiro")
+                        name.set("Fabio Pinheiro")
+                        email.set("fabio.pinheiro@iohk.io")
+                        organization.set("IOG")
+                        roles.add("developer")
+                    }
+                }
+                scm {
+                    connection.set("scm:git:git://git@github.com/hyperledger-identus/apollo.git")
+                    developerConnection.set("scm:git:ssh://git@github.com/hyperledger-identus/apollo.git")
+                    url.set("https://github.com/hyperledger-identus/apollo")
+                }
+            }
+
         }
     }
 }
+
+signing {
+    useInMemoryPgpKeys(
+            project.findProperty("signing.signingSecretKey") as String? ?: System.getenv("GPG_PRIVATE"),
+            project.findProperty("signing.signingSecretKeyPassword") as String? ?: System.getenv("GPG_PASSWORD")
+    )
+    sign(publishing.publications.mavenJava)
+}
+
 nexusPublishing {
     repositories {
         sonatype {

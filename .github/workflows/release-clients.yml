@@ -108,6 +108,8 @@ jobs:
           NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
           OSSRH_PASSWORD: ${{ secrets.OSSRH_PASSWORD }}
           OSSRH_USERNAME: ${{ secrets.OSSRH_USERNAME }}
+          GPG_PRIVATE: ${{ secrets.HYP_BOT_GPG_PRIVATE }}
+          GPG_PASSWORD: ${{ secrets.HYP_BOT_GPG_PASSWORD }}
         run: |
           if [ -z "${{ github.event.inputs.releaseTag }}" ]; then
             echo "Using revision version for publishing: ${VERSION_TAG}"
