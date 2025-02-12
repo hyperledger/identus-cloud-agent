@@ -107,8 +107,6 @@ jobs:
         with:
           images: ${{ vars.DOCKERHUB_ORG }}/cloud-agent
           tags: |
-            type=sha,format=short
-            type=ref,event=branch
             type=semver,pattern={{version}}
           labels: |
             org.opencontainers.image.title=cloud-agent
