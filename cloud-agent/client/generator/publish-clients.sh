@@ -8,7 +8,7 @@ echo version=${AGENT_VERSION}
 yarn
 
 gradle -p ../kotlin -Pversion=${AGENT_VERSION} build
-gradle -p ../kotlin -Pversion=${AGENT_VERSION} publish
+gradle -p ../kotlin -Pversion=${AGENT_VERSION} publish --debug
 
 # typescript
 yarn --cwd ../typescript

@@ -45,7 +45,7 @@ val sourceJar by tasks.registering(Jar::class) {
 
 publishing {
     publications.withType<MavenPublication> {
-        groupId = project.group.toString()
+        groupId = publishedMavenId
         artifactId = project.name
         version = project.version.toString()
         from(components["java"])
