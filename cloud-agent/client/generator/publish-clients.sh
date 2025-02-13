@@ -7,11 +7,10 @@ echo version=${AGENT_VERSION}
 # install dependencies
 yarn
 
-gradle -p ../kotlin -Pversion=${AGENT_VERSION} build
-gradle -p ../kotlin -Pversion=${AGENT_VERSION} publish --debug
+gradle -p ../kotlin -Pversion=${AGENT_VERSION} publishToSonatype --debug
 
 # typescript
 yarn --cwd ../typescript
-yarn --cwd ../typescript publish --new-version ${AGENT_VERSION} --no-git-tag-version --non-interactive
+yarn --cwd ../typescript publish --new-version ${AGENT_VERSION} --no-git-tag-version --non-interactive --access public
 
 # python

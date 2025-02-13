@@ -101,6 +101,11 @@ jobs:
               echo "VERSION_TAG=${{ github.event.inputs.releaseTag }}" >> $GITHUB_ENV
           fi
 
+      - name: Configure npm authentication
+        run: echo "//registry.npmjs.org/:_authToken=${NODE_AUTH_TOKEN}" > ~/.npmrc
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+
       - name: Publish clients
         working-directory: cloud-agent/client/generator
         env:
