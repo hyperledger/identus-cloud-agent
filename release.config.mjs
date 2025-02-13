@@ -54,5 +54,5 @@ export default {
             }
         }],
     ],
-    tagFormat: "cloud-agent-v${version}"
+    tagFormat: "v${version}"
 }
